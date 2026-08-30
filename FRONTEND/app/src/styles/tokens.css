@@ -1,0 +1,96 @@
+:root {
+  color-scheme: light;
+
+  --background: #f7f7f6;
+  --surface: #ffffff;
+  --surface-subtle: #f1f1ef;
+  --surface-raised: #ffffff;
+  --foreground: #121212;
+  --foreground-muted: #666663;
+  --foreground-subtle: #8f8f89;
+  --border: #dfdfdb;
+  --border-strong: #c7c7c1;
+  --inverse: #121212;
+  --inverse-foreground: #ffffff;
+
+  --info: #1859d1;
+  --info-subtle: #edf3ff;
+  --success: #137547;
+  --success-subtle: #eaf7ef;
+  --danger: #c52a2a;
+  --danger-subtle: #fff0f0;
+
+  --focus-ring: #1859d1;
+  --overlay: rgb(0 0 0 / 48%);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-full: 999px;
+
+  --shadow-xs: 0 1px 2px rgb(18 18 18 / 5%);
+  --shadow-sm: 0 1px 3px rgb(18 18 18 / 8%), 0 1px 2px rgb(18 18 18 / 4%);
+  --shadow-md: 0 12px 32px rgb(18 18 18 / 9%);
+
+  --content-max: 80rem;
+  --admin-sidebar: 17rem;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #0d0d0d;
+  --surface: #151515;
+  --surface-subtle: #1d1d1d;
+  --surface-raised: #191919;
+  --foreground: #f5f5f3;
+  --foreground-muted: #aaa9a4;
+  --foreground-subtle: #7c7b77;
+  --border: #30302e;
+  --border-strong: #474744;
+  --inverse: #f5f5f3;
+  --inverse-foreground: #121212;
+
+  --info: #78a7ff;
+  --info-subtle: #142547;
+  --success: #63c993;
+  --success-subtle: #132e20;
+  --danger: #ff8585;
+  --danger-subtle: #3b1919;
+
+  --focus-ring: #78a7ff;
+  --overlay: rgb(0 0 0 / 72%);
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 24%);
+  --shadow-sm: 0 2px 8px rgb(0 0 0 / 28%);
+  --shadow-md: 0 16px 40px rgb(0 0 0 / 34%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --background: #0d0d0d;
+    --surface: #151515;
+    --surface-subtle: #1d1d1d;
+    --surface-raised: #191919;
+    --foreground: #f5f5f3;
+    --foreground-muted: #aaa9a4;
+    --foreground-subtle: #7c7b77;
+    --border: #30302e;
+    --border-strong: #474744;
+    --inverse: #f5f5f3;
+    --inverse-foreground: #121212;
+    --info: #78a7ff;
+    --info-subtle: #142547;
+    --success: #63c993;
+    --success-subtle: #132e20;
+    --danger: #ff8585;
+    --danger-subtle: #3b1919;
+    --focus-ring: #78a7ff;
+    --overlay: rgb(0 0 0 / 72%);
+    --shadow-xs: 0 1px 2px rgb(0 0 0 / 24%);
+    --shadow-sm: 0 2px 8px rgb(0 0 0 / 28%);
+    --shadow-md: 0 16px 40px rgb(0 0 0 / 34%);
+  }
+}

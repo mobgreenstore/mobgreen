@@ -1,0 +1,4 @@
+CREATE TYPE "AdminRole" AS ENUM ('OWNER', 'MANAGER', 'EDITOR', 'VIEWER');
+
+ALTER TABLE "admin_users"
+ADD COLUMN "role" "AdminRole" NOT NULL DEFAULT 'VIEWER';

@@ -1,0 +1,24 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated output
+node_modules/
+.next/
+.next-admin/
+.next-store/
+out/
+build/
+coverage/
+src/generated/prisma/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local tooling and patch artifacts
+.DS_Store
+.vercel/
+*.log
+*.orig
+*.rej
+*.pem
