@@ -1,6 +1,7 @@
-import { Boxes, Menu } from "lucide-react";
+import { Boxes } from "lucide-react";
 import type { ReactNode } from "react";
 import { AdminNavigation } from "@/components/shared/admin-navigation";
+import { AdminMenu } from "@/components/shared/admin-menu";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { AdminAccountMenu } from "@/features/admin-auth/components/admin-account-menu";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -39,18 +40,7 @@ export function AdminShell({
         <header className="sticky top-0 z-30 border-b border-border bg-background/92 backdrop-blur-xl lg:bg-background/80">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <div className="lg:hidden">
-              <details className="group relative">
-                <summary
-                  className="grid size-11 list-none place-items-center rounded-md hover:bg-surface-subtle [&::-webkit-details-marker]:hidden"
-                  aria-label="Open admin navigation"
-                >
-                  <Menu aria-hidden="true" className="size-5" />
-                </summary>
-                <div className="absolute top-13 left-0 z-50 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-border bg-surface p-3 shadow-md">
-                  <BrandMark className="mb-4 px-2" />
-                  <AdminNavigation mobile />
-                </div>
-              </details>
+              <AdminMenu />
             </div>
             <p className="hidden text-sm font-medium text-foreground-muted lg:block">
               Admin workspace

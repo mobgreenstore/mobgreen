@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Info, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useId, useState } from "react";
 import {
@@ -28,6 +28,7 @@ export function StorefrontMenu({
   const rechargeRouteActive = pathname === "/recharge-online";
   const ordersRouteActive =
     pathname === "/orders" || pathname.startsWith("/orders/");
+  const howToOrderRouteActive = pathname === "/how-to-order";
   const [rechargeOpen, setRechargeOpen] = useState(rechargeRouteActive);
 
   return (
@@ -126,6 +127,20 @@ export function StorefrontMenu({
               )}
             >
               Track orders
+            </Link>
+          </DrawerClose>
+
+          <DrawerClose asChild>
+            <Link
+              href="/how-to-order"
+              aria-current={howToOrderRouteActive ? "page" : undefined}
+              className={cn(
+                navigationClassName,
+                "mt-1",
+                howToOrderRouteActive && "bg-surface-subtle",
+              )}
+            >
+              How to order
             </Link>
           </DrawerClose>
         </nav>

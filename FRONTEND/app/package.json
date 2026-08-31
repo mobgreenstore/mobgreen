@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently --kill-others-on-fail --names database,admin,store npm:db:tunnel \"sh -c 'sleep 5 && npm run dev:admin'\" \"sh -c 'sleep 5 && npm run dev:store'\"",
+    "dev": "concurrently --kill-others-on-fail --names database,admin,store npm:db:tunnel \"sh -c 'sleep 10 && npm run dev:admin'\" \"sh -c 'sleep 10 && npm run dev:store'\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

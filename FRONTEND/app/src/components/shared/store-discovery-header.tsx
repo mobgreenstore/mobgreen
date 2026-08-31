@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactNode } from "react";
-import { Info } from "lucide-react";
 import Link from "next/link";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { StoreSearchBar } from "@/components/shared/store-search-bar";
@@ -55,15 +54,6 @@ export function StoreDiscoveryHeader({
             />
             <div className="flex items-center gap-1">
               <ThemeToggle className={controlClassName} />
-              <Link href="/how-to-order">
-                <IconButton
-                  aria-label="How to order"
-                  title="Learn how to order"
-                  className={controlClassName}
-                >
-                  <Info aria-hidden="true" className="size-5" strokeWidth={2} />
-                </IconButton>
-              </Link>
               <CartButton className={controlClassName} />
             </div>
           </div>
@@ -95,15 +85,6 @@ export function StoreDiscoveryHeader({
             />
             <div className="hidden shrink-0 items-center gap-1 md:flex">
               <ThemeToggle className={controlClassName} />
-              <Link href="/how-to-order">
-                <IconButton
-                  aria-label="How to order"
-                  title="Learn how to order"
-                  className={controlClassName}
-                >
-                  <Info aria-hidden="true" className="size-5" strokeWidth={2} />
-                </IconButton>
-              </Link>
               <CartButton className={controlClassName} />
             </div>
           </div>

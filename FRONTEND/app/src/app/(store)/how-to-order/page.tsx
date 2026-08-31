@@ -4,6 +4,7 @@ import {
   ArrowRight,
   CheckCircle2,
   CreditCard,
+  Mail,
   Package,
   ShoppingCart,
   ShieldCheck,
@@ -129,9 +130,30 @@ export default function HowToOrderPage() {
         </div>
       </main>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto max-w-[var(--content-max)] px-3 py-8 text-sm text-foreground-muted sm:px-6 lg:px-8">
-          © {new Date().getFullYear()} MOB GREENS
+      <footer className="border-t border-border bg-surface">
+        <div className="mx-auto max-w-[var(--content-max)] px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-6">
+            <div className="text-center sm:text-left">
+              <h3 className="text-sm font-semibold text-foreground mb-1">
+                MOB GREENS
+              </h3>
+              <p className="text-xs text-foreground-muted">
+                Fresh goods delivered to your door.
+              </p>
+            </div>
+
+            <Link
+              href="mailto:contact@mobgreens.com"
+              className="flex items-center gap-2 text-xs text-foreground-muted transition-colors hover:text-foreground"
+            >
+              <Mail aria-hidden="true" className="size-3" />
+              contact@mobgreens.com
+            </Link>
+
+            <p className="text-xs text-foreground-muted">
+              © {new Date().getFullYear()} MOB GREENS
+            </p>
+          </div>
         </div>
       </footer>
     </div>
