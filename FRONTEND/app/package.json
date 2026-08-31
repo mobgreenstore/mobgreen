@@ -24,8 +24,8 @@
     "dev:store": "MOB_GREENS_SURFACE=store next dev --port 3001",
     "build:admin": "MOB_GREENS_SURFACE=admin next build",
     "build:store": "MOB_GREENS_SURFACE=store next build",
-    "start:admin": "MOB_GREENS_SURFACE=admin next start --port 3000",
-    "start:store": "MOB_GREENS_SURFACE=store next start --port 3001",
+    "start:admin": "MOB_GREENS_SURFACE=admin next start --port ${PORT:-3000}",
+    "start:store": "MOB_GREENS_SURFACE=store next start --port ${PORT:-3001}",
     "dev:apps": "concurrently --kill-others-on-fail --names admin,store npm:dev:admin npm:dev:store",
     "test:responsive": "node scripts/validate-catalog-responsive.mjs"
   },
