@@ -44,6 +44,7 @@ enum PaymentStatus {
 enum PaymentMethod {
   RECHARGE_FROM_STORE
   RECHARGE_ONLINE
+  BITCOIN_DEPOSIT
 }
 
 enum FulfillmentType {

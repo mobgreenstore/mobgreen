@@ -35,7 +35,7 @@ export interface AdminOrderListItem {
   customerEmail: string | null;
   customerPhone: string | null;
   fulfillmentType: "PICKUP" | "DELIVERY";
-  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE";
+  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE" | "BITCOIN_DEPOSIT";
   rechargeProvider: string | null;
   currency: SupportedCurrency;
   totalMinor: number;

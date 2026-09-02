@@ -46,8 +46,7 @@ export function CategoryShowcaseVisual({
       className={cn(
         "relative isolate min-h-[20rem] overflow-hidden rounded-xl border shadow-sm sm:min-h-[23rem]",
         tone.surfaceClassName,
-        hasDarkTone &&
-          "border-white/45 shadow-[0_12px_32px_rgb(0_0_0/0.28)] ring-1 ring-white/25 ring-inset",
+        hasDarkTone && "border-white/20 shadow-[0_10px_26px_rgb(0_0_0/0.2)]",
         className,
       )}
     >

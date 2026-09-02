@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { buttonVariants } from "@/components/ui";
 import { RECHARGE_PARTNERS } from "@/config/recharge";
-import { cn } from "@/lib/utils";
+import { RechargePartnerCard } from "@/features/recharge/components/recharge-partner-card";
 
 export const metadata: Metadata = {
   title: "Recharge online",
   description:
     "Choose an approved external recharge partner, purchase a code, and return to MOB GREENS checkout.",
 };
-
-function partnerHost(url: string) {
-  return new URL(url).hostname.replace(/^www\./, "");
-}
 
 export default function RechargeOnlinePage() {
   return (
@@ -32,77 +28,47 @@ export default function RechargeOnlinePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[var(--content-max)] px-3 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-        <div className="mx-auto max-w-3xl">
-          <div className="max-w-2xl">
+      <main className="mx-auto max-w-[var(--content-max)] px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
+        <div className="mx-auto max-w-2xl">
+          <div className="rounded-2xl bg-surface-subtle px-5 py-6 sm:px-7 sm:py-8">
             <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
               Recharge online
             </p>
-            <h1 className="mt-3 text-3xl leading-tight font-semibold tracking-[-0.055em] text-balance sm:text-5xl">
-              Purchase your recharge code securely.
+            <h1 className="mt-2 max-w-xl text-3xl leading-[1.05] font-semibold tracking-[-0.05em] text-balance sm:text-4xl">
+              Choose a trusted recharge partner.
             </h1>
-            <p className="mt-4 text-base leading-7 text-foreground-muted sm:text-lg">
-              Choose one of the approved external partners below. Complete the
-              purchase on their website, then return to MOB GREENS and enter the
-              verification code during checkout.
+            <p className="mt-3 max-w-xl text-sm leading-6 text-foreground-muted sm:text-base">
+              Purchase on the partner website, then return to checkout with the
+              verification code you receive.
             </p>
+            <div className="mt-5 flex items-center gap-2 text-xs font-medium text-foreground-muted">
+              <ShieldCheck aria-hidden="true" className="size-4" />
+              MOB GREENS never receives your card details
+            </div>
           </div>
 
-          <section
-            aria-labelledby="recharge-partners"
-            className="mt-9 sm:mt-12"
-          >
+          <section aria-labelledby="recharge-partners" className="mt-7 sm:mt-9">
             <h2
               id="recharge-partners"
               className="text-lg font-semibold tracking-[-0.025em]"
             >
               Approved recharge partners
             </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {RECHARGE_PARTNERS.map((partner, index) => (
-                <article
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:gap-4">
+              {RECHARGE_PARTNERS.map((partner) => (
+                <RechargePartnerCard
                   key={partner.id}
-                  className="flex min-h-44 flex-col rounded-xl border border-border bg-surface p-5 shadow-xs transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-border-strong hover:shadow-sm motion-reduce:transition-none"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold tracking-[0.08em] text-foreground-subtle uppercase">
-                        Partner {String(index + 1).padStart(2, "0")}
-                      </p>
-                      <h3 className="mt-2 text-xl font-semibold tracking-[-0.035em]">
-                        {partner.name}
-                      </h3>
-                      <p className="mt-1 text-sm text-foreground-muted">
-                        {partnerHost(partner.url)}
-                      </p>
-                    </div>
-                    <ExternalLink
-                      aria-hidden="true"
-                      className="size-5 shrink-0 text-foreground-muted"
-                      strokeWidth={1.8}
-                    />
-                  </div>
-                  <a
-                    href={partner.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      buttonVariants({ variant: "secondary" }),
-                      "mt-auto w-full justify-between",
-                    )}
-                    aria-label={`Open ${partner.name} in a new tab`}
-                  >
-                    Open partner website
-                    <ArrowRight aria-hidden="true" className="size-4" />
-                  </a>
-                </article>
+                  name={partner.name}
+                  url={partner.url}
+                  iconUrl={partner.iconUrl}
+                />
               ))}
             </div>
           </section>
 
           <section
             aria-labelledby="before-you-continue"
-            className="mt-8 rounded-xl bg-surface-subtle p-5 sm:p-6"
+            className="mt-7 rounded-xl border border-border bg-surface p-5 sm:p-6"
           >
             <h2
               id="before-you-continue"
@@ -123,7 +89,7 @@ export default function RechargeOnlinePage() {
             </div>
           </section>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="safe-bottom mt-7 flex flex-col gap-3 pb-3 sm:flex-row">
             <Link
               href="/checkout"
               className={buttonVariants({ size: "large" })}

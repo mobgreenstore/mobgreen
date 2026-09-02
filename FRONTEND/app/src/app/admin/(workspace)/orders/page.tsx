@@ -114,9 +114,10 @@ export default async function AdminOrdersPage({
             defaultValue={filters.paymentMethod}
             aria-label="Payment method"
           >
-            <option value="all">All recharge methods</option>
+            <option value="all">All payment methods</option>
             <option value="RECHARGE_FROM_STORE">From store</option>
             <option value="RECHARGE_ONLINE">Online</option>
+            <option value="BITCOIN_DEPOSIT">Bitcoin deposit</option>
           </Select>
           <Select
             name="fulfillment"

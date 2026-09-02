@@ -50,6 +50,14 @@ describe("admin order filters", () => {
     });
   });
 
+  it("recognizes the Bitcoin deposit method", () => {
+    expect(
+      parseAdminOrderFilters({
+        paymentMethod: "BITCOIN_DEPOSIT",
+      }).paymentMethod,
+    ).toBe("BITCOIN_DEPOSIT");
+  });
+
   it("keeps active filters in pagination links", () => {
     const filters = parseAdminOrderFilters({
       q: "Ngon",

@@ -19,7 +19,7 @@ export interface CheckoutIntentView {
   publicId: string;
   status: "DRAFT" | "MATCHING" | "DRIVER_SELECTED" | "SUBMITTED" | "EXPIRED";
   fulfillmentType: "PICKUP" | "DELIVERY";
-  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE";
+  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE" | "BITCOIN_DEPOSIT";
   rechargeProvider: string | null;
   currency: SupportedCurrency;
   subtotalMinor: number;

@@ -23,6 +23,7 @@ import {
   PaymentStatusBadge,
 } from "@/features/orders/components/status-badges";
 import { getAdminOrder } from "@/features/orders/server/queries";
+import { paymentMethodLabel } from "@/features/payments/payment-method";
 import {
   validOrderTransitions,
   validPaymentTransitions,
@@ -109,9 +110,10 @@ export default async function AdminOrderDetailsPage({
                   Recharge method
                 </dt>
                 <dd className="mt-1 font-medium">
-                  {order.paymentMethod === "RECHARGE_FROM_STORE"
-                    ? "Recharge from store"
-                    : `Recharge online${order.rechargeProvider ? ` · ${order.rechargeProvider}` : ""}`}
+                  {paymentMethodLabel(
+                    order.paymentMethod,
+                    order.rechargeProvider,
+                  )}
                 </dd>
               </div>
             </dl>

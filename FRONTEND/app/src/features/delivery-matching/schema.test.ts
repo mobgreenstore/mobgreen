@@ -42,6 +42,22 @@ describe("delivery matching write boundaries", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts Bitcoin only without a recharge partner", () => {
+    expect(
+      startCheckoutIntentSchema.safeParse({
+        ...base,
+        paymentMethod: "BITCOIN_DEPOSIT",
+      }).success,
+    ).toBe(true);
+    expect(
+      startCheckoutIntentSchema.safeParse({
+        ...base,
+        paymentMethod: "BITCOIN_DEPOSIT",
+        rechargeProvider: "DUNDLE",
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects altered intent and courier identifiers", () => {
     expect(
       selectCourierSchema.safeParse({

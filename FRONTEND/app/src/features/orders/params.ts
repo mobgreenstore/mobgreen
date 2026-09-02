@@ -7,12 +7,13 @@ import {
   type AdminPaymentStatus,
 } from "@/features/orders/types";
 import type { SupportedCurrency } from "@/config/commerce";
+import { isPaymentMethod, type PaymentMethodId } from "@/features/payments/payment-method";
 
 export interface AdminOrderFilters {
   search: string;
   status: AdminOrderStatus | "all";
   paymentStatus: AdminPaymentStatus | "all";
-  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE" | "all";
+  paymentMethod: PaymentMethodId | "all";
   fulfillment: "PICKUP" | "DELIVERY" | "all";
   currency: SupportedCurrency | "all";
   dateFrom: string;
@@ -50,10 +51,7 @@ export function parseAdminOrderFilters(
       ? (paymentStatus as AdminPaymentStatus)
       : "all",
     paymentMethod:
-      paymentMethod === "RECHARGE_FROM_STORE" ||
-      paymentMethod === "RECHARGE_ONLINE"
-        ? paymentMethod
-        : "all",
+      paymentMethod && isPaymentMethod(paymentMethod) ? paymentMethod : "all",
     fulfillment:
       fulfillment === "PICKUP" || fulfillment === "DELIVERY"
         ? fulfillment

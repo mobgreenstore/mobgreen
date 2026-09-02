@@ -5,6 +5,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { CartValidationService } from "@/features/cart/server/cart-validation-service";
 import { PrismaCartRepository } from "@/features/cart/server/prisma-cart-repository";
 import { storedCartLinesSchema } from "@/features/cart/schema";
+import { isBitcoinCheckoutConfigured } from "@/features/bitcoin/server/environment";
 import type {
   SelectCourierInput,
   StartCheckoutIntentInput,
@@ -31,7 +32,8 @@ export type CheckoutIntentErrorCode =
   | "INTENT_NOT_FOUND"
   | "INVALID_LOCATION"
   | "INVALID_SELECTION"
-  | "MIXED_CURRENCY";
+  | "MIXED_CURRENCY"
+  | "PAYMENT_UNAVAILABLE";
 
 export class CheckoutIntentError extends Error {
   constructor(
@@ -52,7 +54,7 @@ type IntentRecord = {
   publicId: string;
   status: "DRAFT" | "MATCHING" | "DRIVER_SELECTED" | "SUBMITTED" | "EXPIRED";
   fulfillmentType: "PICKUP" | "DELIVERY";
-  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE";
+  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE" | "BITCOIN_DEPOSIT";
   rechargeProvider: string | null;
   currency: "GBP" | "EUR" | "USD";
   subtotalMinor: bigint;
@@ -161,6 +163,16 @@ export class CheckoutIntentService {
     input: StartCheckoutIntentInput,
     guest: GuestSessionIdentity,
   ): Promise<CheckoutIntentView> {
+    if (
+      input.paymentMethod === "BITCOIN_DEPOSIT" &&
+      !isBitcoinCheckoutConfigured()
+    ) {
+      throw new CheckoutIntentError(
+        "PAYMENT_UNAVAILABLE",
+        "Bitcoin checkout is not available yet.",
+        503,
+      );
+    }
     const cart = await new CartValidationService(
       new PrismaCartRepository(),
     ).validate(input.lines);

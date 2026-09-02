@@ -2,6 +2,7 @@ import { z } from "zod";
 import { RECHARGE_PARTNERS } from "@/config/recharge";
 import { storedCartLinesSchema } from "@/features/cart/schema";
 import { deliveryLocationSchema } from "@/features/location/schema";
+import { PAYMENT_METHODS } from "@/features/payments/payment-method";
 
 const partnerIds = RECHARGE_PARTNERS.map((partner) => partner.id) as [
   (typeof RECHARGE_PARTNERS)[number]["id"],
@@ -19,7 +20,7 @@ export const startCheckoutIntentSchema = z
     customerName: z.string().trim().min(2).max(120),
     customerEmail: z.email().trim().toLowerCase().max(320),
     fulfillmentType: z.enum(["PICKUP", "DELIVERY"]),
-    paymentMethod: z.enum(["RECHARGE_FROM_STORE", "RECHARGE_ONLINE"]),
+    paymentMethod: z.enum(PAYMENT_METHODS),
     rechargeProvider: z.enum(partnerIds).nullable().optional(),
     deliveryLocation: deliveryLocationSchema.nullable().optional(),
     lines: storedCartLinesSchema.min(1),
@@ -40,10 +41,7 @@ export const startCheckoutIntentSchema = z
         message: "Choose the online partner used for the recharge.",
       });
     }
-    if (
-      value.paymentMethod === "RECHARGE_FROM_STORE" &&
-      value.rechargeProvider
-    ) {
+    if (value.paymentMethod !== "RECHARGE_ONLINE" && value.rechargeProvider) {
       context.addIssue({
         code: "custom",
         path: ["rechargeProvider"],

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAYMENT_METHODS } from "@/features/payments/payment-method";
 import {
   currencySchema,
   idSchema,
@@ -40,7 +41,7 @@ export const createOrderSchema = z
     subtotalMinor: moneyMinorSchema,
     deliveryFeeMinor: moneyMinorSchema.default(0n),
     totalMinor: moneyMinorSchema,
-    paymentMethod: z.enum(["RECHARGE_FROM_STORE", "RECHARGE_ONLINE"]),
+    paymentMethod: z.enum(PAYMENT_METHODS),
     items: z.array(orderItemWriteSchema).min(1).max(100),
   })
   .superRefine((value, context) => {

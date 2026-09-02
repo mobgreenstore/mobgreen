@@ -58,4 +58,13 @@ describe("guest checkout validation", () => {
       }).success,
     ).toBe(true);
   });
+
+  it("keeps Bitcoin out of the legacy recharge-code endpoint", () => {
+    expect(
+      guestCheckoutSchema.safeParse({
+        ...input,
+        paymentMethod: "BITCOIN_DEPOSIT",
+      }).success,
+    ).toBe(false);
+  });
 });

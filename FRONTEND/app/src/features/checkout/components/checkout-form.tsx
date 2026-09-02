@@ -23,11 +23,17 @@ import { useCart } from "@/features/cart/cart-provider";
 import { StoreLocationControl } from "@/features/location/components/store-location-control";
 import type { DeliveryLocation } from "@/features/location/schema";
 import { loadDeliveryLocation } from "@/features/location/storage";
+import { PaymentMethodSelector } from "@/features/payments/components/payment-method-selector";
+import type { PaymentMethodId } from "@/features/payments/payment-method";
 import { cn } from "@/lib/utils";
 
 type FieldErrors = Record<string, string[] | undefined>;
 
-export function CheckoutForm() {
+export function CheckoutForm({
+  bitcoinCheckoutAvailable,
+}: {
+  bitcoinCheckoutAvailable: boolean;
+}) {
   const router = useRouter();
   const { storedLines, cart, status, refresh } = useCart();
   const idempotencyKey = useRef(crypto.randomUUID());
@@ -36,9 +42,9 @@ export function CheckoutForm() {
   );
   const [deliveryLocation, setDeliveryLocation] =
     useState<DeliveryLocation | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<
-    "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE"
-  >("RECHARGE_FROM_STORE");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>(
+    "RECHARGE_FROM_STORE",
+  );
   const [rechargeProvider, setRechargeProvider] = useState<string>("");
   const [pending, setPending] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -57,7 +63,11 @@ export function CheckoutForm() {
     cart.currency !== null &&
     cart.subtotalMinor !== null &&
     status !== "error";
-  const canSubmit = summaryReady && !pending && status !== "refreshing";
+  const canSubmit =
+    summaryReady &&
+    !pending &&
+    status !== "refreshing" &&
+    (paymentMethod !== "BITCOIN_DEPOSIT" || bitcoinCheckoutAvailable);
   const amountLabel = useMemo(
     () =>
       cart.currency && cart.subtotalMinor !== null
@@ -276,32 +286,17 @@ export function CheckoutForm() {
             <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
               Step 3
             </p>
-            <h2 className="mt-1 text-lg font-semibold">Recharge method</h2>
+            <h2 className="mt-1 text-lg font-semibold">Payment method</h2>
             <p className="mt-1 text-sm leading-6 text-foreground-muted">
-              Choose how you will obtain the PaysafeCard recharge. You enter the
-              numeric verification code on the final confirmation step.
+              Choose one secure method. The server saves this choice with the
+              confirmed cart and order amount.
             </p>
           </div>
-          <RadioGroup
-            name="paymentMethod"
-            legend="Choose how you obtained the recharge"
-            orientation="horizontal"
-          >
-            <RadioOption
-              value="RECHARGE_FROM_STORE"
-              label="Recharge from store"
-              description="Use a code purchased from a physical store."
-              checked={paymentMethod === "RECHARGE_FROM_STORE"}
-              onChange={() => setPaymentMethod("RECHARGE_FROM_STORE")}
-            />
-            <RadioOption
-              value="RECHARGE_ONLINE"
-              label="Recharge online"
-              description="Purchase from one of the external partner websites."
-              checked={paymentMethod === "RECHARGE_ONLINE"}
-              onChange={() => setPaymentMethod("RECHARGE_ONLINE")}
-            />
-          </RadioGroup>
+          <PaymentMethodSelector
+            value={paymentMethod}
+            bitcoinAvailable={bitcoinCheckoutAvailable}
+            onChange={setPaymentMethod}
+          />
 
           {paymentMethod === "RECHARGE_ONLINE" && (
             <div>

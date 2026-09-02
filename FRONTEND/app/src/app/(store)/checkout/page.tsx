@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { StoreHeader } from "@/components/shared/store-header";
+import { isBitcoinCheckoutConfigured } from "@/features/bitcoin/server/environment";
 import { CheckoutForm } from "@/features/checkout/components/checkout-form";
 
 export const metadata: Metadata = {
@@ -32,7 +33,9 @@ export default function CheckoutPage() {
             created.
           </p>
         </div>
-        <CheckoutForm />
+        <CheckoutForm
+          bitcoinCheckoutAvailable={isBitcoinCheckoutConfigured()}
+        />
       </main>
     </div>
   );

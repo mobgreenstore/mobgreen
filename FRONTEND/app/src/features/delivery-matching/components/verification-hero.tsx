@@ -2,14 +2,7 @@ import { BadgeCheck, Clock3, ShieldCheck } from "lucide-react";
 import { ResponsiveImage } from "@/components/commerce";
 import { Badge } from "@/components/ui";
 import type { CheckoutConfirmationView } from "@/features/delivery-matching/types";
-
-function methodLabel(intent: CheckoutConfirmationView) {
-  if (intent.paymentMethod === "RECHARGE_FROM_STORE")
-    return "Recharge from store";
-  return intent.rechargeProvider
-    ? `Recharge online · ${intent.rechargeProvider}`
-    : "Recharge online";
-}
+import { paymentMethodLabel } from "@/features/payments/payment-method";
 
 export function VerificationHero({
   intent,
@@ -47,7 +40,7 @@ export function VerificationHero({
             </span>
             <span className="inline-flex items-center gap-2">
               <BadgeCheck aria-hidden="true" className="size-4 text-blue-300" />
-              {methodLabel(intent)}
+              {paymentMethodLabel(intent.paymentMethod, intent.rechargeProvider)}
             </span>
           </div>
         </div>

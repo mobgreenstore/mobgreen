@@ -1,4 +1,5 @@
 import type { SupportedCurrency, WeightUnit } from "@/config/commerce";
+import { paymentMethodLabel } from "@/features/payments/payment-method";
 
 export interface AdminOrderEmailInput {
   adminOrderUrl: string;
@@ -7,7 +8,7 @@ export interface AdminOrderEmailInput {
   customerEmail: string | null;
   customerPhone: string | null;
   fulfillment: "PICKUP" | "DELIVERY";
-  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE";
+  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE" | "BITCOIN_DEPOSIT";
   rechargeProvider: string | null;
   deliveryAddress: string | null;
   courierName: string | null;
@@ -53,10 +54,7 @@ export function maskVerificationCode(code: string) {
 }
 
 export function buildAdminOrderEmail(input: AdminOrderEmailInput) {
-  const payment =
-    input.paymentMethod === "RECHARGE_FROM_STORE"
-      ? "Recharge from store"
-      : `Recharge online${input.rechargeProvider ? ` · ${input.rechargeProvider}` : ""}`;
+  const payment = paymentMethodLabel(input.paymentMethod, input.rechargeProvider);
   const location = input.deliveryAddress ?? "Pickup";
   const itemText = input.items
     .map(
