@@ -1,11 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { Menu } from "lucide-react";
-import { usePathname } from "next/navigation";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerTitle,
@@ -14,11 +11,8 @@ import {
 } from "@/components/ui";
 import { AdminNavigation } from "@/components/shared/admin-navigation";
 import { BrandMark } from "@/components/shared/brand-mark";
-import { cn } from "@/lib/utils";
 
 export function AdminMenu() {
-  const pathname = usePathname();
-
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -41,10 +35,7 @@ export function AdminMenu() {
             <DrawerTitle className="text-xl font-semibold tracking-[-0.035em]">
               Admin Menu
             </DrawerTitle>
-            <DrawerDescription
-              id="admin-menu-description"
-              className="sr-only"
-            >
+            <DrawerDescription id="admin-menu-description" className="sr-only">
               Admin workspace navigation.
             </DrawerDescription>
           </div>

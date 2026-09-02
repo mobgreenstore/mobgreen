@@ -14,7 +14,7 @@ import type {
   CatalogSort,
 } from "@/features/catalog/types";
 
-const COMMIT_DELAY_MS = 180;
+const COMMIT_DELAY_MS = 480;
 
 export function CategoryShowcaseRail({
   categories,
@@ -46,9 +46,11 @@ export function CategoryShowcaseRail({
       viewport.querySelectorAll<HTMLElement>("[data-showcase-item]"),
     );
     if (!cards.length) return 0;
+    const viewportCenter = viewport.scrollLeft + viewport.clientWidth / 2;
     return cards.reduce(
       (nearest, card, index) => {
-        const distance = Math.abs(card.offsetLeft - viewport.scrollLeft);
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const distance = Math.abs(cardCenter - viewportCenter);
         return distance < nearest.distance ? { index, distance } : nearest;
       },
       { index: 0, distance: Number.POSITIVE_INFINITY },
@@ -201,7 +203,7 @@ export function CategoryShowcaseRail({
             interactionRef.current = true;
           }}
           onScroll={handleScroll}
-          className="flex snap-x snap-mandatory scrollbar-none gap-3 overflow-x-auto px-3 pr-12 pb-2 sm:gap-4 sm:px-6 sm:pr-20 lg:px-8 lg:pr-24"
+          className="flex touch-pan-x snap-x snap-mandatory scroll-px-3 scrollbar-none gap-3 overflow-x-auto overscroll-x-contain px-3 pr-12 pb-2 sm:scroll-px-6 sm:gap-4 sm:px-6 sm:pr-20 lg:scroll-px-8 lg:px-8 lg:pr-24"
         >
           {categories.map((category, index) => (
             <div

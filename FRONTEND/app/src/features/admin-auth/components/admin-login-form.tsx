@@ -1,11 +1,12 @@
 "use client";
 
-import { AtSign, LockKeyhole } from "lucide-react";
-import { useActionState } from "react";
+import { AtSign, Eye, EyeOff, LockKeyhole } from "lucide-react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   Button,
   FormField,
+  IconButton,
   InlineAlert,
   Label,
   TextField,
@@ -30,6 +31,7 @@ export function AdminLoginForm({
   redirectTo?: string;
 }) {
   const [state, action] = useActionState(signInAction, initialState);
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   return (
     <form
@@ -62,12 +64,29 @@ export function AdminLoginForm({
         <Label required>Password</Label>
         <TextField
           name="password"
-          type="password"
+          type={passwordVisible ? "text" : "password"}
           autoComplete="current-password"
           minLength={12}
           maxLength={128}
           placeholder="Enter your password"
           leading={<LockKeyhole aria-hidden="true" className="size-4" />}
+          trailing={
+            <IconButton
+              type="button"
+              size="small"
+              aria-label={passwordVisible ? "Hide password" : "Show password"}
+              aria-controls="admin-password"
+              aria-pressed={passwordVisible}
+              onClick={() => setPasswordVisible((visible) => !visible)}
+              className="rounded-full"
+            >
+              {passwordVisible ? (
+                <EyeOff aria-hidden="true" className="size-4" />
+              ) : (
+                <Eye aria-hidden="true" className="size-4" />
+              )}
+            </IconButton>
+          }
           required
         />
       </FormField>

@@ -23,7 +23,11 @@ export function CatalogDiscovery({
   sort: CatalogSort;
 }) {
   const router = useRouter();
-  const [focusedSlug, setFocusedSlug] = useState(activeCategorySlug);
+  const fallbackSlug = categories[0]?.slug ?? "";
+  const [focusedSlug, setFocusedSlug] = useState(
+    activeCategorySlug || fallbackSlug,
+  );
+
   const focusedCategory = categories.find(
     (category) => category.slug === focusedSlug,
   );

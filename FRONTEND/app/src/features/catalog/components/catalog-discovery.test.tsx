@@ -92,13 +92,13 @@ describe("catalog discovery synchronization", () => {
       scrollWidth: { configurable: true, value: 600 },
       scrollLeft: { configurable: true, writable: true, value: 300 },
     });
-    Object.defineProperty(items[0], "offsetLeft", {
-      configurable: true,
-      value: 0,
+    Object.defineProperties(items[0], {
+      offsetLeft: { configurable: true, value: 0 },
+      offsetWidth: { configurable: true, value: 300 },
     });
-    Object.defineProperty(items[1], "offsetLeft", {
-      configurable: true,
-      value: 300,
+    Object.defineProperties(items[1], {
+      offsetLeft: { configurable: true, value: 300 },
+      offsetWidth: { configurable: true, value: 300 },
     });
 
     fireEvent.pointerDown(viewport);
@@ -114,7 +114,7 @@ describe("catalog discovery synchronization", () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(200);
+      vi.advanceTimersByTime(500);
     });
     expect(replace).toHaveBeenCalledWith(
       "/?category=root-vegetables&q=fresh&sort=name-desc",

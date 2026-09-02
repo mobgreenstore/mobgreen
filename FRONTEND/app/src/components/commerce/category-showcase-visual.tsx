@@ -39,12 +39,15 @@ export function CategoryShowcaseVisual({
   const tone = getCategoryDisplayTone(displayTone);
   const Heading = headingAs as ElementType;
   const hasImage = Boolean(image);
+  const hasDarkTone = displayTone === "CHARCOAL" || displayTone === "INK";
 
   return (
     <div
       className={cn(
         "relative isolate min-h-[20rem] overflow-hidden rounded-xl border shadow-sm sm:min-h-[23rem]",
         tone.surfaceClassName,
+        hasDarkTone &&
+          "border-white/45 shadow-[0_12px_32px_rgb(0_0_0/0.28)] ring-1 ring-white/25 ring-inset",
         className,
       )}
     >

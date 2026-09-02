@@ -98,6 +98,8 @@ export function CategoryTabRail({
   const inactiveClassName =
     "border-current/20 bg-transparent text-inherit hover:border-current/45 hover:bg-black/5";
 
+  if (!categories.length) return null;
+
   return (
     <nav
       aria-label="Product categories"
@@ -118,23 +120,6 @@ export function CategoryTabRail({
           onKeyDown={handleKeyDown}
           className="flex snap-x snap-mandatory scrollbar-none gap-2 overflow-x-auto px-3 py-2.5 sm:px-5 lg:px-8"
         >
-          <Link
-            data-category-tab
-            href={catalogHref({ search, sort })}
-            aria-current={!activeCategorySlug ? "page" : undefined}
-            className={cn(
-              tabClassName,
-              !activeCategorySlug ? activeClassName : inactiveClassName,
-            )}
-          >
-            All goods
-            {!activeCategorySlug && (
-              <span
-                aria-hidden="true"
-                className="absolute inset-x-4 bottom-1 h-0.5 rounded-full bg-current opacity-65"
-              />
-            )}
-          </Link>
           {categories.map((category) => {
             const active = category.slug === activeCategorySlug;
             return (

@@ -4,7 +4,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { SignInActionState } from "@/server/auth/action-state";
 import { AdminAuthenticationService } from "@/server/auth/authenticate";
-import { requireAdminPermission } from "@/server/auth/authorization";
 import { getSafeAdminRedirect } from "@/server/auth/safe-redirect";
 import { createAdminSession, destroyAdminSession } from "@/server/auth/session";
 
@@ -35,7 +34,6 @@ export async function signInAction(
 }
 
 export async function signOutAction() {
-  await requireAdminPermission("workspace.read");
   await destroyAdminSession();
   redirect("/admin/login");
 }

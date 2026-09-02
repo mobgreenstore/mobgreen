@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, Info, Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useId, useState } from "react";
 import {

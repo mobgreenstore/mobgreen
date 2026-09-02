@@ -66,7 +66,7 @@ describe("store discovery controls", () => {
     expect(screen.queryByLabelText(/microphone/i)).not.toBeInTheDocument();
   });
 
-  it("keeps All goods first and preserves search and sorting in real category links", () => {
+  it("shows only real categories and preserves search and sorting in their links", () => {
     render(
       <CategoryTabRail
         categories={categories}
@@ -78,16 +78,14 @@ describe("store discovery controls", () => {
     );
     const links = screen.getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual([
-      "All goods",
       "Leafy greens",
       "Root vegetables",
     ]);
-    expect(links[0]).toHaveAttribute("href", "/?q=kale&sort=name-desc");
-    expect(links[1]).toHaveAttribute(
+    expect(links[0]).toHaveAttribute(
       "href",
       "/?category=leafy-greens&q=kale&sort=name-desc",
     );
-    expect(links[1]).toHaveAttribute("aria-current", "page");
+    expect(links[0]).toHaveAttribute("aria-current", "page");
   });
 
   it("supports arrow-key movement across the category rail", async () => {
@@ -106,7 +104,7 @@ describe("store discovery controls", () => {
     await user.keyboard("{ArrowRight}");
     expect(links[1]).toHaveFocus();
     await user.keyboard("{End}");
-    expect(links[2]).toHaveFocus();
+    expect(links[1]).toHaveFocus();
     await user.keyboard("{Home}");
     expect(links[0]).toHaveFocus();
   });

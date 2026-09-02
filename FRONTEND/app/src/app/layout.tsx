@@ -35,15 +35,6 @@ export const viewport: Viewport = {
   ],
 };
 
-const themeScript = `
-  try {
-    const saved = localStorage.getItem("mob-greens-theme");
-    if (saved === "light" || saved === "dark") {
-      document.documentElement.dataset.theme = saved;
-    }
-  } catch (_) {}
-`;
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {

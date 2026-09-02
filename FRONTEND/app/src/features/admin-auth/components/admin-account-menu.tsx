@@ -1,6 +1,13 @@
 "use client";
 
-import { ChevronDown, LogOut, ShieldCheck, UserRound } from "lucide-react";
+import {
+  ChevronDown,
+  LoaderCircle,
+  LogOut,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
+import { useTransition } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +27,8 @@ const roleLabels = {
 } as const;
 
 export function AdminAccountMenu({ admin }: { admin: AuthenticatedAdmin }) {
+  const [signingOut, startSignOut] = useTransition();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -54,14 +63,25 @@ export function AdminAccountMenu({ admin }: { admin: AuthenticatedAdmin }) {
           {roleLabels[admin.role]}
         </div>
         <DropdownMenuSeparator />
-        <form action={signOutAction}>
-          <DropdownMenuItem asChild>
-            <button type="submit" className="w-full">
-              <LogOut aria-hidden="true" className="size-4" />
-              Sign out
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <DropdownMenuItem
+          disabled={signingOut}
+          onSelect={(event) => {
+            event.preventDefault();
+            startSignOut(async () => {
+              await signOutAction();
+            });
+          }}
+        >
+          {signingOut ? (
+            <LoaderCircle
+              aria-hidden="true"
+              className="size-4 animate-spin motion-reduce:animate-none"
+            />
+          ) : (
+            <LogOut aria-hidden="true" className="size-4" />
+          )}
+          {signingOut ? "Signing out…" : "Sign out"}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

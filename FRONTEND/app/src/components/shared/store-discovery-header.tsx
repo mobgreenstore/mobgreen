@@ -1,9 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
-import Link from "next/link";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { StoreSearchBar } from "@/components/shared/store-search-bar";
 import { StorefrontMenu } from "@/components/shared/storefront-menu";
-import { IconButton } from "@/components/ui/icon-button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   getCategoryDisplayTone,

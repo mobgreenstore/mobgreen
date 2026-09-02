@@ -107,7 +107,11 @@ export function PublicOfferCard({
           ) : (
             <ShoppingBag aria-hidden="true" className="size-4" />
           )}
-          {timeLeft ? "Add offer to cart" : "Offer ended"}
+          {pending
+            ? "Adding offer…"
+            : timeLeft
+              ? "Add offer to cart"
+              : "Offer ended"}
         </Button>
       </div>
     </article>
