@@ -26,6 +26,7 @@ export function StorefrontMenu({
   const pathname = usePathname();
   const rechargeRegionId = useId();
   const rechargeRouteActive = pathname === "/recharge-online";
+  const homeRouteActive = pathname === "/";
   const ordersRouteActive =
     pathname === "/orders" || pathname.startsWith("/orders/");
   const verificationRouteActive = pathname === "/allverification";
@@ -67,6 +68,19 @@ export function StorefrontMenu({
           aria-label="Storefront menu"
           className="flex min-h-0 flex-1 flex-col px-3 pb-4 sm:px-4"
         >
+          <DrawerClose asChild>
+            <Link
+              href="/"
+              aria-current={homeRouteActive ? "page" : undefined}
+              className={cn(
+                navigationClassName,
+                homeRouteActive && "bg-surface-subtle",
+              )}
+            >
+              Home
+            </Link>
+          </DrawerClose>
+
           <button
             type="button"
             aria-expanded={rechargeOpen}
@@ -74,7 +88,7 @@ export function StorefrontMenu({
             onClick={() => setRechargeOpen((current) => !current)}
             className={cn(
               navigationClassName,
-              "w-full justify-between text-left",
+              "mt-1 w-full justify-between text-left",
               rechargeRouteActive && "bg-surface-subtle",
             )}
           >

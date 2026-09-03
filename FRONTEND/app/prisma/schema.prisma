@@ -129,6 +129,7 @@ enum OrderNotificationStatus {
 
 enum OrderNotificationKind {
   ADMIN_ORDER_SUBMITTED
+  CUSTOMER_ORDER_SUBMITTED
 }
 
 model AdminUser {

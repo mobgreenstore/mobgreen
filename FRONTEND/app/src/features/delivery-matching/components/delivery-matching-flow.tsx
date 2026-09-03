@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, LoaderCircle, MapPin, Truck } from "lucide-react";
+import { AlertTriangle, LoaderCircle, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Card, InlineAlert, buttonVariants } from "@/components/ui";
 import { StoreLocationControl } from "@/features/location/components/store-location-control";
@@ -12,6 +12,7 @@ import type {
 } from "@/features/delivery-matching/types";
 import { cn } from "@/lib/utils";
 import { CourierCandidateGrid } from "./courier-candidate-grid";
+import { CourierMatchLoading } from "./courier-match-loading";
 
 type RequestState = "idle" | "matching" | "selecting" | "error";
 
@@ -189,43 +190,14 @@ export function DeliveryMatchingFlow({
 
   if (requestState === "matching") {
     return (
-      <Card
-        className="grid min-h-80 place-items-center p-6 text-center"
-        aria-live="polite"
-      >
-        <div>
-          <div className="relative mx-auto grid size-16 place-items-center rounded-full bg-surface-subtle">
-            <Truck aria-hidden="true" className="size-7" strokeWidth={1.8} />
-            <LoaderCircle
-              aria-hidden="true"
-              className="absolute -inset-1 size-[4.5rem] animate-spin text-info motion-reduce:animate-none"
-              strokeWidth={1.2}
-            />
-          </div>
-          <h2 className="mt-5 text-xl font-semibold tracking-[-0.03em]">
-            Finding nearby delivery options
-          </h2>
-          <div className="mt-3 flex justify-center gap-1" aria-hidden="true">
-            {[0, 1, 2].map((dot) => (
-              <span
-                key={dot}
-                className="size-2 animate-pulse rounded-full bg-foreground motion-reduce:animate-none"
-                style={{ animationDelay: `${dot * 180}ms` }}
-              />
-            ))}
-          </div>
-          <p className="mt-4 text-sm text-foreground-muted">
-            {[intent.location.locality, intent.location.postalCode]
-              .filter(Boolean)
-              .join(" · ") || "Confirmed destination"}
-          </p>
-          {slow && (
-            <p className="mt-3 text-xs text-foreground-subtle">
-              This is taking longer than usual. Keep this page open.
-            </p>
-          )}
-        </div>
-      </Card>
+      <CourierMatchLoading
+        locationLabel={
+          [intent.location.locality, intent.location.postalCode]
+            .filter(Boolean)
+            .join(" · ") || "Confirmed destination"
+        }
+        slow={slow}
+      />
     );
   }
 

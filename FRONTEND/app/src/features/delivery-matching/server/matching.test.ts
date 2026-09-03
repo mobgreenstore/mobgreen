@@ -56,6 +56,12 @@ describe("simulated courier matching", () => {
           left.estimatedDurationSeconds - right.estimatedDurationSeconds,
       ),
     );
+    for (const [index, candidate] of first.entries()) {
+      if (index === 0) continue;
+      expect(candidate.estimatedDurationSeconds).toBeGreaterThanOrEqual(
+        first[index - 1]!.estimatedDurationSeconds,
+      );
+    }
   });
 
   it("does not return the same assignment for unrelated checkout seeds", () => {

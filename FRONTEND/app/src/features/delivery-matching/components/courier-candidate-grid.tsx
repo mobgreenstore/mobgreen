@@ -14,13 +14,19 @@ export function CourierCandidateGrid({
   disabled?: boolean | undefined;
   onSelect: (candidate: SimulatedCourierCandidate) => void;
 }) {
+  const sortedCandidates = [...candidates].sort(
+    (left, right) =>
+      left.distanceMeters - right.distanceMeters ||
+      left.estimatedDurationSeconds - right.estimatedDurationSeconds,
+  );
+
   return (
     <div
       className="grid grid-cols-2 gap-3 min-[400px]:grid-cols-3 sm:gap-4"
       role="list"
       aria-label="Simulated nearby delivery profiles"
     >
-      {candidates.map((candidate) => (
+      {sortedCandidates.map((candidate) => (
         <div key={candidate.candidateId} role="listitem" className="min-w-0">
           <CourierCandidateCard
             candidate={candidate}

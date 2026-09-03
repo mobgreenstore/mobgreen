@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   Button,
   FieldDescription,
@@ -18,9 +19,11 @@ import {
 } from "@/components/ui";
 import { RECHARGE_PARTNERS } from "@/config/recharge";
 import { CourierCandidateGrid } from "@/features/delivery-matching/components/courier-candidate-grid";
+import { CourierMatchLoading } from "@/features/delivery-matching/components/courier-match-loading";
 import type { SimulatedCourierCandidate } from "@/features/delivery-matching/types";
 import { StoreLocationControl } from "@/features/location/components/store-location-control";
 import type { DeliveryLocation } from "@/features/location/schema";
+import { loadDeliveryLocation } from "@/features/location/storage";
 import { RechargePartnerRail } from "@/features/payments/components/recharge-partner-rail";
 
 const methodDetails = {
@@ -54,12 +57,25 @@ function candidateSet(location: DeliveryLocation): SimulatedCourierCandidate[] {
     Math.round(location.latitude * 1000) +
       Math.round(location.longitude * 1000),
   );
-  return profileNames.map((displayName, index) => ({
-    candidateId: `direct-${index}-${(seed + index * 37).toString(36)}`,
-    displayName,
-    distanceMeters: 700 + ((seed + index * 619) % 4300),
-    estimatedDurationSeconds: 13 * 60 + ((seed + index * 241) % (29 * 60)),
-  }));
+  return profileNames
+    .map((displayName, index) => {
+      const distanceMeters = 700 + ((seed + index * 619) % 4300);
+      const trafficSeconds = (seed + index * 71) % 121;
+      return {
+        candidateId: `direct-${index}-${(seed + index * 37).toString(36)}`,
+        displayName,
+        distanceMeters,
+        estimatedDurationSeconds: Math.max(
+          9 * 60,
+          Math.round(distanceMeters / 4.8) + 7 * 60 + trafficSeconds,
+        ),
+      };
+    })
+    .sort(
+      (left, right) =>
+        left.distanceMeters - right.distanceMeters ||
+        left.estimatedDurationSeconds - right.estimatedDurationSeconds,
+    );
 }
 
 function VerificationCodes({
@@ -219,16 +235,6 @@ function VerificationForm({
               required
             />
           </FormField>
-          <FormField>
-            <Label required>Phone number</Label>
-            <TextField
-              name="phone"
-              type="tel"
-              autoComplete="tel"
-              minLength={7}
-              required
-            />
-          </FormField>
           <FormField hasDescription>
             <Label required>Order amount</Label>
             <TextField
@@ -286,18 +292,43 @@ export function DirectVerificationFlow() {
   const [method, setMethod] = useState<DirectMethod>("RECHARGE_ONLINE");
   const [codes, setCodes] = useState(["", "", ""]);
   const [prepared, setPrepared] = useState(false);
-  const [location, setLocation] = useState<DeliveryLocation | null>(null);
+  const [location, setLocation] = useState<DeliveryLocation | null>(() =>
+    typeof window === "undefined" ? null : loadDeliveryLocation(),
+  );
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
+  const [matching, setMatching] = useState(false);
   const [selectedCourier, setSelectedCourier] =
     useState<SimulatedCourierCandidate | null>(null);
+  const matchingTimer = useRef<number | null>(null);
   const candidates = useMemo(
     () => (location ? candidateSet(location) : []),
     [location],
   );
 
+  useEffect(() => {
+    return () => {
+      if (matchingTimer.current !== null) {
+        window.clearTimeout(matchingTimer.current);
+      }
+    };
+  }, []);
+
+  function beginMatching() {
+    if (matchingTimer.current !== null) {
+      window.clearTimeout(matchingTimer.current);
+    }
+    setSelectedCourier(null);
+    setMatching(true);
+    matchingTimer.current = window.setTimeout(() => {
+      setMatching(false);
+      matchingTimer.current = null;
+    }, 1_100);
+  }
+
   function applyLocation(next: DeliveryLocation | null) {
     setLocation(next);
     setSelectedCourier(null);
+    if (next && prepared) beginMatching();
   }
 
   function submit(method: DirectMethod, event: FormEvent<HTMLFormElement>) {
@@ -305,7 +336,11 @@ export function DirectVerificationFlow() {
     if (method !== "BITCOIN_DEPOSIT" && codes.some((code) => code.length < 6))
       return;
     setPrepared(true);
-    setLocationSheetOpen(true);
+    if (!location) {
+      setLocationSheetOpen(true);
+      return;
+    }
+    beginMatching();
   }
 
   return (
@@ -391,25 +426,46 @@ export function DirectVerificationFlow() {
                   className="shrink-0 font-bold text-info"
                 />
               </div>
-              <div>
-                <h3 className="text-xl font-black tracking-tight">
-                  Nearby delivery profiles
-                </h3>
-                <p className="mt-1 text-sm text-foreground-muted">
-                  Estimated from the confirmed destination.
-                </p>
-              </div>
-              <CourierCandidateGrid
-                candidates={candidates}
-                selectedCandidateId={selectedCourier?.candidateId}
-                onSelect={setSelectedCourier}
-              />
-              {selectedCourier && (
-                <InlineAlert
-                  tone="info"
-                  title="Delivery preference saved"
-                  description="It is revalidated after the order payment is confirmed."
+              {matching ? (
+                <CourierMatchLoading
+                  locationLabel={
+                    [location.locality, location.postalCode]
+                      .filter(Boolean)
+                      .join(" · ") || "Confirmed destination"
+                  }
                 />
+              ) : (
+                <>
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">
+                      Nearby delivery profiles
+                    </h3>
+                    <p className="mt-1 text-sm text-foreground-muted">
+                      Sorted from closest to furthest from your confirmed
+                      destination.
+                    </p>
+                  </div>
+                  <CourierCandidateGrid
+                    candidates={candidates}
+                    selectedCandidateId={selectedCourier?.candidateId}
+                    onSelect={setSelectedCourier}
+                  />
+                </>
+              )}
+              {selectedCourier && !matching && (
+                <div className="grid gap-3 border-t border-border pt-5 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <InlineAlert
+                    tone="info"
+                    title="Delivery profile selected"
+                    description="Start secure checkout to protect the order total, send the order email, and activate private tracking access."
+                  />
+                  <Link
+                    href="/checkout"
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-semibold text-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
+                  >
+                    Start secure checkout
+                  </Link>
+                </div>
               )}
             </div>
           )}

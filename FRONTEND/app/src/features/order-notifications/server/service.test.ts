@@ -33,7 +33,10 @@ vi.mock("@/server/core/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-import { dispatchOrderSubmittedNotification } from "@/features/order-notifications/server/service";
+import {
+  dispatchCustomerOrderSubmittedNotification,
+  dispatchOrderSubmittedNotification,
+} from "@/features/order-notifications/server/service";
 
 const notification = {
   id: "notification-id",
@@ -112,5 +115,31 @@ describe("order notification outbox", () => {
       where: { id: notification.id, status: "PROCESSING" },
       data: { status: "FAILED", lastError: "provider unavailable" },
     });
+  });
+});
+
+describe("customer order notification", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prisma.order.findUnique.mockResolvedValue(order);
+    prisma.orderNotification.updateMany.mockResolvedValue({ count: 1 });
+    prisma.orderNotification.update.mockResolvedValue({});
+    sendMail.mockResolvedValue({ messageId: "gmail-message-id" });
+  });
+
+  it("sends the customer a tracking link without a recharge code", async () => {
+    await expect(
+      dispatchCustomerOrderSubmittedNotification(order.reference),
+    ).resolves.toEqual({ status: "SENT" });
+    expect(sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "customer@example.com",
+        subject: expect.stringContaining(order.reference),
+      }),
+    );
+    const sent = sendMail.mock.calls[0]?.[0] as { text: string; html: string };
+    expect(sent.text).toContain("View delivery status");
+    expect(sent.text).not.toContain("123456789012");
+    expect(sent.html).not.toContain("123456789012");
   });
 });

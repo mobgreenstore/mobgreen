@@ -12,7 +12,9 @@ import {
 } from "@/features/checkout/server/code-encryption";
 import { maskVerificationCode } from "@/features/order-notifications/server/template";
 import {
+  createCustomerOrderNotificationEnvelope,
   createOrderNotificationEnvelope,
+  dispatchCustomerOrderSubmittedNotification,
   dispatchOrderSubmittedNotification,
 } from "@/features/order-notifications/server/service";
 import {
@@ -61,7 +63,7 @@ export class CheckoutFinalizeService {
       position,
     }));
     const encryptedCode = securedCodes[0]?.encryptedValue ?? null;
-    const notification = createOrderNotificationEnvelope();
+    const adminNotification = createOrderNotificationEnvelope();
 
     const result = await withTransaction(async (transaction) => {
       const intent = await transaction.checkoutIntent.findFirst({
@@ -128,16 +130,35 @@ export class CheckoutFinalizeService {
           410,
         );
       }
+      if (intent.status === "SUBMITTED") {
+        throw new CheckoutError(
+          "INVALID_SELECTION",
+          "This payment has already been submitted.",
+          400,
+        );
+      }
       if (
-        intent.status === "SUBMITTED" ||
-        (intent.fulfillmentType === "DELIVERY" &&
-          (!intent.deliveryAddress ||
-            intent.destinationLatitude === null ||
-            intent.destinationLongitude === null))
+        intent.fulfillmentType === "DELIVERY" &&
+        (!intent.deliveryAddress ||
+          intent.destinationLatitude === null ||
+          intent.destinationLongitude === null)
       ) {
         throw new CheckoutError(
           "INVALID_SELECTION",
           "Confirm a delivery location before submitting payment.",
+          400,
+        );
+      }
+      if (
+        intent.fulfillmentType === "DELIVERY" &&
+        (!intent.selectedCourierProfileId ||
+          !intent.selectedCourierName ||
+          intent.selectedDistanceMeters === null ||
+          intent.selectedDurationSeconds === null)
+      ) {
+        throw new CheckoutError(
+          "INVALID_SELECTION",
+          "Choose a nearby delivery profile before submitting payment.",
           400,
         );
       }
@@ -325,6 +346,14 @@ export class CheckoutFinalizeService {
         );
       }
 
+      const customerNotification = createCustomerOrderNotificationEnvelope(
+        intent.customerEmail,
+      );
+      const notifications = [
+        ...(adminNotification ? [adminNotification] : []),
+        ...(customerNotification ? [customerNotification] : []),
+      ];
+
       const order = await transaction.order.create({
         data: {
           reference: createReference(),
@@ -363,7 +392,9 @@ export class CheckoutFinalizeService {
               note: "Order submitted; recharge verification is pending.",
             },
           },
-          ...(notification ? { notifications: { create: notification } } : {}),
+          ...(notifications.length
+            ? { notifications: { create: notifications } }
+            : {}),
         },
         select: { id: true, reference: true, currency: true, totalMinor: true },
       });
@@ -401,7 +432,10 @@ export class CheckoutFinalizeService {
 
     // The order transaction is authoritative. Mail failure is recorded in the
     // outbox and can be retried without rolling back or duplicating the order.
-    await dispatchOrderSubmittedNotification(result.reference);
+    await Promise.all([
+      dispatchOrderSubmittedNotification(result.reference),
+      dispatchCustomerOrderSubmittedNotification(result.reference),
+    ]);
     return result;
   }
 }

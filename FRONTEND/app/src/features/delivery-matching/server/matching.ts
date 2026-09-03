@@ -47,5 +47,14 @@ export function generateSimulatedCourierCandidates(
       (left, right) =>
         left.distanceMeters - right.distanceMeters ||
         left.estimatedDurationSeconds - right.estimatedDurationSeconds,
-    );
+    )
+    .reduce<StoredSimulatedCourierCandidate[]>((matched, candidate) => {
+      const previous = matched.at(-1);
+      const estimatedDurationSeconds = Math.max(
+        candidate.estimatedDurationSeconds,
+        previous ? previous.estimatedDurationSeconds + 20 : 10 * 60,
+      );
+      matched.push({ ...candidate, estimatedDurationSeconds });
+      return matched;
+    }, []);
 }

@@ -19,6 +19,16 @@ vi.mock("@/features/checkout/server/code-encryption", () => ({
   encryptVerificationCode: () => "encrypted-code",
   fingerprintVerificationCode: () => "fingerprint",
 }));
+vi.mock("@/features/order-notifications/server/service", () => ({
+  createOrderNotificationEnvelope: () => null,
+  createCustomerOrderNotificationEnvelope: () => null,
+  dispatchOrderSubmittedNotification: async () => ({
+    status: "NOT_CONFIGURED",
+  }),
+  dispatchCustomerOrderSubmittedNotification: async () => ({
+    status: "NOT_CONFIGURED",
+  }),
+}));
 
 import { CheckoutFinalizeService } from "@/features/delivery-matching/server/checkout-finalize-service";
 
@@ -219,7 +229,7 @@ describe("checkout intent finalization transaction", () => {
     );
   });
 
-  it("allows payment submission before courier selection", async () => {
+  it("rejects delivery payment submission before courier selection", async () => {
     transaction.checkoutIntent.findFirst.mockResolvedValue({
       ...intent,
       status: "MATCHING",
@@ -237,8 +247,8 @@ describe("checkout intent finalization transaction", () => {
         },
         guest,
       ),
-    ).resolves.toMatchObject({ status: "PENDING", paymentStatus: "PENDING" });
-    expect(transaction.order.create).toHaveBeenCalled();
+    ).rejects.toMatchObject({ code: "INVALID_SELECTION", status: 400 });
+    expect(transaction.order.create).not.toHaveBeenCalled();
   });
 
   it("rejects a changed authoritative price", async () => {
