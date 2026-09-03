@@ -21,6 +21,7 @@ import { CourierCandidateGrid } from "@/features/delivery-matching/components/co
 import type { SimulatedCourierCandidate } from "@/features/delivery-matching/types";
 import { StoreLocationControl } from "@/features/location/components/store-location-control";
 import type { DeliveryLocation } from "@/features/location/schema";
+import { RechargePartnerRail } from "@/features/payments/components/recharge-partner-rail";
 
 const methodDetails = {
   RECHARGE_ONLINE: {
@@ -46,63 +47,6 @@ const profileNames = [
   "Elena R.",
   "Matteo B.",
   "Amélie K.",
-] as const;
-
-const partners = [
-  {
-    id: "STARTSELECT",
-    name: "Startselect",
-    url: "https://startselect.com/",
-    logoSrc: "/images/partners/startselect.png",
-  },
-  {
-    id: "DUNDLE",
-    name: "Dundle",
-    url: "https://dundle.com/",
-    logoSrc: "/images/partners/dundle.png",
-  },
-  {
-    id: "RECHARGE_COM",
-    name: "Recharge.com",
-    url: "https://recharge.com/",
-    logoSrc: "/images/partners/recharge-com.ico",
-  },
-  {
-    id: "VIDAPLAYER",
-    name: "VidaPlayer",
-    url: "https://www.vidaplayer.com/",
-    logoSrc: "/images/partners/vidaplayer.ico",
-  },
-  {
-    id: "BITREFILL",
-    name: "Bitrefill",
-    url: "https://www.bitrefill.com/",
-    logoSrc: "/images/partners/bitrefill.ico",
-  },
-  {
-    id: "COINSBEE",
-    name: "Coinsbee",
-    url: "https://www.coinsbee.com/",
-    logoSrc: "/images/partners/coinsbee.png",
-  },
-  {
-    id: "OFFGAMERS",
-    name: "OffGamers",
-    url: "https://off-gamers.com/",
-    logoSrc: "/images/partners/offgamers.png",
-  },
-  {
-    id: "G2A",
-    name: "G2A",
-    url: "https://www.g2a.com/",
-    logoSrc: "/images/partners/g2a.ico",
-  },
-  {
-    id: "GAMESEAL",
-    name: "Gameseal",
-    url: "https://gameseal.com/",
-    logoSrc: "/images/partners/gameseal.ico",
-  },
 ] as const;
 
 function candidateSet(location: DeliveryLocation): SimulatedCourierCandidate[] {
@@ -232,48 +176,7 @@ function VerificationCodes({
 }
 
 export function PartnerMarquee() {
-  const repeated = [...partners, ...partners];
-  return (
-    <section
-      aria-label="Recharge partners"
-      className="overflow-hidden border-b border-border bg-surface-subtle/45 py-4"
-    >
-      <div className="flex items-baseline justify-between gap-4 px-5 sm:px-8">
-        <p className="text-xs font-bold tracking-[0.12em] text-foreground-subtle uppercase">
-          Recharge partners
-        </p>
-        <p className="hidden text-xs text-foreground-muted sm:block">
-          Buy a code, then return here to verify.
-        </p>
-      </div>
-      <div className="mt-3 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]">
-        <div className="verification-partner-marquee flex w-max items-center gap-1 px-4 focus-within:[animation-play-state:paused] hover:[animation-play-state:paused] motion-reduce:animate-none">
-          {repeated.map((partner, index) => (
-            <a
-              key={`${partner.id}-${index}`}
-              href={partner.url}
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-hidden={index >= partners.length ? true : undefined}
-              tabIndex={index >= partners.length ? -1 : undefined}
-              className="flex h-11 shrink-0 items-center gap-2 rounded-md px-3 transition-colors hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
-            >
-              <img
-                src={partner.logoSrc}
-                width="26"
-                height="26"
-                alt=""
-                className="size-6 object-contain"
-              />
-              <span className="text-sm font-semibold whitespace-nowrap">
-                {partner.name}
-              </span>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+  return <RechargePartnerRail />;
 }
 
 function VerificationForm({
