@@ -47,6 +47,27 @@ enum PaymentMethod {
   BITCOIN_DEPOSIT
 }
 
+enum PaymentAttemptStatus {
+  CREATED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  INVOICE_PENDING
+  PAYMENT_DETECTED
+  CONFIRMING
+  SETTLED
+  UNDERPAID
+  OVERPAID
+  EXPIRED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  INTERNAL_RECHARGE
+  NOWPAYMENTS
+}
+
 enum FulfillmentType {
   PICKUP
   DELIVERY
@@ -263,6 +284,7 @@ model Order {
   items                     OrderItem[]
   statusEvents              OrderStatusEvent[]
   paymentStatusEvents       OrderPaymentStatusEvent[]
+  paymentAttempts           PaymentAttempt[]
   notifications             OrderNotification[]
   verificationAccessEvents  OrderVerificationAccessEvent[]
   guestSession              GuestSession?                  @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
@@ -434,10 +456,81 @@ model CheckoutIntent {
   updatedAt                DateTime             @updatedAt @db.Timestamptz(3)
   guestSession             GuestSession         @relation(fields: [guestSessionId], references: [id], onDelete: Cascade)
   order                    Order?
+  paymentAttempts          PaymentAttempt[]
 
   @@index([guestSessionId, createdAt])
   @@index([status, expiresAt])
   @@map("checkout_intents")
+}
+
+model PaymentAttempt {
+  id                  String                @id @default(uuid()) @db.Uuid
+  publicId            String                @unique @db.VarChar(64)
+  checkoutIntentId    String                @db.Uuid
+  orderId             String?               @db.Uuid
+  paymentMethod       PaymentMethod
+  provider            PaymentProvider
+  currency            Currency
+  orderTotalMinor     BigInt
+  depositMinor        BigInt
+  cashBalanceDueMinor BigInt
+  expectedSatoshis    BigInt?
+  receivedSatoshis    BigInt                @default(0)
+  lockedExchangeRate  Decimal?              @db.Decimal(24, 8)
+  providerInvoiceId   String?               @unique @db.VarChar(255)
+  paymentAddress      String?               @db.VarChar(255)
+  transactionId       String?               @db.VarChar(255)
+  confirmationCount   Int                   @default(0)
+  status              PaymentAttemptStatus  @default(CREATED)
+  expiresAt           DateTime?             @db.Timestamptz(3)
+  detectedAt          DateTime?             @db.Timestamptz(3)
+  confirmedAt         DateTime?             @db.Timestamptz(3)
+  failedAt            DateTime?             @db.Timestamptz(3)
+  cancelledAt         DateTime?             @db.Timestamptz(3)
+  cashCollectedAt     DateTime?             @db.Timestamptz(3)
+  createdAt           DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime              @updatedAt @db.Timestamptz(3)
+  checkoutIntent      CheckoutIntent        @relation(fields: [checkoutIntentId], references: [id], onDelete: Cascade)
+  order               Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  rechargeCodes       RechargePaymentCode[]
+  events              PaymentEvent[]
+
+  @@index([checkoutIntentId, createdAt])
+  @@index([orderId, createdAt])
+  @@index([status, expiresAt])
+  @@map("payment_attempts")
+}
+
+model RechargePaymentCode {
+  id               String         @id @default(uuid()) @db.Uuid
+  paymentAttemptId String         @db.Uuid
+  encryptedValue   String         @db.Text
+  maskedValue      String         @db.VarChar(96)
+  fingerprint      String         @db.VarChar(64)
+  position         Int
+  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
+  paymentAttempt   PaymentAttempt @relation(fields: [paymentAttemptId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentAttemptId, position])
+  @@unique([paymentAttemptId, fingerprint])
+  @@index([paymentAttemptId])
+  @@map("recharge_payment_codes")
+}
+
+model PaymentEvent {
+  id               String                @id @default(uuid()) @db.Uuid
+  paymentAttemptId String                @db.Uuid
+  providerEventId  String?               @unique @db.VarChar(255)
+  eventType        String                @db.VarChar(80)
+  fromStatus       PaymentAttemptStatus?
+  toStatus         PaymentAttemptStatus
+  payloadHash      String?               @db.VarChar(64)
+  metadata         Json?
+  createdAt        DateTime              @default(now()) @db.Timestamptz(3)
+  paymentAttempt   PaymentAttempt        @relation(fields: [paymentAttemptId], references: [id], onDelete: Cascade)
+
+  @@index([paymentAttemptId, createdAt])
+  @@map("payment_events")
 }
 
 model OrderNotification {

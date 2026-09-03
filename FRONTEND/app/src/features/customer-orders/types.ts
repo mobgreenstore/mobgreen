@@ -28,6 +28,7 @@ export interface PublicOrderListView {
 }
 
 export interface PublicOrderDetail extends PublicOrderListItem {
+  deliveryMatchingIntentId: string | null;
   customerName: string;
   deliveryLocation: {
     formattedAddress: string;

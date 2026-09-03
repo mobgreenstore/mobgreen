@@ -79,6 +79,27 @@ export interface AdminOrderDetail extends AdminOrderListItem {
       })
     | null;
   verificationCodeAvailable: boolean;
+  paymentAttempt: {
+    publicId: string;
+    status: string;
+    provider: string;
+    depositMinor: number;
+    cashBalanceDueMinor: number;
+    expectedSatoshis: number | null;
+    receivedSatoshis: number;
+    transactionId: string | null;
+    confirmationCount: number;
+    cashCollectedAt: string | null;
+    expiresAt: string | null;
+    maskedCodes: string[];
+    events: Array<{
+      id: string;
+      eventType: string;
+      fromStatus: string | null;
+      toStatus: string;
+      occurredAt: string;
+    }>;
+  } | null;
   notification: {
     status: "PENDING" | "PROCESSING" | "SENT" | "FAILED";
     attemptCount: number;

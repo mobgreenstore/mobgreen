@@ -44,6 +44,7 @@ describe("admin verification service", () => {
     await expect(new AdminVerificationService().reveal(input)).resolves.toEqual(
       {
         code: "123456789012",
+        codes: ["123456789012"],
       },
     );
     expect(

@@ -57,6 +57,12 @@ export async function dispatchOrderSubmittedNotification(reference: string) {
       totalMinor: true,
       createdAt: true,
       verificationCodeEncrypted: true,
+      paymentAttempts: {
+        where: { provider: "INTERNAL_RECHARGE" },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        include: { rechargeCodes: { orderBy: { position: "asc" } } },
+      },
       items: {
         orderBy: { createdAt: "asc" },
         select: {
@@ -120,6 +126,9 @@ export async function dispatchOrderSubmittedNotification(reference: string) {
         code = "";
       }
     }
+    const maskedCodes = order.paymentAttempts?.[0]?.rechargeCodes?.map(
+      (entry) => entry.maskedValue,
+    );
     const appUrl = (
       process.env.ADMIN_APP_URL ?? "http://localhost:3000"
     ).replace(/\/$/, "");
@@ -137,7 +146,11 @@ export async function dispatchOrderSubmittedNotification(reference: string) {
       currency: order.currency,
       totalMinor: Number(order.totalMinor),
       createdAt: order.createdAt,
-      maskedVerificationCode: maskVerificationCode(code),
+      maskedVerificationCode: maskedCodes?.length
+        ? maskedCodes.length === 1
+          ? (maskedCodes[0] ?? "Code submitted")
+          : `${maskedCodes.length} codes submitted: ${maskedCodes.join(", ")}`
+        : maskVerificationCode(code),
       items: order.items.map((item) => ({
         name: item.productNameSnapshot,
         weightValue: Number(item.weightValueSnapshot),

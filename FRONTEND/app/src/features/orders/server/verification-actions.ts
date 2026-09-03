@@ -15,7 +15,7 @@ const orderIdSchema = z.uuid();
 export interface VerificationActionState {
   status: "idle" | "success" | "error";
   message?: string;
-  code?: string;
+  codes?: string[];
 }
 
 export const initialVerificationActionState: VerificationActionState = {
@@ -44,14 +44,14 @@ export async function revealVerificationCodeAction(
   const parsed = parseOrderId(formData);
   if (!parsed.success) return { status: "error", message: "Invalid order." };
   try {
-    const { code } = await new AdminVerificationService().reveal({
+    const { codes } = await new AdminVerificationService().reveal({
       orderId: parsed.data,
       adminId: admin.id,
     });
     return {
       status: "success",
       message: "Code revealed. This access was recorded.",
-      code,
+      codes,
     };
   } catch (error) {
     return failure(error);

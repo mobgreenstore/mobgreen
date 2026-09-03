@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
-import { CheckoutConfirmationForm } from "@/features/delivery-matching/components/checkout-confirmation-form";
 import { CheckoutPageShell } from "@/features/delivery-matching/components/checkout-page-shell";
-import { CheckoutProgress } from "@/features/delivery-matching/components/checkout-progress";
-import { VerificationHero } from "@/features/delivery-matching/components/verification-hero";
+import { PaymentConfirmationFlow } from "@/features/payments/components/payment-confirmation-flow";
 import { checkoutIntentIdSchema } from "@/features/delivery-matching/schema";
 import { CheckoutIntentService } from "@/features/delivery-matching/server/checkout-intent-service";
 import { getServerGuestSession } from "@/server/guest-session";
@@ -31,16 +29,7 @@ export async function CheckoutConfirmationRoute({
   );
   if (!intent) notFound();
   if (intent.status === "SUBMITTED") redirect("/orders?tab=pending");
-  if (intent.fulfillmentType === "DELIVERY" && !intent.selectedCourier) {
-    redirect(
-      `/checkout/delivery?intent=${encodeURIComponent(intent.publicId)}`,
-    );
-  }
-
-  const backHref =
-    intent.fulfillmentType === "DELIVERY"
-      ? `/checkout/delivery?intent=${encodeURIComponent(intent.publicId)}`
-      : "/checkout";
+  const backHref = "/checkout";
 
   return (
     <CheckoutPageShell label="Recharge confirmation">
@@ -52,13 +41,7 @@ export async function CheckoutConfirmationRoute({
         Back
       </Link>
       <div className="mt-3">
-        <VerificationHero intent={intent} />
-      </div>
-      <div className="mx-auto mt-5 max-w-3xl rounded-lg border border-border bg-surface p-4 shadow-xs sm:p-5">
-        <CheckoutProgress />
-      </div>
-      <div className="mt-7 sm:mt-10">
-        <CheckoutConfirmationForm intent={intent} />
+        <PaymentConfirmationFlow intent={intent} />
       </div>
     </CheckoutPageShell>
   );

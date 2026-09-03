@@ -19,29 +19,42 @@ export class AdminVerificationService {
     const result = await withTransaction(async (transaction) => {
       const order = await transaction.order.findUnique({
         where: { id: input.orderId },
-        select: { verificationCodeEncrypted: true },
+        select: {
+          verificationCodeEncrypted: true,
+          paymentAttempts: {
+            where: { provider: "INTERNAL_RECHARGE" },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            include: { rechargeCodes: { orderBy: { position: "asc" } } },
+          },
+        },
       });
       if (!order)
         throw new VerificationOperationError("NOT_FOUND", "Order not found.");
-      if (!order.verificationCodeEncrypted) {
+      const attemptCodes = order.paymentAttempts?.[0]?.rechargeCodes ?? [];
+      if (!attemptCodes.length && !order.verificationCodeEncrypted) {
         throw new VerificationOperationError(
           "UNAVAILABLE",
           "No verification code is available for this order.",
         );
       }
-      let code: string;
+      let codes: string[];
       try {
-        code = decryptVerificationCode(order.verificationCodeEncrypted);
+        codes = attemptCodes.length
+          ? attemptCodes.map((code) =>
+              decryptVerificationCode(code.encryptedValue),
+            )
+          : [decryptVerificationCode(order.verificationCodeEncrypted!)];
       } catch {
         throw new VerificationOperationError(
           "UNAVAILABLE",
-          "The verification code could not be decrypted.",
+          "The verification codes could not be decrypted.",
         );
       }
       await transaction.orderVerificationAccessEvent.create({
         data: { orderId: input.orderId, adminUserId: input.adminId },
       });
-      return { code };
+      return { codes, code: codes[0] ?? "" };
     });
     logger.info("order_verification.revealed", {
       orderId: input.orderId,
@@ -58,11 +71,24 @@ export class AdminVerificationService {
           status: true,
           paymentStatus: true,
           verificationCodeEncrypted: true,
+          paymentAttempts: {
+            where: { provider: "INTERNAL_RECHARGE" },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              id: true,
+              status: true,
+              _count: { select: { rechargeCodes: true } },
+            },
+          },
         },
       });
       if (!current)
         throw new VerificationOperationError("NOT_FOUND", "Order not found.");
-      if (!current.verificationCodeEncrypted) {
+      if (
+        !current.verificationCodeEncrypted &&
+        !current.paymentAttempts[0]?._count.rechargeCodes
+      ) {
         throw new VerificationOperationError(
           "UNAVAILABLE",
           "This order has no submitted verification code.",
@@ -106,6 +132,22 @@ export class AdminVerificationService {
           note: "Order confirmed after recharge verification approval.",
         },
       });
+      const attempt = current.paymentAttempts?.[0];
+      if (attempt) {
+        await transaction.paymentAttempt.update({
+          where: { id: attempt.id },
+          data: { status: "APPROVED", confirmedAt: new Date() },
+        });
+        await transaction.paymentEvent.create({
+          data: {
+            paymentAttemptId: attempt.id,
+            eventType: "RECHARGE_APPROVED",
+            fromStatus: attempt.status,
+            toStatus: "APPROVED",
+            metadata: { adminId: input.adminId },
+          },
+        });
+      }
       return { status: "CONFIRMED" as const, paymentStatus: "PAID" as const };
     });
     logger.info("order_verification.approved", {
@@ -119,7 +161,16 @@ export class AdminVerificationService {
     const result = await withTransaction(async (transaction) => {
       const current = await transaction.order.findUnique({
         where: { id: input.orderId },
-        select: { status: true, paymentStatus: true },
+        select: {
+          status: true,
+          paymentStatus: true,
+          paymentAttempts: {
+            where: { provider: "INTERNAL_RECHARGE" },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { id: true, status: true },
+          },
+        },
       });
       if (!current)
         throw new VerificationOperationError("NOT_FOUND", "Order not found.");
@@ -152,6 +203,22 @@ export class AdminVerificationService {
           note: "Recharge verification rejected by an authorized administrator.",
         },
       });
+      const attempt = current.paymentAttempts?.[0];
+      if (attempt) {
+        await transaction.paymentAttempt.update({
+          where: { id: attempt.id },
+          data: { status: "REJECTED", failedAt: new Date() },
+        });
+        await transaction.paymentEvent.create({
+          data: {
+            paymentAttemptId: attempt.id,
+            eventType: "RECHARGE_REJECTED",
+            fromStatus: attempt.status,
+            toStatus: "REJECTED",
+            metadata: { adminId: input.adminId },
+          },
+        });
+      }
       return { status: "PENDING" as const, paymentStatus: "UNPAID" as const };
     });
     logger.info("order_verification.rejected", {

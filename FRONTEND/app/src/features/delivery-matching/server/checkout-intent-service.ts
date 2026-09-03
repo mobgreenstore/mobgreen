@@ -266,7 +266,10 @@ export class CheckoutIntentService {
   ): Promise<CheckoutIntentView | null> {
     const intent = await prisma.checkoutIntent.findFirst({
       where: { publicId: intentId, guestSessionId },
-      select: intentSelect,
+      select: {
+        ...intentSelect,
+        order: { select: { reference: true, paymentStatus: true } },
+      },
     });
     if (!intent) return null;
     if (intent.expiresAt <= new Date() && intent.status !== "SUBMITTED") {
@@ -280,7 +283,11 @@ export class CheckoutIntentService {
       });
       return checkoutIntentView({ ...intent, status: "EXPIRED" });
     }
-    return checkoutIntentView(intent);
+    return {
+      ...checkoutIntentView(intent),
+      paymentApproved: intent.order?.paymentStatus === "PAID",
+      orderReference: intent.order?.reference ?? null,
+    };
   }
 
   async getConfirmationForGuest(
@@ -404,7 +411,13 @@ export class CheckoutIntentService {
         guestSessionId,
         fulfillmentType: "DELIVERY",
       },
-      select: { id: true, status: true, expiresAt: true, candidateSet: true },
+      select: {
+        id: true,
+        status: true,
+        expiresAt: true,
+        candidateSet: true,
+        order: { select: { paymentStatus: true } },
+      },
     });
     if (!intent) {
       throw new CheckoutIntentError(
@@ -413,7 +426,12 @@ export class CheckoutIntentService {
         404,
       );
     }
-    if (intent.expiresAt <= new Date() || intent.status === "SUBMITTED") {
+    const postPaymentSelection =
+      intent.status === "SUBMITTED" && intent.order?.paymentStatus === "PAID";
+    if (
+      (intent.expiresAt <= new Date() && !postPaymentSelection) ||
+      (intent.status === "SUBMITTED" && !postPaymentSelection)
+    ) {
       throw new CheckoutIntentError(
         "INTENT_EXPIRED",
         "This checkout has expired. Return to checkout and try again.",
@@ -433,11 +451,23 @@ export class CheckoutIntentService {
     const updated = await prisma.checkoutIntent.update({
       where: { id: intent.id },
       data: {
-        status: "DRIVER_SELECTED",
+        status: postPaymentSelection ? "SUBMITTED" : "DRIVER_SELECTED",
         selectedCourierProfileId: candidate.profileId,
         selectedCourierName: candidate.displayName,
         selectedDistanceMeters: candidate.distanceMeters,
         selectedDurationSeconds: candidate.estimatedDurationSeconds,
+        ...(postPaymentSelection
+          ? {
+              order: {
+                update: {
+                  courierProfileIdSnapshot: candidate.profileId,
+                  courierNameSnapshot: candidate.displayName,
+                  courierDistanceMeters: candidate.distanceMeters,
+                  courierDurationSeconds: candidate.estimatedDurationSeconds,
+                },
+              },
+            }
+          : {}),
       },
       select: intentSelect,
     });

@@ -107,14 +107,21 @@ export function VerificationReviewPanel({
           title="Restricted information"
           description="Only an Owner or Manager can reveal and verify recharge codes."
         />
-      ) : revealState.code ? (
+      ) : revealState.codes?.length ? (
         <div className="rounded-md border border-border bg-surface-subtle p-4">
           <p className="text-xs font-semibold text-foreground-muted">
             Full verification code
           </p>
-          <code className="mt-2 block font-mono text-base font-semibold break-all">
-            {revealState.code}
-          </code>
+          <div className="mt-3 grid gap-2">
+            {revealState.codes.map((code, index) => (
+              <code
+                key={index}
+                className="block rounded-lg bg-surface px-3 py-2 font-mono text-base font-semibold break-all"
+              >
+                {code}
+              </code>
+            ))}
+          </div>
           <p className="mt-2 text-xs text-foreground-subtle">
             {revealState.message}
           </p>

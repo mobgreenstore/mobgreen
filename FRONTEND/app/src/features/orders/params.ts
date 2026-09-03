@@ -7,7 +7,10 @@ import {
   type AdminPaymentStatus,
 } from "@/features/orders/types";
 import type { SupportedCurrency } from "@/config/commerce";
-import { isPaymentMethod, type PaymentMethodId } from "@/features/payments/payment-method";
+import {
+  isPaymentMethod,
+  type PaymentMethodId,
+} from "@/features/payments/payment-method";
 
 export interface AdminOrderFilters {
   search: string;

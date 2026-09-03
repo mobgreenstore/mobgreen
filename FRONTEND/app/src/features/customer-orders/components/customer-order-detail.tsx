@@ -86,6 +86,25 @@ export function CustomerOrderDetailView({
         />
       )}
 
+      {order.deliveryMatchingIntentId && (
+        <InlineAlert
+          tone="info"
+          title="Payment approved — choose delivery"
+          description={
+            <span>
+              Your payment is confirmed.{" "}
+              <Link
+                href={`/checkout/delivery?intent=${encodeURIComponent(order.deliveryMatchingIntentId)}`}
+                className="font-bold text-info underline"
+              >
+                Find a nearby delivery profile
+              </Link>
+              .
+            </span>
+          }
+        />
+      )}
+
       {order.deliveryLocation && (
         <section className="rounded-xl border border-border p-5">
           <h2 className="text-lg font-semibold">Delivery destination</h2>

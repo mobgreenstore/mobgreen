@@ -13,6 +13,7 @@ import { WeightDisplay } from "@/components/commerce/weight-display";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge, Card, InlineAlert } from "@/components/ui";
 import { OrderOperationsPanel } from "@/features/orders/components/order-operations-panel";
+import { AdminPaymentAttemptCard } from "@/features/orders/components/admin-payment-attempt-card";
 import { CourierAssignmentCard } from "@/features/delivery-matching/components/courier-assignment-card";
 import { AdminCourierAssignment } from "@/features/delivery-operations/components/admin-courier-assignment";
 import { OrderOperationsTimeline } from "@/features/orders/components/order-operations-timeline";
@@ -128,6 +129,8 @@ export default async function AdminOrderDetailsPage({
               </div>
             )}
           </Card>
+
+          <AdminPaymentAttemptCard order={order} />
 
           {order.fulfillmentType === "DELIVERY" && (
             <Card className="p-5 sm:p-6">

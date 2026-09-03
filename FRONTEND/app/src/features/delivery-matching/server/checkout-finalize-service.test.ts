@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const transaction = vi.hoisted(() => ({
   checkoutIntent: { findFirst: vi.fn(), update: vi.fn() },
   order: { findUnique: vi.fn(), create: vi.fn() },
+  paymentAttempt: { create: vi.fn() },
   productPriceOption: { findMany: vi.fn() },
   specialOffer: { findMany: vi.fn() },
 }));
@@ -16,6 +17,7 @@ vi.mock("@/server/db/client", () => ({ prisma: {} }));
 vi.mock("@/server/db/transaction", () => ({ withTransaction }));
 vi.mock("@/features/checkout/server/code-encryption", () => ({
   encryptVerificationCode: () => "encrypted-code",
+  fingerprintVerificationCode: () => "fingerprint",
 }));
 
 import { CheckoutFinalizeService } from "@/features/delivery-matching/server/checkout-finalize-service";
@@ -77,6 +79,7 @@ describe("checkout intent finalization transaction", () => {
       },
     ]);
     transaction.order.create.mockResolvedValue({
+      id: "order-id",
       reference: "MG-2026-MATCHED",
       currency: "EUR",
       totalMinor: 2_500n,
@@ -87,7 +90,7 @@ describe("checkout intent finalization transaction", () => {
     const result = await new CheckoutFinalizeService().createFromIntent(
       {
         intentId: "a".repeat(32),
-        verificationCode: "1234567890",
+        verificationCodes: ["1234567890"],
         customerNote: "",
       },
       guest,
@@ -175,6 +178,7 @@ describe("checkout intent finalization transaction", () => {
       },
     ]);
     transaction.order.create.mockResolvedValue({
+      id: "order-id",
       reference: "MG-2026-OFFER",
       currency: "EUR",
       totalMinor: 2_250n,
@@ -183,7 +187,7 @@ describe("checkout intent finalization transaction", () => {
     await new CheckoutFinalizeService().createFromIntent(
       {
         intentId: "a".repeat(32),
-        verificationCode: "1234567890",
+        verificationCodes: ["1234567890"],
         customerNote: "",
       },
       guest,
@@ -215,7 +219,7 @@ describe("checkout intent finalization transaction", () => {
     );
   });
 
-  it("rejects delivery finalization without a server-selected courier", async () => {
+  it("allows payment submission before courier selection", async () => {
     transaction.checkoutIntent.findFirst.mockResolvedValue({
       ...intent,
       status: "MATCHING",
@@ -228,13 +232,13 @@ describe("checkout intent finalization transaction", () => {
       new CheckoutFinalizeService().createFromIntent(
         {
           intentId: "a".repeat(32),
-          verificationCode: "1234567890",
+          verificationCodes: ["1234567890"],
           customerNote: "",
         },
         guest,
       ),
-    ).rejects.toMatchObject({ code: "INVALID_SELECTION", status: 400 });
-    expect(transaction.order.create).not.toHaveBeenCalled();
+    ).resolves.toMatchObject({ status: "PENDING", paymentStatus: "PENDING" });
+    expect(transaction.order.create).toHaveBeenCalled();
   });
 
   it("rejects a changed authoritative price", async () => {
@@ -261,7 +265,7 @@ describe("checkout intent finalization transaction", () => {
       new CheckoutFinalizeService().createFromIntent(
         {
           intentId: "a".repeat(32),
-          verificationCode: "1234567890",
+          verificationCodes: ["1234567890"],
           customerNote: "",
         },
         guest,

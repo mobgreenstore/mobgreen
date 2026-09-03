@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { CheckoutProgress } from "@/features/delivery-matching/components/checkout-progress";
+import { PaymentMethodSummary } from "@/features/payments/components/payment-confirmation";
+import { RechargeCodeConfirmation } from "@/features/payments/components/recharge-code-confirmation";
 import { VerificationHero } from "@/features/delivery-matching/components/verification-hero";
 import type { CheckoutConfirmationView } from "@/features/delivery-matching/types";
 
@@ -63,5 +65,31 @@ describe("checkout confirmation presentation", () => {
     expect(screen.getByText("Recharge online · dundle")).toBeTruthy();
     expect(screen.getByText("Admin approval")).toBeTruthy();
     expect(screen.queryByText(/balance is available/i)).not.toBeTruthy();
+  });
+
+  it("shows the locked method and adds several secure code fields", () => {
+    render(
+      <>
+        <PaymentMethodSummary
+          method="RECHARGE_ONLINE"
+          rechargeProvider="dundle"
+        />
+        <RechargeCodeConfirmation
+          intentId={"a".repeat(32)}
+          customerEmail="customer@example.com"
+          eligible
+          onCompleted={() => undefined}
+        />
+      </>,
+    );
+    expect(screen.getByText(/selected:/i).parentElement?.textContent).toContain(
+      "Recharge online",
+    );
+    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Add another code" }));
+    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(2);
+    expect(
+      screen.getByText(/associated with customer@example.com/i),
+    ).toBeTruthy();
   });
 });

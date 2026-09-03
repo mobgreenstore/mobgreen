@@ -33,7 +33,13 @@ export default async function DeliveryMatchingPage({
       `/checkout/confirmation?intent=${encodeURIComponent(intent.publicId)}`,
     );
   }
-  if (intent.status === "SUBMITTED") redirect("/orders?tab=pending");
+  if (intent.status === "SUBMITTED" && !intent.paymentApproved) {
+    redirect(
+      intent.orderReference
+        ? `/orders/${encodeURIComponent(intent.orderReference)}`
+        : "/orders?tab=pending",
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-background">

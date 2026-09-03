@@ -143,6 +143,14 @@ export async function getAdminOrder(
       },
       deliveryTracking: true,
       checkoutIntent: { select: { candidateSet: true } },
+      paymentAttempts: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        include: {
+          rechargeCodes: { orderBy: { position: "asc" } },
+          events: { orderBy: { createdAt: "asc" } },
+        },
+      },
       notifications: {
         where: { kind: "ADMIN_ORDER_SUBMITTED" },
         orderBy: { createdAt: "desc" },
@@ -185,6 +193,8 @@ export async function getAdminOrder(
         (candidate) => candidate.profileId === order.courierProfileIdSnapshot,
       )
     : null;
+
+  const paymentAttempt = order.paymentAttempts[0] ?? null;
 
   return {
     id: order.id,
@@ -242,7 +252,38 @@ export async function getAdminOrder(
           lastProviderError: order.deliveryTracking.lastProviderError,
         }
       : null,
-    verificationCodeAvailable: Boolean(order.verificationCodeEncrypted),
+    verificationCodeAvailable:
+      Boolean(order.verificationCodeEncrypted) ||
+      Boolean(paymentAttempt?.rechargeCodes.length),
+    paymentAttempt: paymentAttempt
+      ? {
+          publicId: paymentAttempt.publicId,
+          status: paymentAttempt.status,
+          provider: paymentAttempt.provider,
+          depositMinor: Number(paymentAttempt.depositMinor),
+          cashBalanceDueMinor: Number(paymentAttempt.cashBalanceDueMinor),
+          expectedSatoshis:
+            paymentAttempt.expectedSatoshis === null
+              ? null
+              : Number(paymentAttempt.expectedSatoshis),
+          receivedSatoshis: Number(paymentAttempt.receivedSatoshis),
+          transactionId: paymentAttempt.transactionId,
+          confirmationCount: paymentAttempt.confirmationCount,
+          cashCollectedAt:
+            paymentAttempt.cashCollectedAt?.toISOString() ?? null,
+          expiresAt: paymentAttempt.expiresAt?.toISOString() ?? null,
+          maskedCodes: paymentAttempt.rechargeCodes.map(
+            (code) => code.maskedValue,
+          ),
+          events: paymentAttempt.events.map((event) => ({
+            id: event.id,
+            eventType: event.eventType,
+            fromStatus: event.fromStatus,
+            toStatus: event.toStatus,
+            occurredAt: event.createdAt.toISOString(),
+          })),
+        }
+      : null,
     notification: order.notifications[0]
       ? {
           status: order.notifications[0].status,

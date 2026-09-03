@@ -119,12 +119,8 @@ export function CheckoutForm({
         if (response.status === 409) refresh();
         return;
       }
-      const nextPath =
-        result.intent.fulfillmentType === "DELIVERY"
-          ? "/checkout/delivery"
-          : "/checkout/confirmation";
       router.push(
-        `${nextPath}?intent=${encodeURIComponent(result.intent.publicId)}`,
+        `/checkout/confirmation?intent=${encodeURIComponent(result.intent.publicId)}`,
       );
     } catch {
       setServerError(

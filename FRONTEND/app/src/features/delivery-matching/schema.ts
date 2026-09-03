@@ -72,12 +72,20 @@ export const updateIntentLocationSchema = z
 export const finalizeCheckoutSchema = z
   .object({
     intentId: checkoutIntentIdSchema,
-    verificationCode: z
-      .string()
-      .trim()
-      .min(1, "Enter the recharge verification code.")
-      .max(64)
-      .regex(/^\d+$/, "The verification code must contain digits only."),
+    verificationCodes: z
+      .array(
+        z
+          .string()
+          .trim()
+          .min(6, "Enter a valid recharge verification code.")
+          .max(64)
+          .regex(/^\d+$/, "Verification codes must contain digits only."),
+      )
+      .min(1, "Add at least one recharge verification code.")
+      .max(10, "You can submit up to 10 recharge codes.")
+      .refine((codes) => new Set(codes).size === codes.length, {
+        message: "Each recharge code must be unique.",
+      }),
     customerNote: z.string().trim().max(1000).optional(),
   })
   .strict();

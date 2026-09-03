@@ -28,6 +28,14 @@ export function encryptVerificationCode(code: string) {
     .join(".");
 }
 
+export function fingerprintVerificationCode(code: string) {
+  return createHash("sha256")
+    .update("mob-greens-recharge-code\0")
+    .update(key())
+    .update(code)
+    .digest("hex");
+}
+
 export function decryptVerificationCode(value: string) {
   const [ivValue, tagValue, ciphertextValue] = value.split(".");
   if (!ivValue || !tagValue || !ciphertextValue) {

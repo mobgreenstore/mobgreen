@@ -26,6 +26,8 @@ export interface CheckoutIntentView {
   location: CheckoutIntentLocationView | null;
   candidates: SimulatedCourierCandidate[];
   selectedCourier: SimulatedCourierCandidate | null;
+  paymentApproved?: boolean;
+  orderReference?: string | null;
   expiresAt: string;
 }
 

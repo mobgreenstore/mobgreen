@@ -6,7 +6,11 @@ import { CartValidationService } from "@/features/cart/server/cart-validation-se
 import { PrismaCartRepository } from "@/features/cart/server/prisma-cart-repository";
 import type { FinalizeCheckoutInput } from "@/features/delivery-matching/schema";
 import { parseIntentCartLines } from "@/features/delivery-matching/server/checkout-intent-service";
-import { encryptVerificationCode } from "@/features/checkout/server/code-encryption";
+import {
+  encryptVerificationCode,
+  fingerprintVerificationCode,
+} from "@/features/checkout/server/code-encryption";
+import { maskVerificationCode } from "@/features/order-notifications/server/template";
 import {
   createOrderNotificationEnvelope,
   dispatchOrderSubmittedNotification,
@@ -50,7 +54,13 @@ export class CheckoutFinalizeService {
     input: FinalizeCheckoutInput,
     guest: GuestSessionReference,
   ): Promise<CreatedOrderView> {
-    const encryptedCode = encryptVerificationCode(input.verificationCode);
+    const securedCodes = input.verificationCodes.map((code, position) => ({
+      encryptedValue: encryptVerificationCode(code),
+      fingerprint: fingerprintVerificationCode(code),
+      maskedValue: maskVerificationCode(code),
+      position,
+    }));
+    const encryptedCode = securedCodes[0]?.encryptedValue ?? null;
     const notification = createOrderNotificationEnvelope();
 
     const result = await withTransaction(async (transaction) => {
@@ -82,7 +92,12 @@ export class CheckoutFinalizeService {
           selectedDurationSeconds: true,
           expiresAt: true,
           order: {
-            select: { reference: true, currency: true, totalMinor: true },
+            select: {
+              id: true,
+              reference: true,
+              currency: true,
+              totalMinor: true,
+            },
           },
         },
       });
@@ -95,6 +110,13 @@ export class CheckoutFinalizeService {
         );
       }
       if (intent.order) return publicOrder(intent.order, true);
+      if (intent.paymentMethod === "BITCOIN_DEPOSIT") {
+        throw new CheckoutError(
+          "INVALID_SELECTION",
+          "Bitcoin payment must be confirmed by the invoice service.",
+          400,
+        );
+      }
       if (intent.expiresAt <= new Date() || intent.status === "EXPIRED") {
         await transaction.checkoutIntent.update({
           where: { id: intent.id },
@@ -109,17 +131,13 @@ export class CheckoutFinalizeService {
       if (
         intent.status === "SUBMITTED" ||
         (intent.fulfillmentType === "DELIVERY" &&
-          (!intent.selectedCourierProfileId ||
-            !intent.selectedCourierName ||
-            intent.selectedDistanceMeters === null ||
-            intent.selectedDurationSeconds === null ||
-            !intent.deliveryAddress ||
+          (!intent.deliveryAddress ||
             intent.destinationLatitude === null ||
             intent.destinationLongitude === null))
       ) {
         throw new CheckoutError(
           "INVALID_SELECTION",
-          "Choose an available delivery profile before confirming the order.",
+          "Confirm a delivery location before submitting payment.",
           400,
         );
       }
@@ -347,7 +365,30 @@ export class CheckoutFinalizeService {
           },
           ...(notification ? { notifications: { create: notification } } : {}),
         },
-        select: { reference: true, currency: true, totalMinor: true },
+        select: { id: true, reference: true, currency: true, totalMinor: true },
+      });
+
+      await transaction.paymentAttempt.create({
+        data: {
+          publicId: randomBytes(24).toString("base64url"),
+          checkoutIntentId: intent.id,
+          orderId: order.id,
+          paymentMethod: intent.paymentMethod,
+          provider: "INTERNAL_RECHARGE",
+          currency: intent.currency,
+          orderTotalMinor: subtotalMinor,
+          depositMinor: subtotalMinor,
+          cashBalanceDueMinor: 0n,
+          status: "PENDING_REVIEW",
+          rechargeCodes: { create: securedCodes },
+          events: {
+            create: {
+              eventType: "RECHARGE_CODES_SUBMITTED",
+              toStatus: "PENDING_REVIEW",
+              metadata: { codeCount: securedCodes.length },
+            },
+          },
+        },
       });
 
       await transaction.checkoutIntent.update({

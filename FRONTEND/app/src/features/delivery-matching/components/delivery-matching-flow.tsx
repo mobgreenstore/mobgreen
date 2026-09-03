@@ -321,13 +321,19 @@ export function DeliveryMatchingFlow({
             </p>
           </div>
           <Link
-            href={`/checkout/confirmation?intent=${encodeURIComponent(intent.publicId)}`}
+            href={
+              intent.status === "SUBMITTED"
+                ? "/orders?tab=active"
+                : `/checkout/confirmation?intent=${encodeURIComponent(intent.publicId)}`
+            }
             className={cn(
               buttonVariants({ variant: "primary", size: "large" }),
               "w-full sm:w-auto",
             )}
           >
-            Continue to verification
+            {intent.status === "SUBMITTED"
+              ? "Save delivery profile"
+              : "Continue to verification"}
           </Link>
         </Card>
       )}

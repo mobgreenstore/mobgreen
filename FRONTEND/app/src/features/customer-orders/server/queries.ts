@@ -131,6 +131,7 @@ export async function getGuestOrder(
       courierNameSnapshot: true,
       courierDistanceMeters: true,
       courierDurationSeconds: true,
+      checkoutIntent: { select: { publicId: true } },
       items: {
         orderBy: { createdAt: "asc" },
         select: {
@@ -159,6 +160,12 @@ export async function getGuestOrder(
   });
   return {
     ...summary,
+    deliveryMatchingIntentId:
+      order.fulfillmentType === "DELIVERY" &&
+      order.paymentStatus === "PAID" &&
+      !order.courierNameSnapshot
+        ? (order.checkoutIntent?.publicId ?? null)
+        : null,
     customerName: order.customerName,
     deliveryLocation: order.deliveryAddress
       ? {

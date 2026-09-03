@@ -9,6 +9,7 @@ vi.mock("@/server/auth/environment", () => ({
 import {
   decryptVerificationCode,
   encryptVerificationCode,
+  fingerprintVerificationCode,
 } from "@/features/checkout/server/code-encryption";
 
 describe("verification-code encryption", () => {
@@ -23,5 +24,13 @@ describe("verification-code encryption", () => {
   it("rejects a modified encrypted value", () => {
     const encrypted = encryptVerificationCode("1234567890123456");
     expect(() => decryptVerificationCode(encrypted + "x")).toThrow();
+  });
+
+  it("creates deterministic non-reversible fingerprints for duplicate control", () => {
+    const first = fingerprintVerificationCode("1234567890123456");
+    const second = fingerprintVerificationCode("1234567890123456");
+    expect(first).toBe(second);
+    expect(first).toMatch(/^[a-f0-9]{64}$/);
+    expect(first).not.toContain("1234567890123456");
   });
 });
