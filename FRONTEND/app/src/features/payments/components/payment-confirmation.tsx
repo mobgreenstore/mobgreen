@@ -2,16 +2,9 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import {
-  Banknote,
-  Bitcoin,
-  Check,
-  Clock3,
-  CreditCard,
-  LockKeyhole,
-} from "lucide-react";
+import { Banknote, Bitcoin, Check, Clock3, CreditCard } from "lucide-react";
 import { Money } from "@/components/commerce";
-import { Badge, Card, InlineAlert } from "@/components/ui";
+import { Card, InlineAlert } from "@/components/ui";
 import type { SupportedCurrency } from "@/config/commerce";
 import type { PaymentMethodId } from "@/features/payments/payment-method";
 import { paymentMethodLabel } from "@/features/payments/payment-method";
@@ -22,39 +15,49 @@ export function PaymentConfirmationShell({
   description,
   children,
   aside,
+  belowHero,
 }: {
   title: string;
   description: string;
   children: ReactNode;
-  aside: ReactNode;
+  aside?: ReactNode;
+  belowHero?: ReactNode;
 }) {
   return (
     <section className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-surface shadow-[0_24px_80px_rgb(0_0_0/0.09)]">
       <header className="relative isolate overflow-hidden bg-inverse px-5 py-8 text-inverse-foreground sm:px-8 sm:py-10">
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-20 bg-[url('/images/verification/payment-hero-v1.png')] bg-cover bg-[position:72%_center] opacity-75"
+          className="absolute inset-0 -z-20 bg-[url('/images/verification/payment-hero-v1.png')] bg-cover bg-[position:72%_center] opacity-100"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(2_6_12/.98)_0%,rgb(3_13_24/.94)_46%,rgb(2_12_21/.56)_100%)]"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(2_6_12/.7)_0%,rgb(3_13_24/.54)_45%,rgb(2_12_21/.08)_100%)]"
         />
         <div className="max-w-2xl">
-          <Badge className="border-white/20 bg-black/20 text-white backdrop-blur-sm">
-            <LockKeyhole aria-hidden="true" className="size-3.5" />
+          <p className="text-xs font-bold tracking-[0.14em] text-white/80 uppercase">
             Secure confirmation
-          </Badge>
+          </p>
           <h1 className="mt-5 text-4xl leading-[0.96] font-black tracking-[-0.055em] text-balance sm:text-5xl">
             {title}
           </h1>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-white/75 sm:text-base">
+          <p className="mt-4 max-w-xl text-sm leading-6 text-white/85 sm:text-base">
             {description}
           </p>
         </div>
       </header>
-      <div className="grid gap-7 p-4 sm:p-7 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:p-8">
+      {belowHero}
+      <div
+        className={cn(
+          "p-5 sm:p-7 lg:p-8",
+          aside &&
+            "grid gap-7 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start",
+        )}
+      >
         <div className="min-w-0">{children}</div>
-        <aside className="grid gap-4 lg:sticky lg:top-24">{aside}</aside>
+        {aside ? (
+          <aside className="grid gap-4 lg:sticky lg:top-24">{aside}</aside>
+        ) : null}
       </div>
     </section>
   );

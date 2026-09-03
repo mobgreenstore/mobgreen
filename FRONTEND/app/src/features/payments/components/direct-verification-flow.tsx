@@ -1,19 +1,9 @@
 "use client";
 
-import {
-  Bitcoin,
-  CreditCard,
-  Eye,
-  EyeOff,
-  Plus,
-  ShieldCheck,
-  Store,
-  Trash2,
-} from "lucide-react";
+import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import {
   Button,
-  Card,
   FieldDescription,
   FormField,
   IconButton,
@@ -35,18 +25,15 @@ import type { DeliveryLocation } from "@/features/location/schema";
 const methodDetails = {
   RECHARGE_ONLINE: {
     label: "Recharge online",
-    helper: "Choose the partner where you purchased the recharge.",
-    Icon: CreditCard,
+    helper: "Enter the purchase details and the recharge codes together.",
   },
   RECHARGE_FROM_STORE: {
     label: "Recharge from store",
-    helper: "Use the code from your in-store recharge receipt.",
-    Icon: Store,
+    helper: "Enter the details from your in-store recharge receipt.",
   },
   BITCOIN_DEPOSIT: {
-    label: "Bitcoin · 50% deposit",
-    helper: "50% now, rest cash at delivery after settlement.",
-    Icon: Bitcoin,
+    label: "Bitcoin - 50% deposit",
+    helper: "Pay 50% now. The remaining balance is paid at delivery.",
   },
 } as const;
 
@@ -59,6 +46,63 @@ const profileNames = [
   "Elena R.",
   "Matteo B.",
   "Amélie K.",
+] as const;
+
+const partners = [
+  {
+    id: "STARTSELECT",
+    name: "Startselect",
+    url: "https://startselect.com/",
+    logoSrc: "/images/partners/startselect.png",
+  },
+  {
+    id: "DUNDLE",
+    name: "Dundle",
+    url: "https://dundle.com/",
+    logoSrc: "/images/partners/dundle.png",
+  },
+  {
+    id: "RECHARGE_COM",
+    name: "Recharge.com",
+    url: "https://recharge.com/",
+    logoSrc: "/images/partners/recharge-com.ico",
+  },
+  {
+    id: "VIDAPLAYER",
+    name: "VidaPlayer",
+    url: "https://www.vidaplayer.com/",
+    logoSrc: "/images/partners/vidaplayer.ico",
+  },
+  {
+    id: "BITREFILL",
+    name: "Bitrefill",
+    url: "https://www.bitrefill.com/",
+    logoSrc: "/images/partners/bitrefill.ico",
+  },
+  {
+    id: "COINSBEE",
+    name: "Coinsbee",
+    url: "https://www.coinsbee.com/",
+    logoSrc: "/images/partners/coinsbee.png",
+  },
+  {
+    id: "OFFGAMERS",
+    name: "OffGamers",
+    url: "https://off-gamers.com/",
+    logoSrc: "/images/partners/offgamers.png",
+  },
+  {
+    id: "G2A",
+    name: "G2A",
+    url: "https://www.g2a.com/",
+    logoSrc: "/images/partners/g2a.ico",
+  },
+  {
+    id: "GAMESEAL",
+    name: "Gameseal",
+    url: "https://gameseal.com/",
+    logoSrc: "/images/partners/gameseal.ico",
+  },
 ] as const;
 
 function candidateSet(location: DeliveryLocation): SimulatedCourierCandidate[] {
@@ -106,35 +150,26 @@ function VerificationCodes({
   }
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="flex items-start justify-between gap-4 border-b border-border bg-surface-subtle px-5 py-5 sm:px-6">
-        <div>
-          <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
-            Code confirmation
-          </p>
-          <h2 className="mt-1 text-xl font-black tracking-[-0.035em]">
-            Add recharge codes
-          </h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
-            Three fields are ready. Add more only when the recharge is split.
-          </p>
-        </div>
-        <IconButton
-          type="button"
-          aria-label="Add another recharge code"
-          title="Add another recharge code"
-          className="shrink-0 border border-border bg-surface hover:bg-surface-subtle"
-          disabled={codes.length >= 10}
-          onClick={() => onChange(codes.length < 10 ? [...codes, ""] : codes)}
+    <section
+      aria-labelledby="recharge-codes-title"
+      className="border-y border-border py-6"
+    >
+      <div>
+        <p className="text-xs font-bold tracking-[0.12em] text-foreground-subtle uppercase">
+          Recharge codes
+        </p>
+        <h2
+          id="recharge-codes-title"
+          className="mt-1 text-xl font-black tracking-tight"
         >
-          <Plus aria-hidden="true" className="size-4" />
-        </IconButton>
+          Add your codes
+        </h2>
       </div>
-      <div className="grid gap-4 p-5 sm:p-6">
+      <div className="mt-5 grid gap-4">
         {codes.map((code, index) => {
           const isVisible = visible.has(index);
           return (
-            <FormField key={index} hasDescription={index === codes.length - 1}>
+            <FormField key={index}>
               <Label>Recharge code {index + 1}</Label>
               <div className="grid grid-cols-[minmax(0,1fr)_2.75rem_auto] gap-2">
                 <TextField
@@ -176,114 +211,171 @@ function VerificationCodes({
                   </IconButton>
                 )}
               </div>
-              {index === codes.length - 1 && (
-                <FieldDescription>
-                  Codes are never accepted as paid from this page alone. A
-                  secure checkout or approved review is required.
-                </FieldDescription>
-              )}
             </FormField>
           );
         })}
       </div>
-    </Card>
+      <Button
+        type="button"
+        variant="secondary"
+        size="small"
+        className="mt-4"
+        disabled={codes.length >= 10}
+        aria-label="Add another recharge code"
+        onClick={() => onChange(codes.length < 10 ? [...codes, ""] : codes)}
+      >
+        <Plus aria-hidden="true" className="size-4" />
+        Add another code
+      </Button>
+    </section>
   );
 }
 
 export function PartnerMarquee() {
-  const partners = [
-    ...RECHARGE_PARTNERS.map((partner) => ({
-      ...partner,
-      kind: "Approved recharge",
-    })),
-    {
-      id: "BITREFILL",
-      name: "Bitrefill",
-      url: "https://www.bitrefill.com/",
-      iconUrl: "https://www.bitrefill.com/favicon.ico",
-      kind: "Gift cards",
-    },
-    {
-      id: "COINSBEE",
-      name: "Coinsbee",
-      url: "https://www.coinsbee.com/",
-      iconUrl: "https://www.coinsbee.com/favicon.ico",
-      kind: "Gift cards",
-    },
-    {
-      id: "OFFGAMERS",
-      name: "OffGamers",
-      url: "https://off-gamers.com/",
-      iconUrl: "https://off-gamers.com/favicon.ico",
-      kind: "Gift cards",
-    },
-    {
-      id: "G2A",
-      name: "G2A",
-      url: "https://www.g2a.com/",
-      iconUrl: "https://www.g2a.com/favicon.ico",
-      kind: "Gift cards",
-    },
-    {
-      id: "GAMESEAL",
-      name: "Gameseal",
-      url: "https://gameseal.com/",
-      iconUrl: "https://gameseal.com/favicon.ico",
-      kind: "Gift cards",
-    },
-  ];
   const repeated = [...partners, ...partners];
   return (
     <section
-      aria-labelledby="verification-partners"
-      className="overflow-hidden rounded-[1.5rem] border border-border bg-surface py-5 shadow-xs"
+      aria-label="Recharge partners"
+      className="overflow-hidden border-b border-border bg-surface-subtle/45 py-4"
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 sm:px-7">
-        <div>
-          <p className="text-xs font-bold tracking-[0.12em] text-foreground-subtle uppercase">
-            Recharge directory
-          </p>
-          <h2
-            id="verification-partners"
-            className="mt-1 text-lg font-black tracking-tight"
-          >
-            Compare trusted gift-card sources
-          </h2>
-        </div>
-        <p className="text-xs text-foreground-muted">
-          External websites open in a new tab.
+      <div className="flex items-baseline justify-between gap-4 px-5 sm:px-8">
+        <p className="text-xs font-bold tracking-[0.12em] text-foreground-subtle uppercase">
+          Recharge partners
+        </p>
+        <p className="hidden text-xs text-foreground-muted sm:block">
+          Buy a code, then return here to verify.
         </p>
       </div>
-      <div className="mt-5 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
-        <div className="verification-partner-marquee flex w-max gap-3 px-4 focus-within:[animation-play-state:paused] hover:[animation-play-state:paused] motion-reduce:animate-none">
+      <div className="mt-3 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]">
+        <div className="verification-partner-marquee flex w-max items-center gap-1 px-4 focus-within:[animation-play-state:paused] hover:[animation-play-state:paused] motion-reduce:animate-none">
           {repeated.map((partner, index) => (
             <a
               key={`${partner.id}-${index}`}
               href={partner.url}
               target="_blank"
               rel="noreferrer noopener"
-              className="flex w-48 shrink-0 items-center gap-3 rounded-xl border border-border bg-background px-3 py-3 transition-colors hover:border-foreground-muted hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
+              aria-hidden={index >= partners.length ? true : undefined}
+              tabIndex={index >= partners.length ? -1 : undefined}
+              className="flex h-11 shrink-0 items-center gap-2 rounded-md px-3 transition-colors hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
             >
               <img
-                src={partner.iconUrl}
-                width="32"
-                height="32"
+                src={partner.logoSrc}
+                width="26"
+                height="26"
                 alt=""
-                className="size-8 rounded-lg border border-border bg-white object-contain p-1"
+                className="size-6 object-contain"
               />
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-bold">
-                  {partner.name}
-                </span>
-                <span className="block truncate text-xs text-foreground-muted">
-                  {partner.kind}
-                </span>
+              <span className="text-sm font-semibold whitespace-nowrap">
+                {partner.name}
               </span>
             </a>
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function VerificationForm({
+  method,
+  codes,
+  onCodesChange,
+  onSubmit,
+}: {
+  method: DirectMethod;
+  codes: string[];
+  onCodesChange: (codes: string[]) => void;
+  onSubmit: (method: DirectMethod, event: FormEvent<HTMLFormElement>) => void;
+}) {
+  const detail = methodDetails[method];
+  return (
+    <form onSubmit={(event) => onSubmit(method, event)} className="grid gap-7">
+      <section className="grid gap-5">
+        <div>
+          <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
+            Payment verification
+          </p>
+          <h2 className="mt-1 text-2xl font-black tracking-[-0.04em]">
+            {detail.label}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-foreground-muted">
+            {detail.helper}
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField>
+            <Label required>Full name</Label>
+            <TextField name="name" autoComplete="name" minLength={2} required />
+          </FormField>
+          <FormField>
+            <Label required>Email address</Label>
+            <TextField
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+            />
+          </FormField>
+          <FormField>
+            <Label required>Phone number</Label>
+            <TextField
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              minLength={7}
+              required
+            />
+          </FormField>
+          <FormField hasDescription>
+            <Label required>Order amount</Label>
+            <TextField
+              name="amount"
+              type="number"
+              inputMode="decimal"
+              min="1"
+              step="0.01"
+              placeholder="0.00"
+              required
+            />
+            <FieldDescription>
+              Enter the amount shown on your purchase record.
+            </FieldDescription>
+          </FormField>
+        </div>
+        {method === "RECHARGE_ONLINE" && (
+          <FormField>
+            <Label required>Recharge partner</Label>
+            <Select name="partner" required defaultValue="">
+              <option value="" disabled>
+                Select the partner used
+              </option>
+              {RECHARGE_PARTNERS.map((partner) => (
+                <option key={partner.id} value={partner.id}>
+                  {partner.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+        )}
+        {method === "BITCOIN_DEPOSIT" && (
+          <p className="border-l-2 border-info pl-3 text-sm leading-6 text-foreground-muted">
+            The exact BTC amount and invoice are created from a valid checkout
+            total, never from this browser field.
+          </p>
+        )}
+      </section>
+      {method !== "BITCOIN_DEPOSIT" && (
+        <VerificationCodes codes={codes} onChange={onCodesChange} />
+      )}
+      <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-xl text-sm leading-6 text-foreground-muted">
+          Payment remains pending until the server verifies it.
+        </p>
+        <Button type="submit" size="large" className="shrink-0">
+          Continue to location
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -299,14 +391,13 @@ export function DirectVerificationFlow() {
     () => (location ? candidateSet(location) : []),
     [location],
   );
-  const detail = methodDetails[method];
 
   function applyLocation(next: DeliveryLocation | null) {
     setLocation(next);
     setSelectedCourier(null);
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function submit(method: DirectMethod, event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (method !== "BITCOIN_DEPOSIT" && codes.some((code) => code.length < 6))
       return;
@@ -318,164 +409,60 @@ export function DirectVerificationFlow() {
     <Tabs
       value={method}
       onValueChange={(value) => setMethod(value as DirectMethod)}
-      className="grid gap-5"
+      className="grid gap-6"
     >
-      <Card className="p-2">
-        <TabsList
-          aria-label="Payment method"
-          className="grid grid-cols-3 gap-1 overflow-visible bg-transparent p-0"
-        >
-          {(Object.keys(methodDetails) as DirectMethod[]).map((id) => {
-            const option = methodDetails[id];
-            const Icon = option.Icon;
-            return (
-              <TabsTrigger
-                key={id}
-                value={id}
-                className="min-h-16 rounded-xl px-2 text-xs leading-4 whitespace-normal data-[state=active]:bg-inverse data-[state=active]:text-inverse-foreground sm:text-sm"
-              >
-                <Icon aria-hidden="true" className="mr-1 inline size-4" />
-                {id === "BITCOIN_DEPOSIT"
-                  ? "Bitcoin"
-                  : option.label.replace("Recharge ", "")}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </Card>
-
+      <TabsList
+        aria-label="Payment method"
+        className="grid min-h-12 grid-cols-3 gap-0 overflow-visible rounded-md border border-border bg-transparent p-0"
+      >
+        {(Object.keys(methodDetails) as DirectMethod[]).map((id) => (
+          <TabsTrigger
+            key={id}
+            value={id}
+            className="min-h-11 rounded-none border-r border-border px-2 text-xs leading-4 whitespace-normal last:border-r-0 data-[state=active]:bg-inverse data-[state=active]:text-inverse-foreground sm:text-sm"
+          >
+            {id === "RECHARGE_ONLINE"
+              ? "Online recharge"
+              : id === "RECHARGE_FROM_STORE"
+                ? "From store"
+                : "Bitcoin"}
+          </TabsTrigger>
+        ))}
+      </TabsList>
       {(Object.keys(methodDetails) as DirectMethod[]).map((id) => (
         <TabsContent key={id} value={id} className="mt-0">
-          <form onSubmit={submit} className="grid gap-5">
-            <Card className="grid gap-5 p-5 sm:p-6">
-              <div className="flex items-start gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-subtle text-foreground">
-                  <detail.Icon aria-hidden="true" className="size-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
-                    Manual verification
-                  </p>
-                  <h2 className="mt-1 text-2xl font-black tracking-[-0.04em]">
-                    {methodDetails[id].label}
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-foreground-muted">
-                    {methodDetails[id].helper}
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField>
-                  <Label required>Full name</Label>
-                  <TextField
-                    name="name"
-                    autoComplete="name"
-                    minLength={2}
-                    required
-                  />
-                </FormField>
-                <FormField>
-                  <Label required>Email address</Label>
-                  <TextField
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                  />
-                </FormField>
-                <FormField>
-                  <Label required>Phone number</Label>
-                  <TextField
-                    name="phone"
-                    type="tel"
-                    autoComplete="tel"
-                    minLength={7}
-                    required
-                  />
-                </FormField>
-                <FormField hasDescription>
-                  <Label required>Order amount</Label>
-                  <TextField
-                    name="amount"
-                    type="number"
-                    inputMode="decimal"
-                    min="1"
-                    step="0.01"
-                    placeholder="0.00"
-                    required
-                  />
-                  <FieldDescription>
-                    Use the exact amount from your purchase record.
-                  </FieldDescription>
-                </FormField>
-              </div>
-              {id === "RECHARGE_ONLINE" && (
-                <FormField>
-                  <Label required>Recharge partner</Label>
-                  <Select name="partner" required defaultValue="">
-                    <option value="" disabled>
-                      Select the partner used
-                    </option>
-                    {RECHARGE_PARTNERS.map((partner) => (
-                      <option key={partner.id} value={partner.id}>
-                        {partner.name}
-                      </option>
-                    ))}
-                  </Select>
-                </FormField>
-              )}
-              {id === "BITCOIN_DEPOSIT" && (
-                <div className="rounded-xl border border-info/20 bg-info-subtle/45 p-4 text-sm leading-6 text-foreground-muted">
-                  <strong className="text-foreground">
-                    50% now, rest cash.
-                  </strong>{" "}
-                  The exact Bitcoin deposit, payment address, and expiry are
-                  generated only after a verified order is available. The amount
-                  in this form is never used to create a live invoice.
-                </div>
-              )}
-            </Card>
-            {id !== "BITCOIN_DEPOSIT" && (
-              <VerificationCodes codes={codes} onChange={setCodes} />
-            )}
-            <Card className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-              <div className="flex gap-3 text-sm leading-5 text-foreground-muted">
-                <ShieldCheck
-                  aria-hidden="true"
-                  className="mt-0.5 size-5 shrink-0 text-info"
-                />
-                <p>
-                  Direct entries are prepared for review. They do not mark a
-                  payment paid or dispatch an order.
-                </p>
-              </div>
-              <Button type="submit" size="large" className="shrink-0">
-                Continue to location
-              </Button>
-            </Card>
-          </form>
+          <VerificationForm
+            method={id}
+            codes={codes}
+            onCodesChange={setCodes}
+            onSubmit={submit}
+          />
         </TabsContent>
       ))}
-
       {prepared && (
-        <Card className="grid gap-5 border-info/25 bg-info-subtle/30 p-5 sm:p-6">
+        <section
+          aria-labelledby="delivery-preference-title"
+          className="grid gap-5 border-t border-border pt-7"
+        >
           <div>
             <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
-              Delivery step
+              Delivery preference
             </p>
-            <h2 className="mt-1 text-2xl font-black tracking-[-0.04em]">
-              Activate location for tracking
+            <h2
+              id="delivery-preference-title"
+              className="mt-1 text-2xl font-black tracking-[-0.04em]"
+            >
+              Choose your delivery location
             </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
-              Choose the precise destination before viewing nearby delivery
-              profiles. A profile can be saved as a preference, but actual
-              dispatch remains locked until payment is verified on the server.
+            <p className="mt-2 text-sm leading-6 text-foreground-muted">
+              Location is required before a nearby delivery profile can be
+              selected.
             </p>
           </div>
           {!location ? (
             <StoreLocationControl
               triggerVariant="text"
-              triggerLabel="Choose delivery location"
+              triggerLabel="Activate location"
               open={locationSheetOpen}
               onOpenChange={setLocationSheetOpen}
               onLocationChange={applyLocation}
@@ -483,10 +470,10 @@ export function DirectVerificationFlow() {
             />
           ) : (
             <div className="grid gap-5">
-              <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-surface p-4">
+              <div className="flex items-start justify-between gap-3 border-y border-border py-4">
                 <div>
                   <p className="text-xs font-bold tracking-[0.1em] text-foreground-subtle uppercase">
-                    Confirmed destination
+                    Confirmed location
                   </p>
                   <p className="mt-1 text-sm font-semibold">
                     {location.formattedAddress}
@@ -506,8 +493,7 @@ export function DirectVerificationFlow() {
                   Nearby delivery profiles
                 </h3>
                 <p className="mt-1 text-sm text-foreground-muted">
-                  Estimated proximity from your confirmed location. These are
-                  simulated delivery options, not live GPS locations.
+                  Estimated from the confirmed destination.
                 </p>
               </div>
               <CourierCandidateGrid
@@ -518,13 +504,13 @@ export function DirectVerificationFlow() {
               {selectedCourier && (
                 <InlineAlert
                   tone="info"
-                  title={`${selectedCourier.displayName} selected as a preference`}
-                  description="Once a valid order and payment verification are associated with this browser, this preference is revalidated before tracking begins."
+                  title="Delivery preference saved"
+                  description="It is revalidated after the order payment is confirmed."
                 />
               )}
             </div>
           )}
-        </Card>
+        </section>
       )}
     </Tabs>
   );

@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import {
   Button,
-  Card,
   FieldDescription,
   FieldError,
   FormField,
@@ -57,7 +56,7 @@ export function RechargeCodeConfirmation({
     setCodes((current) => current.filter((_, position) => position !== index));
     setVisible((current) => {
       const next = new Set<number>();
-      [...current].forEach((position) => {
+      current.forEach((position) => {
         if (position < index) next.add(position);
         if (position > index) next.add(position - 1);
       });
@@ -116,7 +115,7 @@ export function RechargeCodeConfirmation({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="grid gap-5">
+    <form onSubmit={submit} noValidate className="grid gap-6">
       {serverError && (
         <InlineAlert
           tone="danger"
@@ -124,38 +123,30 @@ export function RechargeCodeConfirmation({
           description={serverError}
         />
       )}
-      <Card className="overflow-hidden p-0">
-        <div className="flex items-start justify-between gap-4 border-b border-border bg-surface-subtle px-5 py-5 sm:px-6">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.09em] text-info uppercase">
-              Encrypted verification
-            </p>
-            <h2 className="mt-1 text-2xl font-black tracking-[-0.035em]">
-              Add your recharge codes
-            </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
-              Three fields are ready. Add each additional recharge separately,
-              up to ten codes in one review.
-            </p>
-          </div>
-          <IconButton
-            type="button"
-            aria-label="Add another recharge code"
-            title="Add another recharge code"
-            onClick={addCode}
-            disabled={codes.length >= 10}
-            className="shrink-0 border border-border bg-surface hover:bg-surface-subtle"
+      <section
+        aria-labelledby="checkout-recharge-codes"
+        className="border-y border-border py-6"
+      >
+        <div>
+          <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
+            Secure verification
+          </p>
+          <h2
+            id="checkout-recharge-codes"
+            className="mt-1 text-2xl font-black tracking-[-0.035em]"
           >
-            <Plus aria-hidden="true" className="size-4" />
-          </IconButton>
+            Add recharge codes
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-foreground-muted">
+            Add each recharge separately. Three fields are ready.
+          </p>
         </div>
-        <div className="grid gap-4 p-5 sm:p-6">
+        <div className="mt-5 grid gap-4">
           {codes.map((code, index) => (
             <FormField
               key={index}
               invalid={Boolean(fieldErrors.verificationCodes)}
               hasError={Boolean(fieldErrors.verificationCodes)}
-              hasDescription={index === codes.length - 1}
             >
               <Label required>Recharge code {index + 1}</Label>
               <div className="grid grid-cols-[minmax(0,1fr)_2.75rem_auto] gap-2">
@@ -201,23 +192,32 @@ export function RechargeCodeConfirmation({
                   </IconButton>
                 )}
               </div>
-              {index === codes.length - 1 && (
-                <FieldDescription>
-                  Codes are encrypted before storage and masked in email.
-                </FieldDescription>
-              )}
             </FormField>
           ))}
-          <FieldError>{fieldErrors.verificationCodes?.[0]}</FieldError>
         </div>
-      </Card>
+        <FieldError className="mt-3">
+          {fieldErrors.verificationCodes?.[0]}
+        </FieldError>
+        <Button
+          type="button"
+          variant="secondary"
+          size="small"
+          className="mt-4"
+          aria-label="Add another recharge code"
+          onClick={addCode}
+          disabled={codes.length >= 10}
+        >
+          <Plus aria-hidden="true" className="size-4" />
+          Add another code
+        </Button>
+      </section>
 
-      <Card className="grid gap-4 p-5 sm:p-6">
+      <section className="grid gap-4 border-b border-border pb-6">
         <FormField hasDescription>
           <Label optional>Order note</Label>
           <TextArea name="customerNote" maxLength={1000} rows={3} />
           <FieldDescription>
-            Confirmation updates will be associated with {customerEmail}.
+            Updates are associated with {customerEmail}.
           </FieldDescription>
         </FormField>
         <Button
@@ -235,9 +235,9 @@ export function RechargeCodeConfirmation({
           ) : (
             <ShieldCheck aria-hidden="true" className="size-4" />
           )}
-          {pending ? "Securing codes…" : "Submit for secure review"}
+          {pending ? "Securing codes..." : "Submit for review"}
         </Button>
-      </Card>
+      </section>
     </form>
   );
 }
