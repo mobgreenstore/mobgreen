@@ -28,6 +28,7 @@ export function StorefrontMenu({
   const rechargeRouteActive = pathname === "/recharge-online";
   const ordersRouteActive =
     pathname === "/orders" || pathname.startsWith("/orders/");
+  const verificationRouteActive = pathname === "/allverification";
   const howToOrderRouteActive = pathname === "/how-to-order";
   const [rechargeOpen, setRechargeOpen] = useState(rechargeRouteActive);
 
@@ -127,6 +128,20 @@ export function StorefrontMenu({
               )}
             >
               Track orders
+            </Link>
+          </DrawerClose>
+
+          <DrawerClose asChild>
+            <Link
+              href="/allverification"
+              aria-current={verificationRouteActive ? "page" : undefined}
+              className={cn(
+                navigationClassName,
+                "mt-1",
+                verificationRouteActive && "bg-surface-subtle",
+              )}
+            >
+              Verification
             </Link>
           </DrawerClose>
 
