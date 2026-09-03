@@ -61,13 +61,22 @@ export function StoreLocationControl({
   onLocationChange,
   triggerVariant = "icon",
   triggerLabel,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   className?: string;
   onLocationChange?: (location: DeliveryLocation | null) => void;
   triggerVariant?: "icon" | "text";
   triggerLabel?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  function setOpen(next: boolean) {
+    if (controlledOpen === undefined) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  }
   const [location, setLocation] = useState<DeliveryLocation | null>(null);
   const [candidate, setCandidate] = useState<LocationCandidate | null>(null);
   const [suggestions, setSuggestions] = useState<LocationCandidate[]>([]);

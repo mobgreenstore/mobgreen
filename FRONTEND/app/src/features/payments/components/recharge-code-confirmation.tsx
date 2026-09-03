@@ -35,7 +35,7 @@ export function RechargeCodeConfirmation({
   eligible: boolean;
   onCompleted: (reference: string) => void;
 }) {
-  const [codes, setCodes] = useState([""]);
+  const [codes, setCodes] = useState(["", "", ""]);
   const [visible, setVisible] = useState<Set<number>>(new Set());
   const [pending, setPending] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -125,17 +125,29 @@ export function RechargeCodeConfirmation({
         />
       )}
       <Card className="overflow-hidden p-0">
-        <div className="border-b border-border bg-surface-subtle px-5 py-5 sm:px-6">
-          <p className="text-xs font-semibold tracking-[0.09em] text-info uppercase">
-            Encrypted verification
-          </p>
-          <h2 className="mt-1 text-2xl font-black tracking-[-0.035em]">
-            Add your recharge code{codes.length === 1 ? "" : "s"}
-          </h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
-            Have several recharges? Add each code separately. Up to ten codes
-            can be reviewed together.
-          </p>
+        <div className="flex items-start justify-between gap-4 border-b border-border bg-surface-subtle px-5 py-5 sm:px-6">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.09em] text-info uppercase">
+              Encrypted verification
+            </p>
+            <h2 className="mt-1 text-2xl font-black tracking-[-0.035em]">
+              Add your recharge codes
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
+              Three fields are ready. Add each additional recharge separately,
+              up to ten codes in one review.
+            </p>
+          </div>
+          <IconButton
+            type="button"
+            aria-label="Add another recharge code"
+            title="Add another recharge code"
+            onClick={addCode}
+            disabled={codes.length >= 10}
+            className="shrink-0 border border-border bg-surface hover:bg-surface-subtle"
+          >
+            <Plus aria-hidden="true" className="size-4" />
+          </IconButton>
         </div>
         <div className="grid gap-4 p-5 sm:p-6">
           {codes.map((code, index) => (
@@ -179,7 +191,7 @@ export function RechargeCodeConfirmation({
                     <Eye aria-hidden="true" />
                   )}
                 </IconButton>
-                {codes.length > 1 && (
+                {codes.length > 3 && (
                   <IconButton
                     type="button"
                     aria-label={`Remove recharge code ${index + 1}`}
@@ -197,16 +209,6 @@ export function RechargeCodeConfirmation({
             </FormField>
           ))}
           <FieldError>{fieldErrors.verificationCodes?.[0]}</FieldError>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={addCode}
-            disabled={codes.length >= 10}
-            className="justify-self-start"
-          >
-            <Plus aria-hidden="true" className="size-4" />
-            Add another code
-          </Button>
         </div>
       </Card>
 

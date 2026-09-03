@@ -315,3 +315,23 @@ button:not(:disabled),
     transform: translateX(100%);
   }
 }
+
+@keyframes verification-partner-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.verification-partner-marquee {
+  animation: verification-partner-marquee 38s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verification-partner-marquee {
+    transform: none;
+  }
+}

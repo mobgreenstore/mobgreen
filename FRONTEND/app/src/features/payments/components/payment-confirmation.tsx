@@ -31,18 +31,26 @@ export function PaymentConfirmationShell({
   return (
     <section className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-surface shadow-[0_24px_80px_rgb(0_0_0/0.09)]">
       <header className="relative isolate overflow-hidden bg-inverse px-5 py-8 text-inverse-foreground sm:px-8 sm:py-10">
-        <div className="absolute -top-24 -right-20 -z-10 size-64 rounded-full bg-blue-500/25 blur-3xl" />
-        <div className="absolute -bottom-28 -left-20 -z-10 size-56 rounded-full bg-emerald-400/15 blur-3xl" />
-        <Badge className="border-white/15 bg-white/10 text-white">
-          <LockKeyhole aria-hidden="true" className="size-3.5" />
-          Secure confirmation
-        </Badge>
-        <h1 className="mt-5 max-w-2xl text-4xl leading-[0.96] font-black tracking-[-0.055em] text-balance sm:text-5xl">
-          {title}
-        </h1>
-        <p className="mt-4 max-w-xl text-sm leading-6 text-white/70 sm:text-base">
-          {description}
-        </p>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 bg-[url('/images/verification/payment-hero-v1.png')] bg-cover bg-[position:72%_center] opacity-75"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(2_6_12/.98)_0%,rgb(3_13_24/.94)_46%,rgb(2_12_21/.56)_100%)]"
+        />
+        <div className="max-w-2xl">
+          <Badge className="border-white/20 bg-black/20 text-white backdrop-blur-sm">
+            <LockKeyhole aria-hidden="true" className="size-3.5" />
+            Secure confirmation
+          </Badge>
+          <h1 className="mt-5 text-4xl leading-[0.96] font-black tracking-[-0.055em] text-balance sm:text-5xl">
+            {title}
+          </h1>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-white/75 sm:text-base">
+            {description}
+          </p>
+        </div>
       </header>
       <div className="grid gap-7 p-4 sm:p-7 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:p-8">
         <div className="min-w-0">{children}</div>

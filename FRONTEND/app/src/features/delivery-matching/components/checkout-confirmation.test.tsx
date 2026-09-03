@@ -67,7 +67,7 @@ describe("checkout confirmation presentation", () => {
     expect(screen.queryByText(/balance is available/i)).not.toBeTruthy();
   });
 
-  it("shows the locked method and adds several secure code fields", () => {
+  it("shows the locked method with three secure code fields and can add another", () => {
     render(
       <>
         <PaymentMethodSummary
@@ -85,9 +85,11 @@ describe("checkout confirmation presentation", () => {
     expect(screen.getByText(/selected:/i).parentElement?.textContent).toContain(
       "Recharge online",
     );
-    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: "Add another code" }));
-    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(2);
+    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(3);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Add another recharge code" }),
+    );
+    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(4);
     expect(
       screen.getByText(/associated with customer@example.com/i),
     ).toBeTruthy();
