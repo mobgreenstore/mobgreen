@@ -120,7 +120,7 @@ export function CheckoutForm({
         return;
       }
       router.push(
-        `/checkout/confirmation?intent=${encodeURIComponent(result.intent.publicId)}`,
+        `/allverification?intent=${encodeURIComponent(result.intent.publicId)}`,
       );
     } catch {
       setServerError(

@@ -324,7 +324,7 @@ export function DeliveryMatchingFlow({
             href={
               intent.status === "SUBMITTED"
                 ? "/orders?tab=active"
-                : `/checkout/confirmation?intent=${encodeURIComponent(intent.publicId)}`
+                : `/allverification?intent=${encodeURIComponent(intent.publicId)}`
             }
             className={cn(
               buttonVariants({ variant: "primary", size: "large" }),

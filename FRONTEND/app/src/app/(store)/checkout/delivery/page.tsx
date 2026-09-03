@@ -29,9 +29,7 @@ export default async function DeliveryMatchingPage({
   );
   if (!intent) notFound();
   if (intent.fulfillmentType !== "DELIVERY") {
-    redirect(
-      `/checkout/confirmation?intent=${encodeURIComponent(intent.publicId)}`,
-    );
+    redirect(`/allverification?intent=${encodeURIComponent(intent.publicId)}`);
   }
   if (intent.status === "SUBMITTED" && !intent.paymentApproved) {
     redirect(
