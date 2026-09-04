@@ -1,10 +1,15 @@
+"use client";
+
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
+import { useState } from "react";
 import type { CommerceImage } from "@/types/commerce";
 import { cn } from "@/lib/utils";
 
+type DisplayImage = Pick<CommerceImage, "url" | "altText">;
+
 interface ResponsiveImageProps {
-  image: CommerceImage | null;
+  image: DisplayImage | null;
   sizes: string;
   priority?: boolean;
   className?: string;
@@ -20,6 +25,9 @@ export function ResponsiveImage({
   imageClassName,
   aspect = "square",
 }: ResponsiveImageProps) {
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const imageFailed = image !== null && failedImageUrl === image.url;
+
   return (
     <div
       className={cn(
@@ -30,7 +38,7 @@ export function ResponsiveImage({
         className,
       )}
     >
-      {image ? (
+      {image && !imageFailed ? (
         <Image
           src={image.url}
           alt={image.altText}
@@ -38,6 +46,7 @@ export function ResponsiveImage({
           sizes={sizes}
           priority={priority}
           className={cn("object-cover", imageClassName)}
+          onError={() => setFailedImageUrl(image.url)}
         />
       ) : (
         <div

@@ -2,10 +2,11 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Banknote, Bitcoin, Check, Clock3, CreditCard } from "lucide-react";
+import { Check, Clock3 } from "lucide-react";
 import { Money } from "@/components/commerce";
 import { Card, InlineAlert } from "@/components/ui";
 import type { SupportedCurrency } from "@/config/commerce";
+import { PaymentMethodGlyph } from "@/features/payments/components/payment-method-glyph";
 import type { PaymentMethodId } from "@/features/payments/payment-method";
 import { paymentMethodLabel } from "@/features/payments/payment-method";
 import { cn } from "@/lib/utils";
@@ -66,11 +67,10 @@ export function PaymentConfirmationShell({
 const methods: Array<{
   id: PaymentMethodId;
   shortLabel: string;
-  icon: typeof CreditCard;
 }> = [
-  { id: "RECHARGE_FROM_STORE", shortLabel: "From store", icon: CreditCard },
-  { id: "RECHARGE_ONLINE", shortLabel: "Online", icon: Banknote },
-  { id: "BITCOIN_DEPOSIT", shortLabel: "Bitcoin", icon: Bitcoin },
+  { id: "RECHARGE_FROM_STORE", shortLabel: "From store" },
+  { id: "RECHARGE_ONLINE", shortLabel: "Online" },
+  { id: "BITCOIN_DEPOSIT", shortLabel: "Bitcoin" },
 ];
 
 export function PaymentMethodSummary({
@@ -89,7 +89,6 @@ export function PaymentMethodSummary({
       >
         {methods.map((option) => {
           const active = option.id === method;
-          const Icon = option.icon;
           return (
             <div
               key={option.id}
@@ -101,7 +100,10 @@ export function PaymentMethodSummary({
                   : "text-foreground-subtle opacity-55",
               )}
             >
-              <Icon aria-hidden="true" className="size-4 shrink-0" />
+              <PaymentMethodGlyph
+                method={option.id}
+                className="size-4 shrink-0"
+              />
               {option.shortLabel}
             </div>
           );
@@ -112,7 +114,7 @@ export function PaymentMethodSummary({
         <strong className="text-foreground">
           {paymentMethodLabel(method, rechargeProvider)}
         </strong>
-        . To change it, cancel this checkout and start a new payment attempt.
+        . To choose another method, return to checkout and begin a new verification.
       </p>
     </Card>
   );

@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { ImageIcon } from "lucide-react";
 import { Money } from "@/components/commerce/money";
+import { ResponsiveImage } from "@/components/commerce/responsive-image";
 import { Badge } from "@/components/ui";
 import {
   OrderStatusBadge,
@@ -19,20 +18,11 @@ export function CustomerOrderCard({ order }: { order: PublicOrderListItem }) {
       className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-4 rounded-xl border border-border bg-surface p-3 shadow-xs sm:grid-cols-[7rem_minmax(0,1fr)] sm:p-4"
     >
       <div className="relative aspect-square overflow-hidden rounded-lg bg-surface-subtle">
-        {order.firstImage ? (
-          <Image
-            src={order.firstImage.url}
-            alt={order.firstImage.altText}
-            fill
-            sizes="(max-width: 640px) 88px, 112px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center text-foreground-subtle">
-            <ImageIcon aria-hidden="true" className="size-5" />
-            <span className="sr-only">Image unavailable</span>
-          </div>
-        )}
+        <ResponsiveImage
+          image={order.firstImage}
+          sizes="(max-width: 640px) 88px, 112px"
+          className="size-full"
+        />
         {extraItems > 0 && (
           <span className="absolute right-1.5 bottom-1.5 rounded-full bg-black/75 px-2 py-1 text-[0.6875rem] font-semibold text-white">
             +{extraItems}

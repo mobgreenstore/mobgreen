@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ExternalLink, LoaderCircle, Truck } from "lucide-react";
+import { ArrowRight, ExternalLink, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { OrderSummary } from "@/components/commerce/order-summary";
 import { RECHARGE_PARTNERS } from "@/config/recharge";
 import {
@@ -16,6 +16,7 @@ import {
   Label,
   RadioGroup,
   RadioOption,
+  Select,
   TextField,
   buttonVariants,
 } from "@/components/ui";
@@ -63,17 +64,19 @@ export function CheckoutForm({
     cart.currency !== null &&
     cart.subtotalMinor !== null &&
     status !== "error";
+  const onlinePartnerSelected =
+    paymentMethod !== "RECHARGE_ONLINE" || Boolean(rechargeProvider);
+  const deliveryReady =
+    fulfillmentType !== "DELIVERY" || deliveryLocation !== null;
   const canSubmit =
     summaryReady &&
     !pending &&
     status !== "refreshing" &&
+    deliveryReady &&
+    onlinePartnerSelected &&
     (paymentMethod !== "BITCOIN_DEPOSIT" || bitcoinCheckoutAvailable);
-  const amountLabel = useMemo(
-    () =>
-      cart.currency && cart.subtotalMinor !== null
-        ? `${cart.currency} order`
-        : "order",
-    [cart.currency, cart.subtotalMinor],
+  const selectedRechargePartner = RECHARGE_PARTNERS.find(
+    (partner) => partner.id === rechargeProvider,
   );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -82,7 +85,6 @@ export function CheckoutForm({
     setPending(true);
     setServerError(null);
     setFieldErrors({});
-
     const formData = new FormData(event.currentTarget);
     const payload = {
       idempotencyKey: idempotencyKey.current,
@@ -96,7 +98,6 @@ export function CheckoutForm({
         paymentMethod === "RECHARGE_ONLINE" ? rechargeProvider || null : null,
       lines: storedLines,
     };
-
     try {
       const response = await fetch("/api/checkout/intents", {
         method: "POST",
@@ -106,10 +107,7 @@ export function CheckoutForm({
       const result = (await response.json()) as {
         error?: string;
         fieldErrors?: FieldErrors;
-        intent?: {
-          publicId: string;
-          fulfillmentType: "PICKUP" | "DELIVERY";
-        };
+        intent?: { publicId: string };
       };
       if (!response.ok || !result.intent) {
         setFieldErrors(result.fieldErrors ?? {});
@@ -120,9 +118,7 @@ export function CheckoutForm({
         return;
       }
       router.push(
-        result.intent.fulfillmentType === "DELIVERY"
-          ? `/checkout/delivery?intent=${encodeURIComponent(result.intent.publicId)}`
-          : `/allverification?intent=${encodeURIComponent(result.intent.publicId)}`,
+        "/allverification?intent=" + encodeURIComponent(result.intent.publicId),
       );
     } catch {
       setServerError(
@@ -167,7 +163,7 @@ export function CheckoutForm({
       noValidate
       className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-12"
     >
-      <div className="grid gap-6">
+      <div className="grid gap-7">
         {serverError && (
           <InlineAlert
             tone="danger"
@@ -176,61 +172,67 @@ export function CheckoutForm({
           />
         )}
 
-        <Card className="grid gap-5 p-5 sm:p-6">
+        <section className="grid gap-5 border-b border-border pb-7 sm:gap-6 sm:pb-9">
           <div>
-            <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-              Step 1
+            <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
+              Order contact
             </p>
-            <h2 className="mt-1 text-lg font-semibold">Your information</h2>
-            <p className="mt-1 text-sm leading-6 text-foreground-muted">
-              No account is created. We use these details for this order only.
+            <h2 className="mt-1 text-xl font-black tracking-[-0.035em]">
+              Where should we send your update?
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
+              These details are used only for this order. No account is created.
             </p>
           </div>
-          <FormField
-            invalid={Boolean(fieldErrors.customerName)}
-            hasError={Boolean(fieldErrors.customerName)}
-          >
-            <Label required>Full name</Label>
-            <TextField
-              name="customerName"
-              autoComplete="name"
-              required
-              maxLength={120}
-            />
-            <FieldError>{fieldErrors.customerName?.[0]}</FieldError>
-          </FormField>
-          <FormField
-            invalid={Boolean(fieldErrors.customerEmail)}
-            hasError={Boolean(fieldErrors.customerEmail)}
-            hasDescription
-          >
-            <Label required>Email</Label>
-            <TextField
-              name="customerEmail"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              required
-              maxLength={320}
-            />
-            <FieldDescription>
-              Used to identify and communicate about this order.
-            </FieldDescription>
-            <FieldError>{fieldErrors.customerEmail?.[0]}</FieldError>
-          </FormField>
-        </Card>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              invalid={Boolean(fieldErrors.customerName)}
+              hasError={Boolean(fieldErrors.customerName)}
+            >
+              <Label required>Full name</Label>
+              <TextField
+                name="customerName"
+                autoComplete="name"
+                required
+                maxLength={120}
+              />
+              <FieldError>{fieldErrors.customerName?.[0]}</FieldError>
+            </FormField>
+            <FormField
+              invalid={Boolean(fieldErrors.customerEmail)}
+              hasError={Boolean(fieldErrors.customerEmail)}
+              hasDescription
+            >
+              <Label required>Email</Label>
+              <TextField
+                name="customerEmail"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                maxLength={320}
+              />
+              <FieldDescription>
+                We use this for your order and delivery updates.
+              </FieldDescription>
+              <FieldError>{fieldErrors.customerEmail?.[0]}</FieldError>
+            </FormField>
+          </div>
+        </section>
 
-        <Card className="grid gap-5 p-5 sm:p-6">
+        <Card className="grid gap-5 rounded-2xl border-border-strong/65 p-5 sm:p-6">
           <div>
-            <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-              Step 2
+            <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
+              Fulfillment
             </p>
-            <h2 className="mt-1 text-lg font-semibold">Fulfillment</h2>
+            <h2 className="mt-1 text-xl font-black tracking-[-0.035em]">
+              How will you receive the order?
+            </h2>
           </div>
           <RadioGroup
             name="fulfillmentType"
-            legend="How will you receive the order?"
-            description="Detailed pickup and delivery instructions will be confirmed later."
+            legend="Choose pickup or delivery"
+            description="Delivery requires your confirmed location. It is securely carried into All Verification."
             orientation="horizontal"
           >
             <RadioOption
@@ -238,56 +240,50 @@ export function CheckoutForm({
               label="Pickup"
               checked={fulfillmentType === "PICKUP"}
               onChange={() => setFulfillmentType("PICKUP")}
-              description="Collect the order after confirmation."
+              description="Collect after your payment is confirmed."
             />
             <RadioOption
               value="DELIVERY"
               label="Delivery"
               checked={fulfillmentType === "DELIVERY"}
               onChange={() => setFulfillmentType("DELIVERY")}
-              description="Delivery details will be coordinated after verification."
+              description="Choose a nearby delivery profile in verification."
             />
           </RadioGroup>
           {fulfillmentType === "DELIVERY" && (
-            <div className="rounded-xl bg-surface-subtle p-4">
-              <p className="text-sm font-semibold">Delivery destination</p>
-              {deliveryLocation ? (
-                <>
+            <div className="border-t border-border pt-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">Delivery destination</p>
                   <p className="mt-1 text-sm leading-6 text-foreground-muted">
-                    {deliveryLocation.formattedAddress}
+                    {deliveryLocation
+                      ? deliveryLocation.formattedAddress
+                      : "Confirm a real location before continuing."}
                   </p>
-                  <div className="mt-3">
-                    <StoreLocationControl
-                      onLocationChange={setDeliveryLocation}
-                      className="rounded-md border border-border bg-surface"
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <p className="text-sm text-foreground-muted">
-                    Confirm a real location before placing a delivery order.
-                  </p>
-                  <StoreLocationControl
-                    onLocationChange={setDeliveryLocation}
-                    className="shrink-0 rounded-md border border-border bg-surface"
-                  />
                 </div>
-              )}
-              <FieldError>{fieldErrors.deliveryLocation?.[0]}</FieldError>
+                <StoreLocationControl
+                  onLocationChange={setDeliveryLocation}
+                  className="shrink-0 rounded-md border border-border bg-surface"
+                />
+              </div>
+              <FieldError className="mt-3">
+                {fieldErrors.deliveryLocation?.[0]}
+              </FieldError>
             </div>
           )}
         </Card>
 
-        <Card className="grid gap-5 p-5 sm:p-6">
+        <section className="grid gap-5 border-t border-border pt-7 sm:pt-9">
           <div>
-            <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-              Step 3
+            <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
+              Payment
             </p>
-            <h2 className="mt-1 text-lg font-semibold">Payment method</h2>
-            <p className="mt-1 text-sm leading-6 text-foreground-muted">
-              Choose one secure method. The server saves this choice with the
-              confirmed cart and order amount.
+            <h2 className="mt-1 text-xl font-black tracking-[-0.035em]">
+              Choose a payment method
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
+              The selected method, products, and exact total are secured
+              together before verification opens.
             </p>
           </div>
           <PaymentMethodSelector
@@ -297,47 +293,56 @@ export function CheckoutForm({
           />
 
           {paymentMethod === "RECHARGE_ONLINE" && (
-            <div>
-              <p className="text-sm font-semibold">Online recharge partners</p>
-              <p className="mt-1 text-xs leading-5 text-foreground-muted">
-                Partner websites open in a new tab. Complete the purchase,
-                return here, and select the partner you used.
-              </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {RECHARGE_PARTNERS.map((partner) => (
-                  <label
-                    key={partner.id}
-                    className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface p-3.5 has-checked:border-foreground has-checked:ring-1 has-checked:ring-foreground"
-                  >
-                    <span className="flex min-w-0 items-center gap-3">
-                      <input
-                        type="radio"
-                        name="rechargeProvider"
-                        value={partner.id}
-                        checked={rechargeProvider === partner.id}
-                        onChange={() => setRechargeProvider(partner.id)}
-                        className="size-5 accent-black"
-                      />
-                      <span className="text-sm font-semibold">
-                        {partner.name}
-                      </span>
-                    </span>
-                    <a
-                      href={partner.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Open ${partner.name} in a new tab`}
-                      className="grid size-11 shrink-0 place-items-center rounded-md hover:bg-surface-subtle"
-                    >
-                      <ExternalLink aria-hidden="true" className="size-4" />
-                    </a>
-                  </label>
-                ))}
+            <section className="grid gap-4 border-t border-border pt-5">
+              <div>
+                <p className="text-sm font-semibold">Recharge partner</p>
+                <p className="mt-1 text-sm leading-6 text-foreground-muted">
+                  Choose the partner that will issue your code. Their website
+                  opens in a new tab when you are ready.
+                </p>
               </div>
-              <FieldError>{fieldErrors.rechargeProvider?.[0]}</FieldError>
-            </div>
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                <FormField
+                  invalid={Boolean(fieldErrors.rechargeProvider)}
+                  hasError={Boolean(fieldErrors.rechargeProvider)}
+                >
+                  <Label required>Partner used for this order</Label>
+                  <Select
+                    value={rechargeProvider}
+                    onChange={(event) =>
+                      setRechargeProvider(event.target.value)
+                    }
+                    required
+                  >
+                    <option value="" disabled>
+                      Select a recharge partner
+                    </option>
+                    {RECHARGE_PARTNERS.map((partner) => (
+                      <option key={partner.id} value={partner.id}>
+                        {partner.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <FieldError>{fieldErrors.rechargeProvider?.[0]}</FieldError>
+                </FormField>
+                {selectedRechargePartner ? (
+                  <a
+                    href={selectedRechargePartner.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      buttonVariants({ variant: "secondary" }),
+                      "w-full sm:w-auto",
+                    )}
+                  >
+                    Open partner{" "}
+                    <ExternalLink aria-hidden="true" className="size-4" />
+                  </a>
+                ) : null}
+              </div>
+            </section>
           )}
-        </Card>
+        </section>
       </div>
 
       <aside className="grid gap-4 lg:sticky lg:top-24">
@@ -346,27 +351,16 @@ export function CheckoutForm({
           subtotalMinor={cart.subtotalMinor!}
           totalMinor={cart.subtotalMinor!}
         />
-        <InlineAlert
-          tone="info"
-          title="Final verification comes next"
-          description={`Continuing this ${amountLabel} securely confirms current products and prices. Delivery orders then choose a simulated nearby profile before code verification.`}
-        />
         <Button type="submit" size="large" disabled={!canSubmit}>
           {pending ? (
             <LoaderCircle
               aria-hidden="true"
               className="size-4 animate-spin motion-reduce:animate-none"
             />
-          ) : fulfillmentType === "DELIVERY" ? (
-            <Truck aria-hidden="true" className="size-4" />
           ) : (
             <ArrowRight aria-hidden="true" className="size-4" />
           )}
-          {pending
-            ? "Preparing checkout…"
-            : fulfillmentType === "DELIVERY"
-              ? "Find delivery options"
-              : "Continue to verification"}
+          {pending ? "Preparing checkout…" : "Continue to verification"}
         </Button>
         <Link
           href="/cart"

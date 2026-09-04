@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { ImageIcon, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Money } from "@/components/commerce/money";
+import { ResponsiveImage } from "@/components/commerce/responsive-image";
 import { Badge, ErrorState, InlineAlert } from "@/components/ui";
 import { CourierAssignmentCard } from "@/features/delivery-matching/components/courier-assignment-card";
 import type { PublicOrderDetail } from "@/features/customer-orders/types";
@@ -132,22 +132,11 @@ export function CustomerOrderDetailView({
               key={`${item.name}-${index}`}
               className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 rounded-xl border border-border p-3 sm:grid-cols-[6rem_minmax(0,1fr)]"
             >
-              <div className="relative aspect-square overflow-hidden rounded-lg bg-surface-subtle">
-                {item.image ? (
-                  <Image
-                    src={item.image.url}
-                    alt={item.image.altText}
-                    fill
-                    sizes="96px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0 grid place-items-center text-foreground-subtle">
-                    <ImageIcon aria-hidden="true" className="size-5" />
-                    <span className="sr-only">Image unavailable</span>
-                  </div>
-                )}
-              </div>
+              <ResponsiveImage
+                image={item.image}
+                sizes="96px"
+                className="rounded-lg"
+              />
               <div className="flex min-w-0 justify-between gap-3">
                 <div>
                   <h3 className="font-semibold">{item.name}</h3>

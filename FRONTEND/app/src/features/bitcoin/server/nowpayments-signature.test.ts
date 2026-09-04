@@ -2,21 +2,6 @@ import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { verifyNowPaymentsWebhookSignature } from "@/features/bitcoin/server/nowpayments-signature";
 
-function canonical(value: unknown): string {
-  if (Array.isArray(value))
-    return JSON.stringify(value.map((entry) => JSON.parse(canonical(entry))));
-  if (value && typeof value === "object") {
-    return JSON.stringify(
-      Object.fromEntries(
-        Object.entries(value as Record<string, unknown>)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([k, v]) => [k, v]),
-      ),
-    );
-  }
-  return JSON.stringify(value);
-}
-
 describe("NOWPayments IPN signature", () => {
   const secret = "a-secure-webhook-secret-value";
   const body = JSON.stringify({ payment_status: "finished", payment_id: 1 });

@@ -2,6 +2,7 @@
 
 import { LoaderCircle, ShoppingBag } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Money } from "@/components/commerce/money";
 import { WeightPriceSelector } from "@/components/commerce/weight-price-selector";
 import { Badge, Button, Card } from "@/components/ui";
@@ -16,6 +17,7 @@ export function ProductOptionPanel({
   options: CatalogProductDetailViewModel["priceOptions"];
 }) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState(options[0]?.id);
   const [pending, setPending] = useState(false);
   const selected =
@@ -34,7 +36,8 @@ export function ProductOptionPanel({
   const addSelected = async () => {
     setPending(true);
     try {
-      await addItem(productId, selected.id);
+      const added = await addItem(productId, selected.id);
+      if (added) router.push("/cart");
     } finally {
       setPending(false);
     }

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { brandLogoUrlForEmail } from "@/config/brand";
 import { decryptVerificationCode } from "@/features/checkout/server/code-encryption";
 import {
   buildAdminOrderEmail,
@@ -308,7 +309,7 @@ export async function dispatchCustomerOrderSubmittedNotification(
       storefrontUrl: storeUrl,
       orderUrl: `${storeUrl}/orders/${encodeURIComponent(order.reference)}`,
       trackingUrl: `${storeUrl}/orders/${encodeURIComponent(order.reference)}/tracking`,
-      logoUrl: `${storeUrl}/images/mobgreen.png`,
+      logoUrl: brandLogoUrlForEmail(storeUrl),
       reference: order.reference,
       customerName: order.customerName,
       fulfillment: order.fulfillmentType,

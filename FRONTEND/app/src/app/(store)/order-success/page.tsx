@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { CircleCheck, Clock3, MapPin, Navigation } from "lucide-react";
+import { BrandLogo } from "@/components/shared/brand-mark";
 import { StoreHeader } from "@/components/shared/store-header";
 import { Card, InlineAlert, buttonVariants } from "@/components/ui";
 import { OrderStatusBadge } from "@/features/orders/components/status-badges";
@@ -41,13 +41,11 @@ export default async function OrderSuccessPage({
         <Card className="overflow-hidden p-0">
           <div className="border-b border-border bg-surface-subtle px-6 py-7 sm:px-9 sm:py-9">
             <div className="flex items-center justify-between gap-4">
-              <Image
-                src="/images/mobgreen.png"
+              <BrandLogo
                 alt="MOB GREENS"
-                width={48}
-                height={48}
                 className="size-12 rounded-xl object-cover"
                 priority
+                sizes="48px"
               />
               {order ? <OrderStatusBadge status={order.status} /> : null}
             </div>

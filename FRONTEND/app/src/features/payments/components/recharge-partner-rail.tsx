@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { RECHARGE_PARTNERS } from "@/config/recharge";
 import { cn } from "@/lib/utils";
 
@@ -88,11 +89,12 @@ export function RechargePartnerRail({
               }
               className="flex h-11 shrink-0 items-center gap-2 rounded-md px-3 transition-colors hover:bg-surface focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
             >
-              <img
+              <Image
                 src={partner.logoSrc}
-                width="26"
-                height="26"
+                width={26}
+                height={26}
                 alt=""
+                sizes="24px"
                 className="size-6 object-contain"
               />
               <span className="text-sm font-semibold whitespace-nowrap">

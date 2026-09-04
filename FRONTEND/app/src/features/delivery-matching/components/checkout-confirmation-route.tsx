@@ -28,15 +28,6 @@ export async function CheckoutConfirmationRoute({
     parsed.data,
   );
   if (!intent) notFound();
-  if (
-    intent.fulfillmentType === "DELIVERY" &&
-    !intent.selectedCourier &&
-    intent.status !== "SUBMITTED"
-  ) {
-    redirect(
-      `/checkout/delivery?intent=${encodeURIComponent(intent.publicId)}`,
-    );
-  }
   if (intent.status === "SUBMITTED") redirect("/orders?tab=pending");
   const backHref = "/checkout";
 

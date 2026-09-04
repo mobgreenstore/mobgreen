@@ -11,8 +11,12 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const addItem = vi.hoisted(() => vi.fn());
+const push = vi.hoisted(() => vi.fn());
 vi.mock("@/features/cart/cart-provider", () => ({
   useCart: () => ({ addItem }),
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
 }));
 
 import { ProductOptionPanel } from "@/features/catalog/components/product-option-panel";
@@ -44,5 +48,6 @@ describe("product cart action", () => {
         "a70d9361-91cd-4d47-873f-7e5780fa23cc",
       ),
     );
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/cart"));
   });
 });

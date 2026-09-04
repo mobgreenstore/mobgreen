@@ -31,6 +31,9 @@ export default async function DeliveryMatchingPage({
   if (intent.fulfillmentType !== "DELIVERY") {
     redirect(`/allverification?intent=${encodeURIComponent(intent.publicId)}`);
   }
+  if (intent.status !== "SUBMITTED") {
+    redirect(`/allverification?intent=${encodeURIComponent(intent.publicId)}`);
+  }
   if (intent.status === "SUBMITTED" && !intent.paymentApproved) {
     redirect(
       intent.orderReference

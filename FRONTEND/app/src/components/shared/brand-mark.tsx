@@ -1,5 +1,31 @@
+import Image from "next/image";
 import Link from "next/link";
+import { brandLogoSrc } from "@/config/brand";
 import { cn } from "@/lib/utils";
+
+export function BrandLogo({
+  alt = "",
+  className,
+  priority = false,
+  sizes = "48px",
+}: {
+  alt?: string;
+  className?: string;
+  priority?: boolean;
+  sizes?: string;
+}) {
+  return (
+    <Image
+      src={brandLogoSrc}
+      alt={alt}
+      width={96}
+      height={96}
+      priority={priority}
+      sizes={sizes}
+      className={cn("object-cover", className)}
+    />
+  );
+}
 
 interface BrandMarkProps {
   className?: string;
@@ -18,9 +44,9 @@ export function BrandMark({ className, compact = false }: BrandMarkProps) {
     >
       <span
         aria-hidden="true"
-        className="grid size-8 place-items-center rounded-md bg-inverse text-xs font-bold text-inverse-foreground"
+        className="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-md bg-inverse"
       >
-        MG
+        <BrandLogo priority sizes="32px" className="size-full" />
       </span>
       {!compact && <span className="text-[0.9375rem]">MOB GREENS</span>}
     </Link>
