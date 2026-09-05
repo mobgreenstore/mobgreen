@@ -157,7 +157,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const validateAndAccept = useCallback(
     async (lines: StoredCartLine[], persist: boolean) => {
       const requestId = ++requestSequence.current;
-      setStatus(lines.length ? "refreshing" : "ready");
+      setStatus(
+        lines.length === 0
+          ? "ready"
+          : cartRef.current.lines.length === 0
+            ? "loading"
+            : "refreshing",
+      );
       if (lines.length === 0) {
         acceptCart([], EMPTY_CART, persist);
         return true;

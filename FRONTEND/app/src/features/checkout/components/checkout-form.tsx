@@ -14,6 +14,8 @@ import {
   FormField,
   InlineAlert,
   Label,
+  Skeleton,
+  SkeletonGroup,
   TextField,
   buttonVariants,
 } from "@/components/ui";
@@ -28,6 +30,30 @@ import { RechargePartnerCard } from "@/features/recharge/components/recharge-par
 import { cn } from "@/lib/utils";
 
 type FieldErrors = Record<string, string[] | undefined>;
+
+function CheckoutFormLoading() {
+  return (
+    <SkeletonGroup
+      label="Restoring and confirming your card"
+      className="grid min-w-0 gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-12"
+    >
+      <div className="grid min-w-0 gap-6">
+        <div className="grid gap-3 border-b border-border pb-6">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-7 w-64 max-w-full" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+        </div>
+        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-44 w-full rounded-2xl" />
+      </div>
+      <div className="grid gap-4">
+        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-12 w-full rounded-lg" />
+      </div>
+    </SkeletonGroup>
+  );
+}
 
 export function CheckoutForm({
   bitcoinCheckoutAvailable,
@@ -124,15 +150,11 @@ export function CheckoutForm({
     }
   }
 
-  if (status === "loading") {
-    return (
-      <Card className="p-6">
-        <p role="status" className="text-sm text-foreground-muted">
-          Loading and confirming your card…
-        </p>
-      </Card>
-    );
-  }
+  if (
+    status === "loading" ||
+    (status === "refreshing" && cart.lines.length === 0)
+  )
+    return <CheckoutFormLoading />;
 
   if (!summaryReady) {
     return (
