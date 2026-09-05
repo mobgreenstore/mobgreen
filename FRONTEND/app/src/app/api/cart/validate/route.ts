@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > MAX_CART_REQUEST_BYTES) {
     return errorResponse(
-      "The cart request is too large.",
+      "The card request is too large.",
       "CART_TOO_LARGE",
       413,
     );
@@ -32,14 +32,14 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof ZodError) {
       return errorResponse(
-        "The cart contains invalid selections.",
+        "The card contains invalid selections.",
         "INVALID_CART",
         400,
       );
     }
     logger.error("cart.validation_unexpected_error", { error });
     return errorResponse(
-      "The cart could not be refreshed. Try again.",
+      "The card could not be refreshed. Try again.",
       "CART_REFRESH_FAILED",
       500,
     );

@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 
 function CartLoading() {
   return (
-    <SkeletonGroup label="Loading your cart" className="grid gap-4">
+    <SkeletonGroup label="Loading your card" className="grid gap-4">
       <Skeleton className="h-28 w-full rounded-lg" />
       <Skeleton className="h-28 w-full rounded-lg" />
       <Skeleton className="h-52 w-full rounded-lg" />
@@ -66,7 +66,7 @@ export function CartPage() {
   if (status === "error" && cart.lines.length === 0) {
     return (
       <ErrorState
-        title="Your cart could not be confirmed"
+        title="Your card could not be confirmed"
         description={error}
         onRetry={refresh}
       />
@@ -76,7 +76,7 @@ export function CartPage() {
   if (cart.lines.length === 0) {
     return (
       <EmptyState
-        title="Your cart is empty"
+        title="Your card is empty"
         description="Choose a real product and weight option from the catalog."
         icon={<ShoppingBag aria-hidden="true" className="size-5" />}
         action={
@@ -104,7 +104,7 @@ export function CartPage() {
                 id="cart-items-heading"
                 className="text-lg font-semibold tracking-[-0.025em]"
               >
-                Cart items
+                Card items
               </h2>
               <p className="mt-1 text-sm text-foreground-muted">
                 {itemCount === 1 ? "1 item" : `${itemCount} items`} · prices
@@ -160,7 +160,7 @@ export function CartPage() {
             {cart.hasCurrencyConflict && (
               <InlineAlert
                 tone="danger"
-                title="This cart contains multiple currencies"
+                title="This card contains multiple currencies"
                 description="Remove items until every remaining selection uses only GBP, EUR, or USD. Currency conversion is never automatic."
               />
             )}
@@ -188,7 +188,7 @@ export function CartPage() {
                       className="mt-3"
                       tone="success"
                       title={`% special offer applied`}
-                      description={`This cart line contains  units per offer bundle. The offer is rechecked at checkout.`}
+                      description={`This card item contains units per offer bundle. The offer is rechecked at checkout.`}
                     />
                   )}
                   {line.issues.length > 0 && (
@@ -293,8 +293,8 @@ export function CartPage() {
             <DialogTitle>Remove this item?</DialogTitle>
             <DialogDescription>
               {removeTarget
-                ? `${removeTarget.productName} will be removed from your cart.`
-                : "This item will be removed from your cart."}
+                ? `${removeTarget.productName} will be removed from your card.`
+                : "This item will be removed from your card."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -317,14 +317,14 @@ export function CartPage() {
       <Dialog open={clearOpen} onOpenChange={setClearOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Clear your cart?</DialogTitle>
+            <DialogTitle>Clear your card?</DialogTitle>
             <DialogDescription>
               Every saved selection will be removed from this browser.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="secondary">Keep cart</Button>
+              <Button variant="secondary">Keep card</Button>
             </DialogClose>
             <Button
               variant="destructive"
@@ -333,7 +333,7 @@ export function CartPage() {
                 setClearOpen(false);
               }}
             >
-              Clear cart
+              Clear card
             </Button>
           </DialogFooter>
         </DialogContent>

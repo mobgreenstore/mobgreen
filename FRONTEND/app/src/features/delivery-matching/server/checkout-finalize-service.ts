@@ -205,7 +205,7 @@ export class CheckoutFinalizeService {
       ) {
         throw new CheckoutError(
           "CART_CHANGED",
-          "A product, price, or special offer changed. Review the cart and retry.",
+          "A product, price, or special offer changed. Review the card and retry.",
           409,
         );
       }
@@ -272,7 +272,7 @@ export class CheckoutFinalizeService {
         if (!option || option.productId !== line.productId) {
           throw new CheckoutError(
             "INVALID_SELECTION",
-            "A cart selection is no longer valid.",
+            "A card selection is no longer valid.",
             409,
           );
         }
@@ -301,7 +301,7 @@ export class CheckoutFinalizeService {
         ) {
           throw new CheckoutError(
             "CART_CHANGED",
-            "A special offer changed or expired. Review the cart and retry.",
+            "A special offer changed or expired. Review the card and retry.",
             409,
           );
         }
@@ -340,7 +340,7 @@ export class CheckoutFinalizeService {
       ) {
         throw new CheckoutError(
           "MIXED_CURRENCY",
-          "An order must use one currency. Review the cart and retry.",
+          "An order must use one currency. Review the card and retry.",
           409,
         );
       }
@@ -351,7 +351,7 @@ export class CheckoutFinalizeService {
       if (subtotalMinor !== intent.subtotalMinor) {
         throw new CheckoutError(
           "CART_CHANGED",
-          "A product or price changed. Review the cart and retry.",
+          "A product or price changed. Review the card and retry.",
           409,
         );
       }

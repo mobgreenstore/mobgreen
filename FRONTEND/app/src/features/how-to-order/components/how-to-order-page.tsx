@@ -19,7 +19,7 @@ const steps = [
     number: "01",
     title: "Choose your products",
     description:
-      "Browse the catalogue, select an available option, then review every item in your cart before continuing.",
+      "Browse the catalogue, select an available option, then review every item in your card before continuing.",
   },
   {
     icon: MapPin,
@@ -33,7 +33,7 @@ const steps = [
     number: "03",
     title: "Choose how to pay",
     description:
-      "Select recharge from store, recharge online, or Bitcoin deposit. The server locks the current cart, total, currency, and selected payment method together.",
+      "Select recharge from store, recharge online, or Bitcoin deposit. The server locks the current card, total, currency, and selected payment method together.",
   },
   {
     icon: CheckCircle2,
@@ -90,10 +90,10 @@ export function HowToOrderPage() {
                 How to order
               </p>
               <h1 className="mt-4 text-4xl leading-[0.96] font-black tracking-[-0.055em] text-balance sm:text-5xl lg:text-6xl">
-                From cart to confirmed, without losing your place.
+                From card to confirmed, without losing your place.
               </h1>
               <p className="mt-5 max-w-lg text-sm leading-6 text-white/85 sm:text-base sm:leading-7">
-                Your cart, chosen payment method, and confirmed delivery details
+                Your card, chosen payment method, and confirmed delivery details
                 are kept together when you continue to verification.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">

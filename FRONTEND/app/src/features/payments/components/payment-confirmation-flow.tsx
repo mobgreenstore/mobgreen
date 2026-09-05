@@ -90,8 +90,8 @@ export function PaymentConfirmationFlow({
         {!intent.confirmationEligible && (
           <InlineAlert
             tone="danger"
-            title="Your cart changed"
-            description="Return to the cart and confirm the latest products, offers, and prices before submitting payment."
+            title="Your card changed"
+            description="Return to the card and confirm the latest products, offers, and prices before submitting payment."
           />
         )}
 

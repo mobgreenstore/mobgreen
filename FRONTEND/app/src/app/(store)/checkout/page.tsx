@@ -21,7 +21,7 @@ export default function CheckoutPage() {
           className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-foreground-muted hover:text-foreground"
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
-          Back to cart
+          Back to card
         </Link>
         <div className="mt-3 mb-6 max-w-3xl sm:mt-4 sm:mb-8">
           <p className="text-sm font-semibold text-foreground-muted">

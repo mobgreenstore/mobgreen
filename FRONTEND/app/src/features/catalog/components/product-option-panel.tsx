@@ -77,7 +77,7 @@ export function ProductOptionPanel({
         ) : (
           <ShoppingBag aria-hidden="true" className="size-4" />
         )}
-        {pending ? "Confirming availability…" : "Add to cart"}
+        {pending ? "Confirming availability…" : "Add to card"}
       </Button>
       <p className="text-xs leading-5 text-foreground-muted">
         The store confirms the current price and availability before this item

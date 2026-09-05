@@ -157,7 +157,7 @@ export async function prepareBitcoinAttempt(
       BigInt(cart.subtotalMinor) !== intent.subtotalMinor
     )
       throw new BitcoinOrderError(
-        "A product or price changed. Review the cart and retry.",
+        "A product or price changed. Review the card and retry.",
         409,
       );
 

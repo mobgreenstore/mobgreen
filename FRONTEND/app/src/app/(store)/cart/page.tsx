@@ -5,7 +5,7 @@ import { StoreHeader } from "@/components/shared/store-header";
 import { CartPage } from "@/features/cart/components/cart-page";
 
 export const metadata: Metadata = {
-  title: "Your cart",
+  title: "Your card",
   description: "Review current MOB GREENS product prices and availability.",
   robots: { index: false, follow: false },
 };
@@ -26,7 +26,7 @@ export default function CartRoute() {
           <p className="text-sm font-semibold text-foreground-muted">
             Your selections
           </p>
-          <h1 className="heading-display mt-2 text-balance">Shopping cart</h1>
+          <h1 className="heading-display mt-2 text-balance">Shopping card</h1>
           <p className="mt-3 text-sm leading-6 text-foreground-muted sm:text-base">
             Quantities are saved on this device. Prices and availability always
             come from the store.

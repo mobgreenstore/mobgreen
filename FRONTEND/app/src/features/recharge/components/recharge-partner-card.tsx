@@ -7,6 +7,8 @@ interface RechargePartnerCardProps {
   url: string;
   iconUrl: string;
   className?: string;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
 export function RechargePartnerCard({
@@ -14,6 +16,8 @@ export function RechargePartnerCard({
   url,
   iconUrl,
   className,
+  selected = false,
+  onSelect,
 }: RechargePartnerCardProps) {
   return (
     <a
@@ -21,8 +25,11 @@ export function RechargePartnerCard({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Open ${name} in a new tab`}
+      aria-current={selected ? "true" : undefined}
+      onClick={onSelect}
       className={cn(
         "group grid min-h-32 overflow-hidden rounded-xl border border-border bg-surface shadow-xs transition-[border-color,transform,box-shadow] hover:-translate-y-0.5 hover:border-border-strong hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground motion-reduce:transform-none motion-reduce:transition-none",
+        selected && "border-foreground ring-1 ring-foreground",
         className,
       )}
     >

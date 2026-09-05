@@ -41,7 +41,7 @@ describe("product cart action", () => {
         ]}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Add to cart" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add to card" }));
     await waitFor(() =>
       expect(addItem).toHaveBeenCalledWith(
         "a06af44a-68ca-4aef-95db-321fe6fd9e11",

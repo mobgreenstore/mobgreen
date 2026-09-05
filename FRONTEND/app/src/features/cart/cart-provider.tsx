@@ -140,15 +140,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
           writeStoredCart(window.localStorage, lines);
         } catch {
           toast({
-            title: "Cart was not saved",
-            description: "Your browser blocked local cart storage.",
+            title: "Card was not saved",
+            description: "Your browser blocked local card storage.",
             tone: "danger",
           });
         }
       }
       const count = lines.reduce((total, line) => total + line.quantity, 0);
       setAnnouncement(
-        count === 1 ? "Cart contains 1 item." : `Cart contains ${count} items.`,
+        count === 1 ? "Card contains 1 item." : `Card contains ${count} items.`,
       );
     },
     [toast],
@@ -238,15 +238,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
           toast({
             title: "Choose one currency",
             description:
-              "A cart can contain GBP, EUR, or USD items, but not more than one currency at a time.",
+              "A card can contain GBP, EUR, or USD items, but not more than one currency at a time.",
             tone: "danger",
           });
           return false;
         }
         acceptCart(candidate, result, true);
         toast({
-          title: "Added to cart",
-          description: `${selected.productName} is ready in your cart.`,
+          title: "Added to card",
+          description: `${selected.productName} is ready in your card.`,
           tone: "success",
         });
         return true;
@@ -277,7 +277,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         writeStoredCart(window.localStorage, candidate);
       } catch {
-        toast({ title: "Cart was not saved", tone: "danger" });
+        toast({ title: "Card was not saved", tone: "danger" });
       }
       void validateAndAccept(candidate, false);
     },
@@ -296,7 +296,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clear = useCallback(() => {
     requestSequence.current += 1;
     acceptCart(clearCartLines(), EMPTY_CART, true);
-    toast({ title: "Cart cleared", tone: "neutral" });
+    toast({ title: "Card cleared", tone: "neutral" });
   }, [acceptCart, toast]);
 
   const refresh = useCallback(() => {

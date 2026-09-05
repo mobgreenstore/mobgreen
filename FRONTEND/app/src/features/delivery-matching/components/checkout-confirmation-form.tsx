@@ -117,10 +117,10 @@ export function CheckoutConfirmationForm({
         {!intent.confirmationEligible && (
           <InlineAlert
             tone="danger"
-            title="Review your cart again"
+            title="Review your card again"
             description={
               <Link href="/cart" className="font-semibold underline">
-                A product, price, or offer changed. Return to your cart before
+                A product, price, or offer changed. Return to your card before
                 submitting the recharge code.
               </Link>
             }

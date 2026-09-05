@@ -8,13 +8,13 @@ import { cn } from "@/lib/utils";
 
 export function CartButton({ className }: { className?: string }) {
   const { itemCount } = useCart();
-  const label = itemCount === 1 ? "Cart, 1 item" : `Cart, ${itemCount} items`;
+  const label = itemCount === 1 ? "Card, 1 item" : `Card, ${itemCount} items`;
 
   return (
     <Link
       href="/cart"
       aria-label={label}
-      title="Cart"
+      title="Card"
       className={cn(
         buttonVariants({ variant: "ghost", size: "icon" }),
         "relative",

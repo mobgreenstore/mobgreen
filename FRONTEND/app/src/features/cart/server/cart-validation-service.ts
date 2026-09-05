@@ -75,7 +75,7 @@ export class CartValidationService {
         return unavailableLine(line, [
           {
             code: "PRODUCT_MISMATCH",
-            message: "This cart selection is invalid and must be removed.",
+            message: "This card selection is invalid and must be removed.",
           },
         ]);
       }

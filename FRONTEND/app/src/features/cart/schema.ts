@@ -25,7 +25,7 @@ export const storedCartLinesSchema = z
       if (identities.has(identity)) {
         context.addIssue({
           code: "custom",
-          message: "Duplicate cart lines are not allowed.",
+          message: "Duplicate card items are not allowed.",
           path: [index],
         });
       }

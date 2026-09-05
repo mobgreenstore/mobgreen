@@ -185,7 +185,7 @@ export class CheckoutIntentService {
         cart.hasCurrencyConflict ? "MIXED_CURRENCY" : "CART_CHANGED",
         cart.hasCurrencyConflict
           ? "An order must use one currency."
-          : "A product or price changed. Review the cart and retry.",
+          : "A product or price changed. Review the card and retry.",
         409,
       );
     }

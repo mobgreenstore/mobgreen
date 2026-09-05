@@ -81,7 +81,7 @@ describe("public cart validation route", () => {
     );
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({
-      error: "The cart could not be refreshed. Try again.",
+      error: "The card could not be refreshed. Try again.",
       code: "CART_REFRESH_FAILED",
     });
   });

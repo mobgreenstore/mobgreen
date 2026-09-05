@@ -110,7 +110,7 @@ export function PublicOfferCard({
           {pending
             ? "Adding offer…"
             : timeLeft
-              ? "Add offer to cart"
+              ? "Add offer to card"
               : "Offer ended"}
         </Button>
       </div>

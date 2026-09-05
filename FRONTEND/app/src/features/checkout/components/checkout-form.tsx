@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ExternalLink, LoaderCircle } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { OrderSummary } from "@/components/commerce/order-summary";
@@ -14,7 +14,6 @@ import {
   FormField,
   InlineAlert,
   Label,
-  Select,
   TextField,
   buttonVariants,
 } from "@/components/ui";
@@ -25,6 +24,7 @@ import type { DeliveryLocation } from "@/features/location/schema";
 import { loadDeliveryLocation } from "@/features/location/storage";
 import { PaymentMethodSelector } from "@/features/payments/components/payment-method-selector";
 import type { PaymentMethodId } from "@/features/payments/payment-method";
+import { RechargePartnerCard } from "@/features/recharge/components/recharge-partner-card";
 import { cn } from "@/lib/utils";
 
 type FieldErrors = Record<string, string[] | undefined>;
@@ -74,10 +74,6 @@ export function CheckoutForm({
     deliveryReady &&
     onlinePartnerSelected &&
     (paymentMethod !== "BITCOIN_DEPOSIT" || bitcoinCheckoutAvailable);
-  const selectedRechargePartner = RECHARGE_PARTNERS.find(
-    (partner) => partner.id === rechargeProvider,
-  );
-
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) return;
@@ -132,7 +128,7 @@ export function CheckoutForm({
     return (
       <Card className="p-6">
         <p role="status" className="text-sm text-foreground-muted">
-          Loading and confirming your cart…
+          Loading and confirming your card…
         </p>
       </Card>
     );
@@ -142,13 +138,13 @@ export function CheckoutForm({
     return (
       <InlineAlert
         tone="danger"
-        title="Your cart is not ready for checkout"
+        title="Your card is not ready for checkout"
         description={
           <span>
-            Refresh the cart and ensure every item is available and uses one
+            Refresh the card and ensure every item is available and uses one
             currency.{" "}
             <Link href="/cart" className="font-semibold underline">
-              Return to cart
+              Return to card
             </Link>
           </span>
         }
@@ -277,51 +273,30 @@ export function CheckoutForm({
           {paymentMethod === "RECHARGE_ONLINE" && (
             <section className="grid min-w-0 gap-4 border-t border-border pt-5">
               <div>
-                <p className="text-sm font-semibold">Recharge partner</p>
+                <h3 className="text-base font-bold tracking-[-0.02em]">
+                  Approved recharge partners
+                </h3>
                 <p className="mt-1 text-sm leading-6 text-foreground-muted">
-                  Choose the partner that will issue your code. Their website
-                  opens in a new tab when you are ready.
+                  Select where you will buy the code. The partner website opens
+                  in a new tab.
                 </p>
               </div>
-              <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                <FormField
-                  invalid={Boolean(fieldErrors.rechargeProvider)}
-                  hasError={Boolean(fieldErrors.rechargeProvider)}
-                >
-                  <Label required>Partner used for this order</Label>
-                  <Select
-                    value={rechargeProvider}
-                    onChange={(event) =>
-                      setRechargeProvider(event.target.value)
-                    }
-                    required
-                  >
-                    <option value="" disabled>
-                      Select a recharge partner
-                    </option>
-                    {RECHARGE_PARTNERS.map((partner) => (
-                      <option key={partner.id} value={partner.id}>
-                        {partner.name}
-                      </option>
-                    ))}
-                  </Select>
-                  <FieldError>{fieldErrors.rechargeProvider?.[0]}</FieldError>
-                </FormField>
-                {selectedRechargePartner ? (
-                  <a
-                    href={selectedRechargePartner.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      buttonVariants({ variant: "secondary" }),
-                      "w-full sm:w-auto",
-                    )}
-                  >
-                    Open partner{" "}
-                    <ExternalLink aria-hidden="true" className="size-4" />
-                  </a>
-                ) : null}
+              <div
+                className="grid grid-cols-2 gap-3 sm:gap-4"
+                aria-label="Choose a recharge partner"
+              >
+                {RECHARGE_PARTNERS.map((partner) => (
+                  <RechargePartnerCard
+                    key={partner.id}
+                    name={partner.name}
+                    url={partner.url}
+                    iconUrl={partner.iconUrl}
+                    selected={rechargeProvider === partner.id}
+                    onSelect={() => setRechargeProvider(partner.id)}
+                  />
+                ))}
               </div>
+              <FieldError>{fieldErrors.rechargeProvider?.[0]}</FieldError>
             </section>
           )}
         </section>
@@ -348,7 +323,7 @@ export function CheckoutForm({
           href="/cart"
           className={cn(buttonVariants({ variant: "secondary" }), "w-full")}
         >
-          Return to cart
+          Return to card
         </Link>
       </aside>
     </form>

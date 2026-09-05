@@ -144,7 +144,7 @@ export class GuestCheckoutService {
             : "CART_CHANGED",
           authoritativeCart.hasCurrencyConflict
             ? "An order must use one currency."
-            : "A product, price, or special offer changed. Review the cart and retry.",
+            : "A product, price, or special offer changed. Review the card and retry.",
           409,
         );
       }
@@ -215,7 +215,7 @@ export class GuestCheckoutService {
         if (!option || option.productId !== line.productId) {
           throw new CheckoutError(
             "INVALID_SELECTION",
-            "A cart selection is no longer valid.",
+            "A card selection is no longer valid.",
             409,
           );
         }
@@ -244,7 +244,7 @@ export class GuestCheckoutService {
         ) {
           throw new CheckoutError(
             "CART_CHANGED",
-            "A special offer changed or expired. Review the cart and retry.",
+            "A special offer changed or expired. Review the card and retry.",
             409,
           );
         }
@@ -286,7 +286,7 @@ export class GuestCheckoutService {
       }
       const currency = snapshots[0]?.currencySnapshot;
       if (!currency) {
-        throw new CheckoutError("INVALID_SELECTION", "The cart is empty.", 400);
+        throw new CheckoutError("INVALID_SELECTION", "The card is empty.", 400);
       }
       const subtotalMinor = snapshots.reduce(
         (total, item) => total + item.lineTotalMinor,
