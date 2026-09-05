@@ -11,8 +11,12 @@ export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isAdminPage = pathname.startsWith("/admin");
   const isAdminApi = pathname.startsWith("/api/admin");
+  // Public assets are shared by the two presentation servers. Redirecting
+  // them to /admin made every locally hosted image (including partner logos)
+  // return the admin page instead of the requested file.
+  const isPublicAsset = pathname.startsWith("/images/");
 
-  if (surface === "admin" && !isAdminPage && !isAdminApi) {
+  if (surface === "admin" && !isAdminPage && !isAdminApi && !isPublicAsset) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
   if (surface === "store" && isAdminApi) {

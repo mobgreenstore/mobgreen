@@ -30,3 +30,15 @@ export type RechargePartnerId = (typeof RECHARGE_PARTNERS)[number]["id"];
 export function isRechargePartnerId(value: string): value is RechargePartnerId {
   return RECHARGE_PARTNERS.some((partner) => partner.id === value);
 }
+
+export function getRechargePartner(value: string | null | undefined) {
+  if (!value) return null;
+  const normalized = value.trim().toLowerCase();
+  return (
+    RECHARGE_PARTNERS.find(
+      (partner) =>
+        partner.id.toLowerCase() === normalized ||
+        partner.name.toLowerCase() === normalized,
+    ) ?? null
+  );
+}

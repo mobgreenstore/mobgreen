@@ -1,39 +1,35 @@
 import { createHash } from "node:crypto";
+import { after } from "next/server";
 import { z } from "zod";
 import { bitcoinDecimalToSatoshis } from "@/features/bitcoin/policy";
+import { applyNowPaymentsEvent } from "@/features/bitcoin/server/bitcoin-order-service";
 import { getBitcoinEnvironment } from "@/features/bitcoin/server/environment";
 import { verifyNowPaymentsWebhookSignature } from "@/features/bitcoin/server/nowpayments-signature";
-import { prisma } from "@/server/db/client";
+import {
+  dispatchCustomerOrderSubmittedNotification,
+  dispatchOrderSubmittedNotification,
+} from "@/features/order-notifications/server/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const payloadSchema = z.object({
   payment_id: z.union([z.string(), z.number()]),
-  payment_status: z.string(),
+  payment_status: z.enum([
+    "waiting",
+    "sending",
+    "partially_paid",
+    "confirming",
+    "confirmed",
+    "finished",
+    "expired",
+    "failed",
+    "refunded",
+  ]),
   actually_paid: z.union([z.string(), z.number()]).optional(),
   pay_amount: z.union([z.string(), z.number()]).optional(),
   txid: z.string().optional(),
   count: z.number().int().nonnegative().optional(),
 });
-const statusMap: Record<
-  string,
-  | "INVOICE_PENDING"
-  | "PAYMENT_DETECTED"
-  | "CONFIRMING"
-  | "SETTLED"
-  | "EXPIRED"
-  | "FAILED"
-> = {
-  waiting: "INVOICE_PENDING",
-  sending: "PAYMENT_DETECTED",
-  partially_paid: "PAYMENT_DETECTED",
-  confirming: "CONFIRMING",
-  confirmed: "CONFIRMING",
-  finished: "SETTLED",
-  expired: "EXPIRED",
-  failed: "FAILED",
-  refunded: "FAILED",
-};
 export async function POST(request: Request) {
   const environment = getBitcoinEnvironment();
   if (!environment)
@@ -55,52 +51,37 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid payload." }, { status: 400 });
   }
   const providerInvoiceId = String(parsed.payment_id);
-  const attempt = await prisma.paymentAttempt.findFirst({
-    where: { provider: "NOWPAYMENTS", providerInvoiceId },
-    select: { id: true, status: true },
-  });
-  if (!attempt) return Response.json({ ok: true });
-  const nextStatus = statusMap[parsed.payment_status.toLowerCase()];
-  if (!nextStatus) return Response.json({ ok: true });
-  const eventId = `nowpayments:${providerInvoiceId}:${parsed.payment_status.toLowerCase()}:${createHash("sha256").update(rawBody).digest("hex")}`;
+  const payloadHash = createHash("sha256").update(rawBody).digest("hex");
+  const eventId = `nowpayments:${providerInvoiceId}:${parsed.payment_status}:${payloadHash}`;
+  let receivedSatoshis: bigint | null = null;
+  if (parsed.actually_paid !== undefined) {
+    try {
+      receivedSatoshis = bitcoinDecimalToSatoshis(String(parsed.actually_paid));
+    } catch {
+      return Response.json(
+        { error: "Invalid payment amount." },
+        { status: 400 },
+      );
+    }
+  }
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.paymentEvent.create({
-        data: {
-          paymentAttemptId: attempt.id,
-          providerEventId: eventId,
-          eventType: `NOWPAYMENTS_${parsed.payment_status.toUpperCase()}`,
-          fromStatus: attempt.status,
-          toStatus: nextStatus,
-          metadata: { confirmationCount: parsed.count ?? null },
-        },
-      });
-      const updateData = {
-        status: nextStatus,
-        ...(parsed.actually_paid !== undefined
-          ? {
-              receivedSatoshis: bitcoinDecimalToSatoshis(
-                String(parsed.actually_paid),
-              ),
-            }
-          : {}),
-        ...(parsed.txid !== undefined ? { transactionId: parsed.txid } : {}),
-        ...(parsed.count !== undefined
-          ? { confirmationCount: parsed.count }
-          : {}),
-        ...(["PAYMENT_DETECTED", "CONFIRMING", "SETTLED"].includes(nextStatus)
-          ? { detectedAt: new Date() }
-          : {}),
-        ...(nextStatus === "SETTLED" ? { confirmedAt: new Date() } : {}),
-        ...(["EXPIRED", "FAILED"].includes(nextStatus)
-          ? { failedAt: new Date() }
-          : {}),
-      };
-      await tx.paymentAttempt.update({
-        where: { id: attempt.id },
-        data: updateData,
-      });
+    const result = await applyNowPaymentsEvent({
+      providerInvoiceId,
+      providerEventId: eventId,
+      providerStatus: parsed.payment_status,
+      receivedSatoshis,
+      transactionId: parsed.txid ?? null,
+      confirmationCount: parsed.count ?? null,
+      payloadHash,
     });
+    if (result.settledReference) {
+      after(async () => {
+        await Promise.allSettled([
+          dispatchOrderSubmittedNotification(result.settledReference!),
+          dispatchCustomerOrderSubmittedNotification(result.settledReference!),
+        ]);
+      });
+    }
   } catch (error) {
     if (!(
       error instanceof Error && error.message.toLowerCase().includes("unique")

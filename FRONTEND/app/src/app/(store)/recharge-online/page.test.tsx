@@ -29,7 +29,7 @@ describe("RechargeOnlinePage", () => {
       screen.getByText(/does not receive or store your card details/i),
     ).toBeVisible();
     expect(
-      screen.getByText(/return to checkout and submit that code/i),
+      screen.getByText(/return to All Verification and submit that code/i),
     ).toBeVisible();
     expect(
       screen.getByRole("link", { name: /return to checkout/i }),

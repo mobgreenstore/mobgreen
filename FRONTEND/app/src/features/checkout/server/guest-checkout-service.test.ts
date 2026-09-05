@@ -19,6 +19,16 @@ vi.mock("@/server/db/client", () => ({
 vi.mock("@/features/checkout/server/code-encryption", () => ({
   encryptVerificationCode: () => "encrypted-code",
 }));
+vi.mock("@/features/order-notifications/server/service", () => ({
+  createOrderNotificationEnvelope: () => null,
+  createCustomerOrderNotificationEnvelope: () => null,
+  dispatchOrderSubmittedNotification: async () => ({
+    status: "NOT_CONFIGURED",
+  }),
+  dispatchCustomerOrderSubmittedNotification: async () => ({
+    status: "NOT_CONFIGURED",
+  }),
+}));
 
 import { GuestCheckoutService } from "@/features/checkout/server/guest-checkout-service";
 import type { GuestCheckoutInput } from "@/features/checkout/schema";
@@ -84,6 +94,8 @@ describe("guest order transaction", () => {
       reference: "MG-2026-ABC123",
       currency: "EUR",
       totalMinor: 2500n,
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
     });
   });
 
@@ -97,7 +109,8 @@ describe("guest order transaction", () => {
         subtotalMinor: 2500n,
         deliveryFeeMinor: 0n,
         totalMinor: 2500n,
-        paymentStatus: "PENDING",
+        status: "CONFIRMED",
+        paymentStatus: "PAID",
         verificationCodeEncrypted: "encrypted-code",
         items: {
           create: [
@@ -114,15 +127,25 @@ describe("guest order transaction", () => {
           ],
         },
         statusEvents: {
-          create: expect.objectContaining({ toStatus: "PENDING" }),
+          create: expect.objectContaining({ toStatus: "CONFIRMED" }),
+        },
+        paymentStatusEvents: {
+          create: expect.objectContaining({ toStatus: "PAID" }),
         },
       }),
-      select: { reference: true, currency: true, totalMinor: true },
+      select: {
+        reference: true,
+        currency: true,
+        totalMinor: true,
+        status: true,
+        paymentStatus: true,
+      },
     });
     expect(result).toMatchObject({
       reference: "MG-2026-ABC123",
       totalMinor: 2500,
-      paymentStatus: "PENDING",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
       duplicate: false,
     });
   });
@@ -172,6 +195,8 @@ describe("guest order transaction", () => {
       reference: "MG-2026-EXISTING",
       currency: "EUR",
       totalMinor: 2500n,
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
       guestSession: { tokenHash: guest.tokenHash },
     });
     const result = await new GuestCheckoutService().create(input, guest);
@@ -179,6 +204,8 @@ describe("guest order transaction", () => {
     expect(transaction.order.create).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       reference: "MG-2026-EXISTING",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
       duplicate: true,
     });
   });
@@ -188,6 +215,8 @@ describe("guest order transaction", () => {
       reference: "MG-2026-PRIVATE",
       currency: "EUR",
       totalMinor: 2500n,
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
       guestSession: { tokenHash: "another-session" },
     });
     await expect(

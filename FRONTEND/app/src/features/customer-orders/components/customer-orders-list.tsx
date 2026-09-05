@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const tabs: Array<{ value: CustomerOrderTab; label: string }> = [
   { value: "active", label: "Active" },
-  { value: "pending", label: "Pending verification" },
+  { value: "pending", label: "Submitted" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
@@ -92,9 +92,7 @@ export function CustomerOrdersList() {
         ) : result.orders.length === 0 ? (
           <EmptyState
             title={
-              tab === "pending"
-                ? "No orders pending verification"
-                : `No ${tab} orders`
+              tab === "pending" ? "No submitted orders yet" : `No ${tab} orders`
             }
             description="Orders from this browser session will appear here."
           />

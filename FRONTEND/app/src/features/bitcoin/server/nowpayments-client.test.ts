@@ -20,7 +20,7 @@ describe("NOWPayments client", () => {
         JSON.stringify({
           payment_id: "payment-1",
           payment_status: "waiting",
-          pay_amount: "0.001",
+          pay_amount: 0.001,
           pay_address: "bc1qdestination",
           expiration_estimate_date: "2026-09-03T12:00:00.000Z",
         }),
@@ -42,6 +42,8 @@ describe("NOWPayments client", () => {
       price_amount: 50.01,
       price_currency: "eur",
       pay_currency: "btc",
+      payout_address: environment.BTC_RECEIVING_ADDRESS,
+      payout_currency: "btc",
       order_id: "intent-public-id",
     });
     expect(result).toMatchObject({

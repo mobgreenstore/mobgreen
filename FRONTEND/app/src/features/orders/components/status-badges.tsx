@@ -26,9 +26,37 @@ export function OrderStatusBadge({ status }: { status: AdminOrderStatus }) {
   return <StatusBadge status={tone} label={label} />;
 }
 
+export function CustomerOrderStatusBadge({
+  status,
+}: {
+  status: AdminOrderStatus;
+}) {
+  const [tone, label] = orderStatus[status];
+  return (
+    <StatusBadge
+      status={tone}
+      label={status === "PENDING" ? "Order received" : label}
+    />
+  );
+}
+
 export function PaymentStatusBadge({ status }: { status: AdminPaymentStatus }) {
   const [tone, label] = paymentStatus[status];
   return <StatusBadge status={tone} label={label} />;
+}
+
+export function CustomerPaymentStatusBadge({
+  status,
+}: {
+  status: AdminPaymentStatus;
+}) {
+  const [tone, label] = paymentStatus[status];
+  return (
+    <StatusBadge
+      status={tone}
+      label={status === "PENDING" ? "Payment submitted" : label}
+    />
+  );
 }
 
 export function orderStatusLabel(status: AdminOrderStatus) {
@@ -37,4 +65,8 @@ export function orderStatusLabel(status: AdminOrderStatus) {
 
 export function paymentStatusLabel(status: AdminPaymentStatus) {
   return paymentStatus[status][1];
+}
+
+export function customerOrderStatusLabel(status: AdminOrderStatus) {
+  return status === "PENDING" ? "Order received" : orderStatus[status][1];
 }

@@ -41,6 +41,14 @@ describe("presentation server separation", () => {
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
+  it("serves shared public images on the admin server", () => {
+    process.env.MOB_GREENS_SURFACE = "admin";
+    const response = proxy(
+      new NextRequest("http://localhost:3000/images/partners/startselect.png"),
+    );
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
   it("keeps admin routes off the storefront server", () => {
     process.env.MOB_GREENS_SURFACE = "store";
     const response = proxy(new NextRequest("http://localhost:3001/admin"));

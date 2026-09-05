@@ -12,7 +12,6 @@ import {
   FormField,
   InlineAlert,
   Label,
-  TextArea,
   TextField,
   buttonVariants,
 } from "@/components/ui";
@@ -41,7 +40,6 @@ export function CheckoutConfirmationForm({
     setPending(true);
     setServerError("");
     setFieldErrors({});
-    const data = new FormData(event.currentTarget);
     try {
       const response = await fetch(
         `/api/checkout/intents/${encodeURIComponent(intent.publicId)}/submit`,
@@ -50,7 +48,6 @@ export function CheckoutConfirmationForm({
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             verificationCode,
-            customerNote: String(data.get("customerNote") ?? ""),
           }),
         },
       );
@@ -194,13 +191,6 @@ export function CheckoutConfirmationForm({
               Digits only. The code is encrypted before storage.
             </FieldDescription>
             <FieldError>{fieldErrors.verificationCode?.[0]}</FieldError>
-          </FormField>
-          <FormField hasDescription>
-            <Label optional>Order note</Label>
-            <TextArea name="customerNote" maxLength={1000} rows={4} />
-            <FieldDescription>
-              Add a short note if the administrator should know something.
-            </FieldDescription>
           </FormField>
         </Card>
       </div>

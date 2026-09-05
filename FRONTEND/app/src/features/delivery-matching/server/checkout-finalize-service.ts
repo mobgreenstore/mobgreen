@@ -1,7 +1,11 @@
 import "server-only";
 
 import { randomBytes } from "node:crypto";
-import type { Currency } from "@/generated/prisma/client";
+import type {
+  Currency,
+  OrderStatus,
+  PaymentStatus,
+} from "@/generated/prisma/client";
 import { CartValidationService } from "@/features/cart/server/cart-validation-service";
 import { PrismaCartRepository } from "@/features/cart/server/prisma-cart-repository";
 import type { FinalizeCheckoutInput } from "@/features/delivery-matching/schema";
@@ -38,13 +42,15 @@ function publicOrder(
     reference: string;
     currency: Currency;
     totalMinor: bigint;
+    status: OrderStatus;
+    paymentStatus: PaymentStatus;
   },
   duplicate: boolean,
 ): CreatedOrderView {
   return {
     reference: order.reference,
-    status: "PENDING",
-    paymentStatus: "PENDING",
+    status: order.status,
+    paymentStatus: order.paymentStatus,
     currency: order.currency,
     totalMinor: Number(order.totalMinor),
     duplicate,
@@ -99,6 +105,8 @@ export class CheckoutFinalizeService {
               reference: true,
               currency: true,
               totalMinor: true,
+              status: true,
+              paymentStatus: true,
             },
           },
         },
@@ -169,6 +177,8 @@ export class CheckoutFinalizeService {
           reference: true,
           currency: true,
           totalMinor: true,
+          status: true,
+          paymentStatus: true,
           guestSession: { select: { tokenHash: true } },
         },
       });
@@ -380,23 +390,36 @@ export class CheckoutFinalizeService {
           subtotalMinor,
           deliveryFeeMinor: 0n,
           totalMinor: subtotalMinor,
-          status: "PENDING",
-          paymentStatus: "PENDING",
+          status: "CONFIRMED",
+          paymentStatus: "PAID",
           paymentMethod: intent.paymentMethod,
           rechargeProvider: intent.rechargeProvider,
           verificationCodeEncrypted: encryptedCode,
           items: { create: snapshots },
           statusEvents: {
             create: {
-              toStatus: "PENDING",
-              note: "Order submitted; recharge verification is pending.",
+              toStatus: "CONFIRMED",
+              note: "Order confirmed automatically after recharge code submission.",
+            },
+          },
+          paymentStatusEvents: {
+            create: {
+              toStatus: "PAID",
+              note: "Recharge code submitted at checkout; payment was automatically confirmed.",
             },
           },
           ...(notifications.length
             ? { notifications: { create: notifications } }
             : {}),
         },
-        select: { id: true, reference: true, currency: true, totalMinor: true },
+        select: {
+          id: true,
+          reference: true,
+          currency: true,
+          totalMinor: true,
+          status: true,
+          paymentStatus: true,
+        },
       });
 
       await transaction.paymentAttempt.create({
@@ -410,13 +433,17 @@ export class CheckoutFinalizeService {
           orderTotalMinor: subtotalMinor,
           depositMinor: subtotalMinor,
           cashBalanceDueMinor: 0n,
-          status: "PENDING_REVIEW",
+          status: "APPROVED",
+          confirmedAt: new Date(),
           rechargeCodes: { create: securedCodes },
           events: {
             create: {
-              eventType: "RECHARGE_CODES_SUBMITTED",
-              toStatus: "PENDING_REVIEW",
-              metadata: { codeCount: securedCodes.length },
+              eventType: "RECHARGE_AUTO_CONFIRMED",
+              toStatus: "APPROVED",
+              metadata: {
+                codeCount: securedCodes.length,
+                confirmation: "automatic_submission",
+              },
             },
           },
         },

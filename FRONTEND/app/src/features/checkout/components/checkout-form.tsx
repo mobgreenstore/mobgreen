@@ -14,13 +14,12 @@ import {
   FormField,
   InlineAlert,
   Label,
-  RadioGroup,
-  RadioOption,
   Select,
   TextField,
   buttonVariants,
 } from "@/components/ui";
 import { useCart } from "@/features/cart/cart-provider";
+import { FulfillmentSelector } from "@/features/checkout/components/fulfillment-selector";
 import { StoreLocationControl } from "@/features/location/components/store-location-control";
 import type { DeliveryLocation } from "@/features/location/schema";
 import { loadDeliveryLocation } from "@/features/location/storage";
@@ -161,9 +160,9 @@ export function CheckoutForm({
     <form
       onSubmit={submit}
       noValidate
-      className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-12"
+      className="grid min-w-0 gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-12"
     >
-      <div className="grid gap-7">
+      <div className="grid min-w-0 gap-6 sm:gap-7">
         {serverError && (
           <InlineAlert
             tone="danger"
@@ -172,7 +171,7 @@ export function CheckoutForm({
           />
         )}
 
-        <section className="grid gap-5 border-b border-border pb-7 sm:gap-6 sm:pb-9">
+        <section className="grid min-w-0 gap-5 border-b border-border pb-6 sm:gap-6 sm:pb-9">
           <div>
             <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
               Order contact
@@ -220,7 +219,7 @@ export function CheckoutForm({
           </div>
         </section>
 
-        <Card className="grid gap-5 rounded-2xl border-border-strong/65 p-5 sm:p-6">
+        <Card className="grid min-w-0 gap-4 rounded-2xl border-border-strong/65 p-4 sm:gap-5 sm:p-6">
           <div>
             <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
               Fulfillment
@@ -229,27 +228,10 @@ export function CheckoutForm({
               How will you receive the order?
             </h2>
           </div>
-          <RadioGroup
-            name="fulfillmentType"
-            legend="Choose pickup or delivery"
-            description="Delivery requires your confirmed location. It is securely carried into All Verification."
-            orientation="horizontal"
-          >
-            <RadioOption
-              value="PICKUP"
-              label="Pickup"
-              checked={fulfillmentType === "PICKUP"}
-              onChange={() => setFulfillmentType("PICKUP")}
-              description="Collect after your payment is confirmed."
-            />
-            <RadioOption
-              value="DELIVERY"
-              label="Delivery"
-              checked={fulfillmentType === "DELIVERY"}
-              onChange={() => setFulfillmentType("DELIVERY")}
-              description="Choose a nearby delivery profile in verification."
-            />
-          </RadioGroup>
+          <FulfillmentSelector
+            value={fulfillmentType}
+            onChange={setFulfillmentType}
+          />
           {fulfillmentType === "DELIVERY" && (
             <div className="border-t border-border pt-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -273,7 +255,7 @@ export function CheckoutForm({
           )}
         </Card>
 
-        <section className="grid gap-5 border-t border-border pt-7 sm:pt-9">
+        <section className="grid min-w-0 gap-4 border-t border-border pt-6 sm:gap-5 sm:pt-9">
           <div>
             <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
               Payment
@@ -293,7 +275,7 @@ export function CheckoutForm({
           />
 
           {paymentMethod === "RECHARGE_ONLINE" && (
-            <section className="grid gap-4 border-t border-border pt-5">
+            <section className="grid min-w-0 gap-4 border-t border-border pt-5">
               <div>
                 <p className="text-sm font-semibold">Recharge partner</p>
                 <p className="mt-1 text-sm leading-6 text-foreground-muted">
@@ -301,7 +283,7 @@ export function CheckoutForm({
                   opens in a new tab when you are ready.
                 </p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+              <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                 <FormField
                   invalid={Boolean(fieldErrors.rechargeProvider)}
                   hasError={Boolean(fieldErrors.rechargeProvider)}
@@ -345,7 +327,7 @@ export function CheckoutForm({
         </section>
       </div>
 
-      <aside className="grid gap-4 lg:sticky lg:top-24">
+      <aside className="grid min-w-0 gap-4 lg:sticky lg:top-24">
         <OrderSummary
           currency={cart.currency!}
           subtotalMinor={cart.subtotalMinor!}

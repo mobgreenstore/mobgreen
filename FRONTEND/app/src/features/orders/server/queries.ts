@@ -152,7 +152,11 @@ export async function getAdminOrder(
         },
       },
       notifications: {
-        where: { kind: "ADMIN_ORDER_SUBMITTED" },
+        where: {
+          kind: {
+            in: ["ADMIN_ORDER_SUBMITTED", "CUSTOMER_ORDER_SUBMITTED"],
+          },
+        },
         orderBy: { createdAt: "desc" },
         take: 1,
       },
@@ -195,6 +199,12 @@ export async function getAdminOrder(
     : null;
 
   const paymentAttempt = order.paymentAttempts[0] ?? null;
+  const adminNotification = order.notifications.find(
+    (notification) => notification.kind === "ADMIN_ORDER_SUBMITTED",
+  );
+  const customerNotification = order.notifications.find(
+    (notification) => notification.kind === "CUSTOMER_ORDER_SUBMITTED",
+  );
 
   return {
     id: order.id,
@@ -284,12 +294,20 @@ export async function getAdminOrder(
           })),
         }
       : null,
-    notification: order.notifications[0]
+    notification: adminNotification
       ? {
-          status: order.notifications[0].status,
-          attemptCount: order.notifications[0].attemptCount,
-          sentAt: order.notifications[0].sentAt?.toISOString() ?? null,
-          lastError: order.notifications[0].lastError,
+          status: adminNotification.status,
+          attemptCount: adminNotification.attemptCount,
+          sentAt: adminNotification.sentAt?.toISOString() ?? null,
+          lastError: adminNotification.lastError,
+        }
+      : null,
+    customerNotification: customerNotification
+      ? {
+          status: customerNotification.status,
+          attemptCount: customerNotification.attemptCount,
+          sentAt: customerNotification.sentAt?.toISOString() ?? null,
+          lastError: customerNotification.lastError,
         }
       : null,
     items: order.items.map((item) => ({

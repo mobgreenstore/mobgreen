@@ -2,25 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dispatchOrderSubmittedNotification } from "@/features/order-notifications/server/service";
+import {
+  dispatchCustomerOrderSubmittedNotification,
+  dispatchOrderSubmittedNotification,
+} from "@/features/order-notifications/server/service";
 import {
   AdminVerificationService,
   VerificationOperationError,
 } from "@/features/orders/server/verification-service";
+import type { VerificationActionState } from "@/features/orders/verification-action-state";
 import { requireAdminPermission } from "@/server/auth/authorization";
 import { prisma } from "@/server/db/client";
 
 const orderIdSchema = z.uuid();
-
-export interface VerificationActionState {
-  status: "idle" | "success" | "error";
-  message?: string;
-  codes?: string[];
-}
-
-export const initialVerificationActionState: VerificationActionState = {
-  status: "idle",
-};
 
 function parseOrderId(formData: FormData) {
   return orderIdSchema.safeParse(formData.get("orderId"));
@@ -58,54 +52,6 @@ export async function revealVerificationCodeAction(
   }
 }
 
-export async function approveVerificationAction(
-  _previous: VerificationActionState,
-  formData: FormData,
-): Promise<VerificationActionState> {
-  const admin = await requireAdminPermission("payments.verify");
-  const parsed = parseOrderId(formData);
-  if (!parsed.success) return { status: "error", message: "Invalid order." };
-  try {
-    await new AdminVerificationService().approve({
-      orderId: parsed.data,
-      adminId: admin.id,
-    });
-    revalidatePath(`/admin/orders/${parsed.data}`);
-    revalidatePath("/admin/orders");
-    revalidatePath("/admin");
-    return {
-      status: "success",
-      message: "Verification approved. Payment is paid and order is confirmed.",
-    };
-  } catch (error) {
-    return failure(error);
-  }
-}
-
-export async function rejectVerificationAction(
-  _previous: VerificationActionState,
-  formData: FormData,
-): Promise<VerificationActionState> {
-  const admin = await requireAdminPermission("payments.verify");
-  const parsed = parseOrderId(formData);
-  if (!parsed.success) return { status: "error", message: "Invalid order." };
-  try {
-    await new AdminVerificationService().reject({
-      orderId: parsed.data,
-      adminId: admin.id,
-    });
-    revalidatePath(`/admin/orders/${parsed.data}`);
-    revalidatePath("/admin/orders");
-    revalidatePath("/admin");
-    return {
-      status: "success",
-      message: "Verification rejected. Payment is marked unpaid.",
-    };
-  } catch (error) {
-    return failure(error);
-  }
-}
-
 export async function retryOrderNotificationAction(
   _previous: VerificationActionState,
   formData: FormData,
@@ -118,15 +64,25 @@ export async function retryOrderNotificationAction(
     select: { reference: true },
   });
   if (!order) return { status: "error", message: "Order not found." };
-  const result = await dispatchOrderSubmittedNotification(order.reference);
+  const [adminResult, customerResult] = await Promise.all([
+    dispatchOrderSubmittedNotification(order.reference),
+    dispatchCustomerOrderSubmittedNotification(order.reference),
+  ]);
   revalidatePath(`/admin/orders/${parsed.data}`);
-  return result.status === "SENT"
-    ? { status: "success", message: "Administrator email sent." }
+  return adminResult.status === "SENT" &&
+    ["SENT", "NOT_CONFIGURED"].includes(customerResult.status)
+    ? {
+        status: "success",
+        message:
+          customerResult.status === "SENT"
+            ? "Administrator and customer emails sent."
+            : "Administrator email sent.",
+      }
     : {
         status: "error",
         message:
-          result.status === "NOT_CONFIGURED"
+          adminResult.status === "NOT_CONFIGURED"
             ? "Mail is not configured."
-            : "Email could not be sent. You can retry safely.",
+            : "One or more emails could not be sent. You can retry safely.",
       };
 }

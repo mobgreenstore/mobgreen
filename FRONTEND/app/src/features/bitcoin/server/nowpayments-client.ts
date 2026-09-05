@@ -10,7 +10,7 @@ type Fetch = typeof fetch;
 const paymentSchema = z.object({
   payment_id: z.union([z.string(), z.number()]),
   payment_status: z.string(),
-  pay_amount: z.string().min(1),
+  pay_amount: z.union([z.string().min(1), z.number().finite().positive()]),
   pay_address: z.string().min(1),
   expiration_estimate_date: z.string().datetime().optional(),
 });
@@ -74,6 +74,8 @@ export class NowPaymentsClient {
           price_amount: fiatAmount(input.depositMinor),
           price_currency: input.currency.toLowerCase(),
           pay_currency: "btc",
+          payout_address: this.environment.BTC_RECEIVING_ADDRESS,
+          payout_currency: "btc",
           ipn_callback_url: input.callbackUrl,
           order_id: input.checkoutIntentId,
           order_description: input.orderDescription ?? "MOB GREENS order",
@@ -90,7 +92,7 @@ export class NowPaymentsClient {
     return {
       providerInvoiceId: String(payment.payment_id),
       status: invoiceStatus(payment.payment_status),
-      bitcoinAmount: payment.pay_amount,
+      bitcoinAmount: String(payment.pay_amount),
       destination: payment.pay_address,
       paymentUri: `bitcoin:${payment.pay_address}?amount=${encodeURIComponent(payment.pay_amount)}`,
       expiresAt,

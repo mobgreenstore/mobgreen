@@ -75,6 +75,26 @@ function imageView(image: {
   };
 }
 
+function videoView(video: {
+  id: string;
+  url: string;
+  posterUrl: string | null;
+  altText: string;
+  width: number;
+  height: number;
+  durationSeconds: number | null;
+}) {
+  return {
+    id: video.id,
+    url: video.url,
+    posterUrl: video.posterUrl,
+    altText: video.altText,
+    width: video.width,
+    height: video.height,
+    durationSeconds: video.durationSeconds,
+  };
+}
+
 export const getCatalogPage = unstable_cache(
   async (input: {
     categorySlug: string;
@@ -277,6 +297,17 @@ export const getPublicProductBySlug = unstable_cache(
           },
           orderBy: { position: "asc" },
         },
+        video: {
+          select: {
+            id: true,
+            url: true,
+            posterUrl: true,
+            altText: true,
+            width: true,
+            height: true,
+            durationSeconds: true,
+          },
+        },
         priceOptions: {
           where: activePriceWhere,
           select: {
@@ -300,6 +331,7 @@ export const getPublicProductBySlug = unstable_cache(
       shortDescription: product.shortDescription,
       description: product.description,
       images: product.images.map(imageView),
+      video: product.video ? videoView(product.video) : null,
       priceOptions: product.priceOptions.map((option) => ({
         id: option.id,
         weightValue: Number(option.weightValue),

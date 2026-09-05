@@ -13,11 +13,12 @@ import {
   Scale,
   Trash2,
   UploadCloud,
+  Video,
 } from "lucide-react";
 import { useActionState, useMemo, useState, type FormEvent } from "react";
 import { useFormStatus } from "react-dom";
 import {
-  ImageUploader,
+  ProductMediaUploader,
   WeightPriceEditor,
   type WeightPriceDraft,
 } from "@/components/admin";
@@ -39,7 +40,7 @@ import { initialProductActionState } from "@/features/products/server/action-sta
 import { createProductsAction } from "@/features/products/server/actions";
 import type { ProductCategoryOption } from "@/features/products/components/product-form";
 import { cn } from "@/lib/utils";
-import type { ManagedImage } from "@/types/media";
+import type { ManagedImage, ManagedVideo } from "@/types/media";
 
 const MAX_BULK_PRODUCTS = 10;
 
@@ -55,6 +56,7 @@ interface ProductDraft {
   description: string;
   status: "DRAFT" | "ACTIVE";
   images: ManagedImage[];
+  video: ManagedVideo | null;
   priceOptions: WeightPriceDraft[];
   upload: UploadState;
 }
@@ -78,6 +80,7 @@ function newProductDraft(): ProductDraft {
     description: "",
     status: "DRAFT",
     images: [],
+    video: null,
     priceOptions: [],
     upload: { status: "idle", progress: 0 },
   };
@@ -93,6 +96,19 @@ function imagePayload(images: readonly ManagedImage[]) {
     position,
     isCover: image.isCover,
   }));
+}
+
+function videoPayload(video: ManagedVideo | null) {
+  if (!video) return null;
+  return {
+    cloudinaryPublicId: video.publicId,
+    url: video.url,
+    posterUrl: video.posterUrl,
+    altText: video.altText,
+    width: video.width,
+    height: video.height,
+    durationSeconds: video.durationSeconds,
+  };
 }
 
 function priceOptionIsComplete(option: WeightPriceDraft) {
@@ -185,6 +201,7 @@ export function BulkProductForm({
         description: draft.description,
         status: draft.status,
         images: imagePayload(draft.images),
+        video: videoPayload(draft.video),
         priceOptions: draft.priceOptions,
       })),
     [categoryId, drafts],
@@ -224,7 +241,7 @@ export function BulkProductForm({
   function validateBatch(event: FormEvent<HTMLFormElement>) {
     if (uploadsPending) {
       event.preventDefault();
-      setLocalError("Wait for every image upload to finish before saving.");
+      setLocalError("Wait for every media upload to finish before saving.");
       return;
     }
     const invalidIndex = drafts.findIndex((draft) => draftError(draft));
@@ -326,6 +343,13 @@ export function BulkProductForm({
                       <Images aria-hidden="true" className="size-3.5" />
                       {draft.images.length}{" "}
                       {draft.images.length === 1 ? "image" : "images"}
+                      {draft.video && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <Video aria-hidden="true" className="size-3.5" />
+                          video
+                        </>
+                      )}
                       <span aria-hidden="true">·</span>
                       <Scale aria-hidden="true" className="size-3.5" />
                       {draft.priceOptions.length}{" "}
@@ -462,24 +486,26 @@ export function BulkProductForm({
                   <div className="grid content-start gap-6">
                     <section className="grid gap-3">
                       <div>
-                        <h3 className="text-sm font-semibold">
-                          Product images
-                        </h3>
+                        <h3 className="text-sm font-semibold">Product media</h3>
                         <p className="mt-1 text-xs leading-5 text-foreground-muted">
-                          Upload, reorder, describe, and choose a cover image.
+                          Select images and one optional video together, then
+                          choose the image cover.
                         </p>
                       </div>
-                      <ImageUploader
-                        scope="product"
+                      <ProductMediaUploader
                         images={draft.images}
                         onImagesChange={(images) =>
                           updateDraft(draft.id, { images })
                         }
+                        video={draft.video}
+                        onVideoChange={(video) =>
+                          updateDraft(draft.id, { video })
+                        }
                         onUploadProgressChange={(upload) =>
                           updateDraft(draft.id, { upload })
                         }
-                        maxFiles={8}
-                        label="Add product images"
+                        maxImages={8}
+                        label="Add product media"
                       />
                     </section>
 

@@ -106,6 +106,12 @@ export interface AdminOrderDetail extends AdminOrderListItem {
     sentAt: string | null;
     lastError: string | null;
   } | null;
+  customerNotification: {
+    status: "PENDING" | "PROCESSING" | "SENT" | "FAILED";
+    attemptCount: number;
+    sentAt: string | null;
+    lastError: string | null;
+  } | null;
   items: Array<{
     id: string;
     productName: string;

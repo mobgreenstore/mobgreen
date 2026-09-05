@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://res.cloudinary.com https://api.mapbox.com https://cdn.startselect.com https://dundle.com https://company.recharge.com https://www.vidaplayer.com",
+      "media-src 'self' blob: https://res.cloudinary.com",
       "connect-src 'self' https://api.mapbox.com https://events.mapbox.com",
       "worker-src 'self' blob:",
       "font-src 'self' data:",

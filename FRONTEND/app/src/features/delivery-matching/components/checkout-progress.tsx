@@ -2,9 +2,9 @@ import { Check, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const steps = [
-  { label: "Order reviewed", state: "complete" },
-  { label: "Submit recharge", state: "current" },
-  { label: "Admin approval", state: "upcoming" },
+  { label: "Details secured", state: "complete" },
+  { label: "Payment submitted", state: "current" },
+  { label: "Order received", state: "upcoming" },
 ] as const;
 
 export function CheckoutProgress() {

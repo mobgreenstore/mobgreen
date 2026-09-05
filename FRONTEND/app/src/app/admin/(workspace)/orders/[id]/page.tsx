@@ -1,22 +1,14 @@
 import Link from "next/link";
-import {
-  ArrowLeft,
-  BadgePercent,
-  Mail,
-  MapPinned,
-  PackageCheck,
-  Route,
-} from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, BadgePercent, Mail, MapPinned, Route } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Money } from "@/components/commerce/money";
 import { WeightDisplay } from "@/components/commerce/weight-display";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge, Card, InlineAlert } from "@/components/ui";
-import { OrderOperationsPanel } from "@/features/orders/components/order-operations-panel";
 import { AdminPaymentAttemptCard } from "@/features/orders/components/admin-payment-attempt-card";
 import { CourierAssignmentCard } from "@/features/delivery-matching/components/courier-assignment-card";
 import { AdminCourierAssignment } from "@/features/delivery-operations/components/admin-courier-assignment";
-import { OrderOperationsTimeline } from "@/features/orders/components/order-operations-timeline";
 import { DynamicTrackingMap } from "@/features/location/components/dynamic-tracking-map";
 import { VerificationReviewPanel } from "@/features/orders/components/verification-review-panel";
 import {
@@ -25,10 +17,7 @@ import {
 } from "@/features/orders/components/status-badges";
 import { getAdminOrder } from "@/features/orders/server/queries";
 import { paymentMethodLabel } from "@/features/payments/payment-method";
-import {
-  validOrderTransitions,
-  validPaymentTransitions,
-} from "@/features/orders/server/order-operation-service";
+import { getRechargePartner } from "@/config/recharge";
 import {
   hasAdminPermission,
   requireAdminPermission,
@@ -42,8 +31,8 @@ export default async function AdminOrderDetailsPage({
   const admin = await requireAdminPermission("orders.read");
   const order = await getAdminOrder((await params).id);
   if (!order) notFound();
-  const canWrite = hasAdminPermission(admin.role, "orders.write");
   const canVerify = hasAdminPermission(admin.role, "payments.verify");
+  const rechargePartner = getRechargePartner(order.rechargeProvider);
   const created = new Intl.DateTimeFormat("en", {
     dateStyle: "long",
     timeStyle: "short",
@@ -110,7 +99,17 @@ export default async function AdminOrderDetailsPage({
                 <dt className="text-xs font-semibold tracking-[0.08em] text-foreground-subtle uppercase">
                   Recharge method
                 </dt>
-                <dd className="mt-1 font-medium">
+                <dd className="mt-1 flex min-h-8 items-center gap-2 font-medium">
+                  {rechargePartner && (
+                    <Image
+                      src={rechargePartner.iconUrl}
+                      alt=""
+                      width={28}
+                      height={28}
+                      unoptimized
+                      className="size-7 rounded-md border border-border bg-surface object-contain p-1"
+                    />
+                  )}
                   {paymentMethodLabel(
                     order.paymentMethod,
                     order.rechargeProvider,
@@ -169,32 +168,13 @@ export default async function AdminOrderDetailsPage({
                   description="This delivery cannot move to out for delivery until its destination is validated."
                 />
               )}
-              {!order.dispatchConfigured && (
-                <InlineAlert
-                  className="mt-4"
-                  tone="info"
-                  title="Private dispatch origin missing"
-                  description={
-                    <>
-                      Configure the routing origin in{" "}
-                      <Link
-                        className="font-semibold underline"
-                        href="/admin/settings"
-                      >
-                        store settings
-                      </Link>
-                      .
-                    </>
-                  }
-                />
-              )}
               {order.courier && (
                 <CourierAssignmentCard
                   courier={order.courier}
                   className="mt-4"
                 />
               )}
-              {canWrite && (
+              {hasAdminPermission(admin.role, "orders.write") && (
                 <div className="mt-5 border-t border-border pt-5">
                   <h3 className="font-semibold">Courier candidates</h3>
                   <p className="mt-1 mb-4 text-sm text-foreground-muted">
@@ -317,13 +297,6 @@ export default async function AdminOrderDetailsPage({
               />
             </div>
           </Card>
-
-          <Card className="p-5 sm:p-6">
-            <h2 className="text-lg font-semibold">Activity timeline</h2>
-            <div className="mt-6">
-              <OrderOperationsTimeline events={order.timeline} />
-            </div>
-          </Card>
         </div>
 
         <aside className="grid gap-6 xl:sticky xl:top-24">
@@ -332,38 +305,10 @@ export default async function AdminOrderDetailsPage({
               orderId={order.id}
               codeAvailable={order.verificationCodeAvailable}
               canVerify={canVerify}
-              orderStatus={order.status}
-              paymentStatus={order.paymentStatus}
               notification={order.notification}
+              customerNotification={order.customerNotification}
             />
           </Card>
-
-          {canWrite ? (
-            <Card className="p-5">
-              <div className="mb-5 flex items-center gap-2">
-                <PackageCheck aria-hidden="true" className="size-5" />
-                <h2 className="font-semibold">Process order</h2>
-              </div>
-              <OrderOperationsPanel
-                orderId={order.id}
-                orderTransitions={validOrderTransitions(
-                  order.status,
-                  order.fulfillmentType,
-                )}
-                paymentTransitions={validPaymentTransitions(
-                  order.paymentStatus,
-                )}
-                trackingAvailable={
-                  order.status === "OUT_FOR_DELIVERY" && Boolean(order.tracking)
-                }
-              />
-            </Card>
-          ) : (
-            <InlineAlert
-              title="Read-only access"
-              description="Your role can inspect orders but cannot change them."
-            />
-          )}
         </aside>
       </div>
     </div>

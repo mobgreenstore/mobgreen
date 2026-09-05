@@ -15,7 +15,10 @@ import {
   PaymentMethodSummary,
 } from "@/features/payments/components/payment-confirmation";
 import { RechargeCodeConfirmation } from "@/features/payments/components/recharge-code-confirmation";
-import { RechargePartnerRail } from "@/features/payments/components/recharge-partner-rail";
+import {
+  RechargePartnerDirectory,
+  RechargePartnerRail,
+} from "@/features/payments/components/recharge-partner-rail";
 import { calculateBitcoinDeposit } from "@/features/bitcoin/policy";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +70,7 @@ export function PaymentConfirmationFlow({
       description={
         bitcoin
           ? "Your order amount is locked. Payment progression comes only from the invoice provider and blockchain—not from this browser."
-          : "Add one or several recharge codes. They are encrypted immediately, masked in email, and reviewed before the order is marked paid."
+          : "Add one or several recharge codes. They are encrypted immediately and protected with your confirmed order details."
       }
       belowHero={<RechargePartnerRail />}
       aside={aside}
@@ -77,6 +80,12 @@ export function PaymentConfirmationFlow({
           method={intent.paymentMethod}
           rechargeProvider={intent.rechargeProvider}
         />
+
+        {intent.paymentMethod === "RECHARGE_ONLINE" ? (
+          <RechargePartnerDirectory
+            selectedPartnerId={intent.rechargeProvider}
+          />
+        ) : null}
 
         {!intent.confirmationEligible && (
           <InlineAlert
@@ -125,11 +134,11 @@ export function PaymentConfirmationFlow({
             currency={intent.currency}
             depositMinor={split.depositMinor}
             cashBalanceMinor={split.remainingCashMinor}
+            onCompleted={completed}
           />
         ) : (
           <RechargeCodeConfirmation
             intentId={intent.publicId}
-            customerEmail={intent.customer.email}
             eligible={intent.confirmationEligible}
             onCompleted={completed}
           />
@@ -141,9 +150,8 @@ export function PaymentConfirmationFlow({
               aria-hidden="true"
               className="mt-0.5 size-4 shrink-0 text-info"
             />
-            Submitting a recharge code creates a pending-review payment. It
-            never marks the order completed. Bitcoin can progress only after
-            server-confirmed settlement.
+            Submitting recharge codes creates your order immediately. Bitcoin
+            can progress only after server-confirmed settlement.
           </div>
         )}
       </div>

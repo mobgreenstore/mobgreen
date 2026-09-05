@@ -11,6 +11,10 @@ export {
   type ImageUploaderProps,
   type ImageUploadProgress,
 } from "./image-uploader";
+export {
+  ProductMediaUploader,
+  type ProductMediaUploaderProps,
+} from "./product-media-uploader";
 export { MetricCard } from "./metric-card";
 export {
   OrderStatusTimeline,

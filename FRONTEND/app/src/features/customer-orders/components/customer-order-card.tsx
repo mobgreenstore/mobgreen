@@ -5,8 +5,8 @@ import { Money } from "@/components/commerce/money";
 import { ResponsiveImage } from "@/components/commerce/responsive-image";
 import { Badge } from "@/components/ui";
 import {
-  OrderStatusBadge,
-  PaymentStatusBadge,
+  CustomerOrderStatusBadge,
+  CustomerPaymentStatusBadge,
 } from "@/features/orders/components/status-badges";
 import type { PublicOrderListItem } from "@/features/customer-orders/types";
 
@@ -48,8 +48,8 @@ export function CustomerOrderCard({ order }: { order: PublicOrderListItem }) {
           />
         </div>
         <div className="mt-3 flex flex-wrap gap-2" aria-live="polite">
-          <OrderStatusBadge status={order.status} />
-          <PaymentStatusBadge status={order.paymentStatus} />
+          <CustomerOrderStatusBadge status={order.status} />
+          <CustomerPaymentStatusBadge status={order.paymentStatus} />
           <Badge>
             {order.fulfillmentType === "DELIVERY" ? "Delivery" : "Pickup"}
           </Badge>

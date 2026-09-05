@@ -25,6 +25,31 @@ export interface AdminOrderEmailInput {
   }>;
 }
 
+export interface CustomerOrderEmailInput {
+  storefrontUrl: string;
+  orderUrl: string;
+  trackingUrl: string;
+  logoUrl: string;
+  reference: string;
+  customerName: string;
+  fulfillment: "PICKUP" | "DELIVERY";
+  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE" | "BITCOIN_DEPOSIT";
+  rechargeProvider: string | null;
+  deliveryAddress: string | null;
+  courierName: string | null;
+  currency: SupportedCurrency;
+  totalMinor: number;
+  createdAt: Date;
+  maskedRechargeCodes?: string[];
+  items: Array<{
+    name: string;
+    weightValue: number;
+    weightUnit: WeightUnit;
+    quantity: number;
+    lineTotalMinor: number;
+  }>;
+}
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -42,7 +67,57 @@ function money(amountMinor: number, currency: SupportedCurrency) {
 }
 
 function weight(value: number, unit: WeightUnit) {
-  return `${new Intl.NumberFormat("en", { maximumFractionDigits: 3 }).format(value)} ${unit === "KG" ? "kg" : "g"}`;
+  return `${new Intl.NumberFormat("en", {
+    maximumFractionDigits: 3,
+  }).format(value)} ${unit === "KG" ? "kg" : "g"}`;
+}
+
+function submittedAt(value: Date) {
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(value);
+}
+
+function plainTextItems(
+  items: Array<{
+    name: string;
+    weightValue: number;
+    weightUnit: WeightUnit;
+    quantity: number;
+    lineTotalMinor: number;
+  }>,
+  currency: SupportedCurrency,
+) {
+  return items
+    .map(
+      (item) =>
+        `- ${item.name} · ${weight(item.weightValue, item.weightUnit)} · Qty ${item.quantity} · ${money(item.lineTotalMinor, currency)}`,
+    )
+    .join("\n");
+}
+
+function itemRows(
+  items: Array<{
+    name: string;
+    weightValue: number;
+    weightUnit: WeightUnit;
+    quantity: number;
+    lineTotalMinor: number;
+  }>,
+  currency: SupportedCurrency,
+) {
+  return items
+    .map(
+      (item) =>
+        `<tr><td style="padding:14px 0;border-bottom:1px solid #e8e8e5;font-size:14px;line-height:20px"><strong style="font-weight:600;color:#161817">${escapeHtml(item.name)}</strong><br><span style="color:#686d68;font-size:12px">${escapeHtml(weight(item.weightValue, item.weightUnit))} · Qty ${item.quantity}</span></td><td align="right" style="padding:14px 0;border-bottom:1px solid #e8e8e5;font-size:14px;font-weight:600;white-space:nowrap;color:#161817">${escapeHtml(money(item.lineTotalMinor, currency))}</td></tr>`,
+    )
+    .join("");
+}
+
+function detailsRow(label: string, value: string) {
+  return `<tr><td style="padding:7px 0;color:#686d68;font-size:13px;vertical-align:top">${escapeHtml(label)}</td><td align="right" style="padding:7px 0;color:#161817;font-size:13px;font-weight:500;line-height:19px;vertical-align:top">${escapeHtml(value)}</td></tr>`;
 }
 
 export function maskVerificationCode(code: string) {
@@ -58,67 +133,41 @@ export function buildAdminOrderEmail(input: AdminOrderEmailInput) {
     input.paymentMethod,
     input.rechargeProvider,
   );
+  const fulfillment = input.fulfillment === "DELIVERY" ? "Delivery" : "Pickup";
   const location = input.deliveryAddress ?? "Pickup";
-  const itemText = input.items
-    .map(
-      (item) =>
-        `- ${item.name} · ${weight(item.weightValue, item.weightUnit)} · Qty ${item.quantity} · ${money(item.lineTotalMinor, input.currency)}`,
-    )
-    .join("\n");
+  const submitted = submittedAt(input.createdAt);
+  const items = plainTextItems(input.items, input.currency);
   const text = [
-    `New MOB GREENS order ${input.reference}`,
-    "",
-    `Customer: ${input.customerName}`,
-    `Email: ${input.customerEmail ?? "Not provided"}`,
-    `Fulfillment: ${input.fulfillment === "DELIVERY" ? "Delivery" : "Pickup"}`,
-    `Location: ${location}`,
-    `Courier: ${input.courierName ?? "Not assigned"}`,
-    `Recharge method: ${payment}`,
-    `Verification code: ${input.maskedVerificationCode} (masked for email safety)`,
-    `Total: ${money(input.totalMinor, input.currency)}`,
+    "MOB GREENS · New order received",
+    `Reference: ${input.reference}`,
     `Submitted: ${input.createdAt.toISOString()}`,
     "",
-    "Items",
-    itemText,
+    "Customer",
+    `Name: ${input.customerName}`,
+    `Email: ${input.customerEmail ?? "Not provided"}`,
+    `Phone: ${input.customerPhone ?? "Not provided"}`,
     "",
-    `Review securely: ${input.adminOrderUrl}`,
+    "Order",
+    `Total: ${money(input.totalMinor, input.currency)}`,
+    `Payment method: ${payment}`,
+    `Fulfillment: ${fulfillment}`,
+    `Location: ${location}`,
+    `Courier: ${input.courierName ?? "Not assigned"}`,
+    "",
+    `Recharge code: ${input.maskedVerificationCode} (masked for email safety)`,
+    "",
+    "Items",
+    items,
+    "",
+    `Open securely: ${input.adminOrderUrl}`,
   ].join("\n");
-  const itemRows = input.items
-    .map(
-      (item) =>
-        `<tr><td style="padding:8px 0">${escapeHtml(item.name)}<br><span style="color:#666">${escapeHtml(weight(item.weightValue, item.weightUnit))} · Qty ${item.quantity}</span></td><td style="padding:8px 0;text-align:right">${escapeHtml(money(item.lineTotalMinor, input.currency))}</td></tr>`,
-    )
-    .join("");
-  const html = `<!doctype html><html><body style="margin:0;background:#f5f5f5;font-family:Arial,sans-serif;color:#111"><div style="max-width:640px;margin:0 auto;padding:28px 16px"><div style="background:#fff;border:1px solid #ddd;border-radius:16px;padding:28px"><p style="margin:0;color:#666;font-size:13px">MOB GREENS · New order</p><h1 style="margin:8px 0 24px;font-size:26px">${escapeHtml(input.reference)}</h1><table style="width:100%;border-collapse:collapse;font-size:14px"><tr><td style="padding:5px 0;color:#666">Customer</td><td style="padding:5px 0;text-align:right">${escapeHtml(input.customerName)}</td></tr><tr><td style="padding:5px 0;color:#666">Email</td><td style="padding:5px 0;text-align:right">${escapeHtml(input.customerEmail ?? "Not provided")}</td></tr><tr><td style="padding:5px 0;color:#666">Fulfillment</td><td style="padding:5px 0;text-align:right">${input.fulfillment === "DELIVERY" ? "Delivery" : "Pickup"}</td></tr><tr><td style="padding:5px 0;color:#666">Location</td><td style="padding:5px 0;text-align:right">${escapeHtml(location)}</td></tr><tr><td style="padding:5px 0;color:#666">Courier</td><td style="padding:5px 0;text-align:right">${escapeHtml(input.courierName ?? "Not assigned")}</td></tr><tr><td style="padding:5px 0;color:#666">Recharge</td><td style="padding:5px 0;text-align:right">${escapeHtml(payment)}</td></tr></table><div style="margin:22px 0;padding:16px;border-radius:10px;background:#f5f5f5"><div style="font-size:12px;color:#666">Verification code · masked in email</div><div style="margin-top:6px;font-family:monospace;font-size:20px;font-weight:700">${escapeHtml(input.maskedVerificationCode)}</div></div><h2 style="font-size:17px;margin:24px 0 8px">Items</h2><table style="width:100%;border-collapse:collapse;font-size:14px">${itemRows}<tr style="border-top:1px solid #ddd"><td style="padding-top:14px;font-weight:700">Total</td><td style="padding-top:14px;text-align:right;font-weight:700">${escapeHtml(money(input.totalMinor, input.currency))}</td></tr></table><a href="${escapeHtml(input.adminOrderUrl)}" style="display:block;margin-top:24px;padding:13px 18px;border-radius:10px;background:#111;color:#fff;text-decoration:none;text-align:center;font-weight:700">Review order securely</a><p style="margin:16px 0 0;color:#777;font-size:12px">Submitted ${escapeHtml(input.createdAt.toISOString())}. Sign in to reveal the complete code and record an audit event.</p></div></div></body></html>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:0;background:#f4f4f1;color:#161817;font-family:Arial,Helvetica,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f4f4f1"><tr><td align="center" style="padding:28px 16px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:640px;background:#ffffff;border:1px solid #deded9;border-radius:12px;overflow:hidden"><tr><td style="padding:28px 30px;background:#131715;color:#ffffff"><p style="margin:0;font-size:12px;letter-spacing:.11em;font-weight:700;text-transform:uppercase;color:#c7d3cb">MOB GREENS</p><h1 style="margin:10px 0 0;font-size:28px;line-height:34px;font-weight:700;color:#ffffff">New order received</h1><p style="margin:8px 0 0;font-size:15px;line-height:22px;color:#eef2ee">${escapeHtml(input.reference)}</p></td></tr><tr><td style="padding:30px"><p style="margin:0;font-size:16px;line-height:25px">A customer has submitted an order. The recharge code is masked in this email; open the secure order record to view it.</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:26px 0;border-top:1px solid #d9ddd9;border-bottom:1px solid #d9ddd9"><tr><td style="padding:16px 0"><p style="margin:0;color:#686d68;font-size:12px;letter-spacing:.08em;font-weight:700;text-transform:uppercase">Order total</p><p style="margin:5px 0 0;font-size:24px;line-height:30px;font-weight:700">${escapeHtml(money(input.totalMinor, input.currency))}</p></td><td align="right" style="padding:16px 0;font-size:13px;line-height:19px;color:#686d68">Submitted<br><strong style="font-weight:600;color:#161817">${escapeHtml(submitted)} UTC</strong></td></tr></table><h2 style="margin:0 0 10px;font-size:16px;line-height:22px">Customer</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse">${detailsRow("Name", input.customerName)}${detailsRow("Email", input.customerEmail ?? "Not provided")}${detailsRow("Phone", input.customerPhone ?? "Not provided")}</table><h2 style="margin:28px 0 10px;font-size:16px;line-height:22px">Fulfillment</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse">${detailsRow("Method", fulfillment)}${detailsRow("Payment", payment)}${detailsRow("Location", location)}${detailsRow("Courier", input.courierName ?? "Not assigned")}</table><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin-top:28px;border-left:3px solid #355e4a;background:#f6f8f5"><tr><td style="padding:14px 16px"><p style="margin:0;color:#4c554f;font-size:12px;letter-spacing:.06em;font-weight:700;text-transform:uppercase">Recharge code</p><p style="margin:6px 0 0;font-family:Consolas,Monaco,monospace;font-size:18px;line-height:24px;font-weight:700;letter-spacing:.04em">${escapeHtml(input.maskedVerificationCode)}</p><p style="margin:6px 0 0;color:#686d68;font-size:12px;line-height:18px">Masked for email safety. The complete code is available only in the secured admin record.</p></td></tr></table><h2 style="margin:30px 0 0;font-size:16px;line-height:22px">Items</h2><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse">${itemRows(input.items, input.currency)}<tr><td style="padding:16px 0 0;font-size:15px;font-weight:700">Total</td><td align="right" style="padding:16px 0 0;font-size:15px;font-weight:700;white-space:nowrap">${escapeHtml(money(input.totalMinor, input.currency))}</td></tr></table><table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:30px"><tr><td style="border-radius:7px;background:#161817"><a href="${escapeHtml(input.adminOrderUrl)}" style="display:inline-block;padding:13px 18px;color:#ffffff;font-size:14px;font-weight:700;line-height:20px;text-decoration:none">Open secure order</a></td></tr></table><p style="margin:22px 0 0;color:#686d68;font-size:12px;line-height:18px">This message contains masked financial information. Sign in to MOB GREENS before viewing sensitive order details.</p></td></tr></table></td></tr></table></body></html>`;
+
   return {
-    subject: `MOB GREENS order ${input.reference} requires verification`,
+    subject: `New MOB GREENS order ${input.reference}`,
     text,
     html,
   };
-}
-
-export interface CustomerOrderEmailInput {
-  storefrontUrl: string;
-  orderUrl: string;
-  trackingUrl: string;
-  logoUrl: string;
-  reference: string;
-  customerName: string;
-  fulfillment: "PICKUP" | "DELIVERY";
-  paymentMethod: "RECHARGE_FROM_STORE" | "RECHARGE_ONLINE" | "BITCOIN_DEPOSIT";
-  rechargeProvider: string | null;
-  deliveryAddress: string | null;
-  courierName: string | null;
-  currency: SupportedCurrency;
-  totalMinor: number;
-  createdAt: Date;
-  items: Array<{
-    name: string;
-    weightValue: number;
-    weightUnit: WeightUnit;
-    quantity: number;
-    lineTotalMinor: number;
-  }>;
 }
 
 export function buildCustomerOrderEmail(input: CustomerOrderEmailInput) {
@@ -131,43 +180,78 @@ export function buildCustomerOrderEmail(input: CustomerOrderEmailInput) {
     input.fulfillment === "DELIVERY"
       ? (input.deliveryAddress ?? "Your confirmed delivery location")
       : "Pickup details will be confirmed by the store.";
-  const itemText = input.items
-    .map(
-      (item) =>
-        `- ${item.name} · ${weight(item.weightValue, item.weightUnit)} · Qty ${item.quantity} · ${money(item.lineTotalMinor, input.currency)}`,
-    )
-    .join("\n");
+  const submitted = submittedAt(input.createdAt);
+  const items = plainTextItems(input.items, input.currency);
+  const maskedCodes = [...new Set(input.maskedRechargeCodes ?? [])].filter(
+    Boolean,
+  );
+  const codeReference = maskedCodes.length
+    ? maskedCodes.join(" · ")
+    : "Submitted securely";
+  const codeSummary = maskedCodes.length
+    ? `Secure code reference: ${codeReference}`
+    : "Your payment code was submitted securely.";
+  const actionButtons =
+    input.fulfillment === "DELIVERY"
+      ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin-top:30px"><tr><td width="50%" style="padding-right:6px"><a href="${escapeHtml(input.orderUrl)}" style="display:block;border-radius:7px;background:#161817;padding:13px 8px;color:#ffffff;font-size:13px;font-weight:700;line-height:20px;text-align:center;text-decoration:none">View order</a></td><td width="50%" style="padding-left:6px"><a href="${escapeHtml(input.trackingUrl)}" style="display:block;border:1px solid #c9cec9;border-radius:7px;padding:12px 8px;color:#161817;font-size:13px;font-weight:700;line-height:20px;text-align:center;text-decoration:none">Track delivery</a></td></tr></table>`
+      : `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:30px"><tr><td style="border-radius:7px;background:#161817"><a href="${escapeHtml(input.orderUrl)}" style="display:inline-block;padding:13px 18px;color:#ffffff;font-size:14px;font-weight:700;line-height:20px;text-decoration:none">View your order</a></td></tr></table>`;
   const text = [
-    `MOB GREENS order ${input.reference}`,
+    "MOB GREENS · Order placed",
+    `Reference: ${input.reference}`,
+    `Submitted: ${input.createdAt.toISOString()}`,
     "",
     `Hello ${input.customerName},`,
-    "We received your order for review. Your payment is not confirmed yet.",
+    "Your order has been placed. We will send delivery updates to this email.",
+    codeSummary,
     "",
-    `Order total: ${money(input.totalMinor, input.currency)}`,
+    "Order",
+    `Total: ${money(input.totalMinor, input.currency)}`,
     `Payment method: ${payment}`,
     `Fulfillment: ${fulfillment}`,
     `Destination: ${deliveryDetail}`,
     input.courierName
       ? `Nearby delivery profile: ${input.courierName}`
-      : "Delivery profile: pending payment review",
+      : "Delivery profile: not selected",
     "",
     "Items",
-    itemText,
+    items,
     "",
     `View your order: ${input.orderUrl}`,
-    `View delivery status: ${input.trackingUrl}`,
+    ...(input.fulfillment === "DELIVERY"
+      ? [`Track delivery: ${input.trackingUrl}`]
+      : []),
     "",
-    "For your security, verification codes are not included in this email.",
+    "Full recharge codes are never sent by email.",
   ].join("\n");
-  const itemRows = input.items
-    .map(
-      (item) =>
-        `<tr><td style="padding:10px 0;border-bottom:1px solid #e7e5e4">${escapeHtml(item.name)}<br><span style="color:#6b7280;font-size:12px">${escapeHtml(weight(item.weightValue, item.weightUnit))} · Qty ${item.quantity}</span></td><td style="padding:10px 0;border-bottom:1px solid #e7e5e4;text-align:right;font-weight:600">${escapeHtml(money(item.lineTotalMinor, input.currency))}</td></tr>`,
-    )
-    .join("");
-  const html = `<!doctype html><html><body style="margin:0;background:#f6f6f4;font-family:Arial,sans-serif;color:#111827"><div style="max-width:640px;margin:0 auto;padding:28px 16px"><div style="overflow:hidden;background:#ffffff;border:1px solid #e7e5e4;border-radius:20px"><div style="padding:26px 28px;background:#101614;color:#ffffff"><img src="${escapeHtml(input.logoUrl)}" width="42" height="42" alt="MOB GREENS" style="display:block;width:42px;height:42px;border-radius:12px;margin:0 0 20px"/><p style="margin:0;color:#bbf7d0;font-size:12px;letter-spacing:.12em;font-weight:700;text-transform:uppercase">Order received</p><h1 style="margin:8px 0 0;font-size:28px;line-height:1.1">${escapeHtml(input.reference)}</h1></div><div style="padding:28px"><p style="margin:0;font-size:16px;line-height:1.6">Hello ${escapeHtml(input.customerName)},</p><p style="margin:12px 0 0;color:#4b5563;font-size:15px;line-height:1.65">We received your order for review. Payment is still pending; we will update your order once it has been verified.</p><div style="margin:24px 0;padding:18px;background:#f3f7f4;border-left:3px solid #15803d"><div style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.08em">Order total</div><div style="margin-top:5px;font-size:24px;font-weight:700">${escapeHtml(money(input.totalMinor, input.currency))}</div><div style="margin-top:7px;color:#374151;font-size:14px">${escapeHtml(payment)} · ${escapeHtml(fulfillment)}</div></div><table style="width:100%;border-collapse:collapse;font-size:14px"><tr><td style="padding:6px 0;color:#6b7280">Delivery</td><td style="padding:6px 0;text-align:right">${escapeHtml(deliveryDetail)}</td></tr><tr><td style="padding:6px 0;color:#6b7280">Courier</td><td style="padding:6px 0;text-align:right">${escapeHtml(input.courierName ?? "Pending payment review")}</td></tr></table><h2 style="margin:28px 0 8px;font-size:17px">Your items</h2><table style="width:100%;border-collapse:collapse;font-size:14px">${itemRows}<tr><td style="padding-top:16px;font-weight:700">Total</td><td style="padding-top:16px;text-align:right;font-weight:700">${escapeHtml(money(input.totalMinor, input.currency))}</td></tr></table><a href="${escapeHtml(input.orderUrl)}" style="display:block;margin-top:28px;padding:14px 18px;border-radius:10px;background:#111827;color:#ffffff;text-decoration:none;text-align:center;font-weight:700">View your order</a><a href="${escapeHtml(input.trackingUrl)}" style="display:block;margin-top:10px;padding:13px 18px;border:1px solid #d1d5db;border-radius:10px;color:#111827;text-decoration:none;text-align:center;font-weight:700">View delivery status</a><p style="margin:22px 0 0;color:#6b7280;font-size:12px;line-height:1.55">For your security, verification codes are not included in this email. Submitted ${escapeHtml(input.createdAt.toISOString())}.</p></div></div><p style="margin:16px 0 0;color:#6b7280;text-align:center;font-size:12px">MOB GREENS · ${escapeHtml(input.storefrontUrl)}</p></div></body></html>`;
+  const html = [
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>',
+    '<body style="margin:0;padding:0;background:#f4f4f1;color:#161817;font-family:Arial,Helvetica,sans-serif">',
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f4f4f1"><tr><td align="center" style="padding:28px 16px">',
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:640px;background:#ffffff;border:1px solid #deded9;border-radius:12px;overflow:hidden">',
+    '<tr><td style="padding:26px 30px;background:#131715;color:#ffffff">',
+    '<table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>',
+    `<td style="padding-right:12px;vertical-align:middle"><img src="${escapeHtml(input.logoUrl)}" width="40" height="40" alt="MOB GREENS" style="display:block;width:40px;height:40px;border:0;border-radius:10px"></td>`,
+    '<td style="vertical-align:middle"><p style="margin:0;font-size:12px;letter-spacing:.11em;font-weight:700;text-transform:uppercase;color:#c7d3cb">MOB GREENS</p><p style="margin:4px 0 0;font-size:13px;line-height:18px;color:#eef2ee">Order receipt</p></td>',
+    "</tr></table>",
+    `<h1 style="margin:22px 0 0;font-size:28px;line-height:34px;font-weight:700;color:#ffffff">Your order is placed.</h1><p style="margin:8px 0 0;font-size:15px;line-height:22px;color:#eef2ee">${escapeHtml(input.reference)}</p>`,
+    '</td></tr><tr><td style="padding:30px">',
+    `<p style="margin:0;font-size:16px;line-height:25px">Hello ${escapeHtml(input.customerName)},</p><p style="margin:10px 0 0;color:#505651;font-size:15px;line-height:24px">Your order has been placed. We will send delivery updates to this email address.</p>`,
+    `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:26px 0;border-top:1px solid #d9ddd9;border-bottom:1px solid #d9ddd9"><tr><td style="padding:16px 0"><p style="margin:0;color:#686d68;font-size:12px;letter-spacing:.08em;font-weight:700;text-transform:uppercase">Order total</p><p style="margin:5px 0 0;font-size:24px;line-height:30px;font-weight:700">${escapeHtml(money(input.totalMinor, input.currency))}</p></td><td align="right" style="padding:16px 0;font-size:13px;line-height:19px;color:#686d68">Submitted<br><strong style="font-weight:600;color:#161817">${escapeHtml(submitted)} UTC</strong></td></tr></table>`,
+    '<h2 style="margin:0 0 10px;font-size:16px;line-height:22px">Order details</h2>',
+    `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse">${detailsRow("Payment", payment)}${detailsRow("Fulfillment", fulfillment)}${detailsRow("Destination", deliveryDetail)}${detailsRow("Delivery profile", input.courierName ?? "Not selected")}</table>`,
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin-top:26px;border-left:3px solid #355e4a;background:#f6f8f5"><tr><td style="padding:14px 16px"><p style="margin:0;color:#4c554f;font-size:12px;letter-spacing:.06em;font-weight:700;text-transform:uppercase">Payment code secured</p>',
+    `<p style="margin:6px 0 0;font-family:Consolas,Monaco,monospace;font-size:16px;line-height:22px;font-weight:700;letter-spacing:.04em">${escapeHtml(codeReference)}</p>`,
+    '<p style="margin:6px 0 0;color:#686d68;font-size:12px;line-height:18px">This is a masked reference only. Full recharge codes are kept in the secure order record and are never sent by email.</p></td></tr></table>',
+    '<h2 style="margin:30px 0 0;font-size:16px;line-height:22px">Your items</h2>',
+    `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse">${itemRows(input.items, input.currency)}<tr><td style="padding:16px 0 0;font-size:15px;font-weight:700">Total</td><td align="right" style="padding:16px 0 0;font-size:15px;font-weight:700;white-space:nowrap">${escapeHtml(money(input.totalMinor, input.currency))}</td></tr></table>`,
+    actionButtons,
+    "</td></tr></table>",
+    `<p style="margin:14px 0 0;color:#7b807b;font-size:12px;line-height:18px;text-align:center">MOB GREENS · ${escapeHtml(input.storefrontUrl)}</p>`,
+    "</td></tr></table></body></html>",
+  ].join("");
+
   return {
-    subject: `We received your MOB GREENS order ${input.reference}`,
+    subject: `MOB GREENS order ${input.reference} placed`,
     text,
     html,
   };

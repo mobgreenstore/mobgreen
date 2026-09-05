@@ -3,11 +3,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireGuestSession = vi.hoisted(() => vi.fn());
 const getGuestTracking = vi.hoisted(() => vi.fn());
+const getEmailAccessibleTracking = vi.hoisted(() => vi.fn());
+const getRequestOrderEmailAccess = vi.hoisted(() => vi.fn());
 const consumePublicRequest = vi.hoisted(() => vi.fn());
 
 vi.mock("@/server/guest-session", () => ({ requireGuestSession }));
 vi.mock("@/features/customer-orders/server/queries", () => ({
   getGuestTracking,
+  getEmailAccessibleTracking,
+}));
+vi.mock("@/features/customer-orders/server/order-email-access", () => ({
+  getRequestOrderEmailAccess,
 }));
 vi.mock("@/server/public-rate-limit", () => ({
   consumePublicRequest,
@@ -24,6 +30,7 @@ describe("private customer tracking endpoint", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     consumePublicRequest.mockResolvedValue(true);
+    getRequestOrderEmailAccess.mockReturnValue(null);
   });
 
   it("returns the same not-found response without a valid guest session", async () => {
@@ -100,6 +107,21 @@ describe("private customer tracking endpoint", () => {
       { params: Promise.resolve({ reference: "MG-1" }) },
     );
     expect(response.status).toBe(429);
+    expect(getGuestTracking).not.toHaveBeenCalled();
+  });
+
+  it("allows a verified email-link cookie to read only its matching order", async () => {
+    requireGuestSession.mockResolvedValue(null);
+    getRequestOrderEmailAccess.mockReturnValue({ tokenHash: "email-hash" });
+    getEmailAccessibleTracking.mockResolvedValue({ reference: "MG-1" });
+
+    const response = await route.GET(
+      new NextRequest("http://localhost/api/customer/orders/MG-1/tracking"),
+      { params: Promise.resolve({ reference: "MG-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(getEmailAccessibleTracking).toHaveBeenCalledWith("MG-1");
     expect(getGuestTracking).not.toHaveBeenCalled();
   });
 });

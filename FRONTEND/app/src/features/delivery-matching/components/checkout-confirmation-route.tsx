@@ -10,7 +10,7 @@ import { getServerGuestSession } from "@/server/guest-session";
 
 export const confirmationMetadata: Metadata = {
   title: "Confirm your recharge",
-  description: "Securely submit a recharge code for MOB GREENS order review.",
+  description: "Securely submit recharge codes for your MOB GREENS order.",
   robots: { index: false, follow: false },
 };
 

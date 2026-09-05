@@ -128,6 +128,8 @@ export function CustomerOrderTracking({
 
   if (!tracking) return null;
   const data = tracking.tracking;
+  const progress = Math.min(1, Math.max(0, data.progress));
+  const progressPercentage = Math.round(progress * 100);
   const estimatedArrival = new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -173,6 +175,36 @@ export function CustomerOrderTracking({
           title="Simulated delivery progress"
           description={data.routeDisclosure}
         />
+
+        <section aria-labelledby="courier-progress-heading">
+          <div className="flex items-baseline justify-between gap-4">
+            <h3 id="courier-progress-heading" className="text-sm font-semibold">
+              Courier progress
+            </h3>
+            <span className="font-mono text-sm font-semibold">
+              {progressPercentage}%
+            </span>
+          </div>
+          <div
+            role="progressbar"
+            aria-labelledby="courier-progress-heading"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progressPercentage}
+            aria-valuetext={`${progressPercentage}% complete. ${distanceLabel(data.distanceRemainingMeters)} remaining.`}
+            className="mt-3 h-2 overflow-hidden rounded-full bg-surface-subtle"
+          >
+            <span
+              aria-hidden="true"
+              className="block h-full rounded-full bg-success transition-[width] duration-500 motion-reduce:transition-none"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <p className="mt-2 text-sm text-foreground-muted">
+            {distanceLabel(data.distanceRemainingMeters)} remaining to the
+            recipient.
+          </p>
+        </section>
 
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="rounded-xl bg-surface-subtle p-4">

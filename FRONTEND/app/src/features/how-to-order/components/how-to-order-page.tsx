@@ -226,9 +226,8 @@ export function HowToOrderPage() {
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-foreground-muted">
-              Recharge submissions are reviewed before payment is marked as
-              confirmed. Bitcoin progresses only after provider and blockchain
-              confirmation.
+              Recharge codes are securely attached to the order. Bitcoin
+              progresses only after provider and blockchain confirmation.
             </p>
           </div>
           <div className="mt-8 grid border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-border">

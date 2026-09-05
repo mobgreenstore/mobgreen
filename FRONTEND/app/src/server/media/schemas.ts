@@ -21,3 +21,23 @@ export const removeImageSchema = z.object({
       "The image key is not managed by MOB GREENS.",
     ),
 });
+
+export const uploadProductVideoFieldsSchema = z.object({
+  altText: z
+    .string()
+    .trim()
+    .min(3, "Alternative text must contain at least 3 characters.")
+    .max(255),
+});
+
+export const removeProductVideoSchema = z.object({
+  publicId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .refine(
+      (value) => /^mob-greens\/products\/videos\/[a-f0-9-]+$/i.test(value),
+      "The video key is not managed by MOB GREENS.",
+    ),
+});

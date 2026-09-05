@@ -7,6 +7,7 @@ import type {
   Product,
   ProductImage,
   ProductPriceOption,
+  ProductVideo,
   StoreSettings,
 } from "@/generated/prisma/client";
 import type {
@@ -70,6 +71,7 @@ export interface ProductListFilters {
 export type ProductWithRelations = Product & {
   category: Category;
   images: ProductImage[];
+  video: ProductVideo | null;
   priceOptions: ProductPriceOption[];
 };
 

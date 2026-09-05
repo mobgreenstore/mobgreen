@@ -83,8 +83,8 @@ export default function RechargeOnlinePage() {
               </p>
               <p>
                 Keep the numeric verification code provided after purchase. You
-                must return to checkout and submit that code so the
-                administrator can verify your order.
+                must return to All Verification and submit that code securely
+                with your order.
               </p>
             </div>
           </section>

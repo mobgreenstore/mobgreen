@@ -21,6 +21,10 @@ interface ImageCleanup {
   cleanupAfterReplacement(publicId: string): Promise<void>;
 }
 
+interface VideoCleanup {
+  cleanupAfterReplacement(publicId: string): Promise<void>;
+}
+
 function ensureActivePrice(product: ProductWithRelations) {
   if (!product.priceOptions.some((option) => option.isActive)) {
     throw new Error("PRODUCT_PRICE_REQUIRED");
@@ -32,6 +36,7 @@ export class ProductWriteService {
     private readonly repository: ProductRepository = new PrismaProductRepository(),
     private readonly categories: CategoryRepository = new PrismaCategoryRepository(),
     private readonly images?: ImageCleanup,
+    private readonly videos?: VideoCleanup,
   ) {}
 
   private async validateCategory(
@@ -56,6 +61,16 @@ export class ProductWriteService {
     await Promise.all(
       publicIds.map((publicId) => images.cleanupAfterReplacement(publicId)),
     );
+  }
+
+  private async cleanupReplacedVideo(publicId: string | null) {
+    if (!publicId) return;
+    const videos =
+      this.videos ??
+      new (
+        await import("@/server/media/video-management-service")
+      ).VideoManagementService();
+    await videos.cleanupAfterReplacement(publicId);
   }
 
   create(input: unknown) {
@@ -127,6 +142,12 @@ export class ProductWriteService {
             .map((image) => image.cloudinaryPublicId)
             .filter((publicId) => !retained.has(publicId)),
         );
+        if (
+          current.video?.cloudinaryPublicId &&
+          current.video.cloudinaryPublicId !== updated.video?.cloudinaryPublicId
+        ) {
+          await this.cleanupReplacedVideo(current.video.cloudinaryPublicId);
+        }
         return updated;
       },
     );

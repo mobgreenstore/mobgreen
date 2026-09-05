@@ -30,6 +30,13 @@ export function bitcoinDecimalToSatoshis(amount: string): bigint {
   return BigInt(whole) * 100_000_000n + BigInt(fraction.padEnd(8, "0"));
 }
 
+export function satoshisToBitcoinDecimal(satoshis: bigint) {
+  if (satoshis < 0n) throw new TypeError("Satoshis must not be negative.");
+  const whole = satoshis / 100_000_000n;
+  const fraction = (satoshis % 100_000_000n).toString().padStart(8, "0");
+  return `${whole}.${fraction}`;
+}
+
 export type BitcoinReceiptState =
   "AWAITING" | "UNDERPAID" | "SETTLED" | "OVERPAID";
 

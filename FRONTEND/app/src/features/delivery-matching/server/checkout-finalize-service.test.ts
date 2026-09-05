@@ -93,6 +93,8 @@ describe("checkout intent finalization transaction", () => {
       reference: "MG-2026-MATCHED",
       currency: "EUR",
       totalMinor: 2_500n,
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
     });
   });
 
@@ -115,17 +117,83 @@ describe("checkout intent finalization transaction", () => {
           courierDurationSeconds: 1_100,
           subtotalMinor: 2_500n,
           verificationCodeEncrypted: "encrypted-code",
+          status: "CONFIRMED",
+          paymentStatus: "PAID",
+          statusEvents: {
+            create: expect.objectContaining({
+              toStatus: "CONFIRMED",
+              note: "Order confirmed automatically after recharge code submission.",
+            }),
+          },
+          paymentStatusEvents: {
+            create: expect.objectContaining({
+              toStatus: "PAID",
+              note: "Recharge code submitted at checkout; payment was automatically confirmed.",
+            }),
+          },
         }),
       }),
     );
+    expect(transaction.paymentAttempt.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        status: "APPROVED",
+        confirmedAt: expect.any(Date),
+        events: {
+          create: expect.objectContaining({
+            eventType: "RECHARGE_AUTO_CONFIRMED",
+            toStatus: "APPROVED",
+            metadata: expect.objectContaining({
+              codeCount: 1,
+              confirmation: "automatic_submission",
+            }),
+          }),
+        },
+      }),
+    });
     expect(transaction.checkoutIntent.update).toHaveBeenCalledWith({
       where: { id: "intent-id" },
       data: { status: "SUBMITTED", submittedAt: expect.any(Date) },
     });
     expect(result).toMatchObject({
       reference: "MG-2026-MATCHED",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
       duplicate: false,
     });
+  });
+
+  it("returns the persisted automatic statuses for an already-created intent order", async () => {
+    transaction.checkoutIntent.findFirst.mockResolvedValue({
+      ...intent,
+      order: {
+        id: "order-id",
+        reference: "MG-2026-EXISTING",
+        currency: "EUR",
+        totalMinor: 2_500n,
+        status: "CONFIRMED",
+        paymentStatus: "PAID",
+      },
+    });
+
+    const result = await new CheckoutFinalizeService().createFromIntent(
+      {
+        intentId: "a".repeat(32),
+        verificationCodes: ["1234567890"],
+        customerNote: "",
+      },
+      guest,
+    );
+
+    expect(result).toEqual({
+      reference: "MG-2026-EXISTING",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
+      currency: "EUR",
+      totalMinor: 2_500,
+      duplicate: true,
+    });
+    expect(transaction.order.create).not.toHaveBeenCalled();
+    expect(transaction.paymentAttempt.create).not.toHaveBeenCalled();
   });
 
   it("revalidates and snapshots a real special offer atomically", async () => {
@@ -192,6 +260,8 @@ describe("checkout intent finalization transaction", () => {
       reference: "MG-2026-OFFER",
       currency: "EUR",
       totalMinor: 2_250n,
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
     });
 
     await new CheckoutFinalizeService().createFromIntent(

@@ -3,6 +3,7 @@ import type {
   Category,
   ProductImage,
   ProductPriceOption,
+  ProductVideo,
 } from "@/generated/prisma/client";
 import { describe, expect, it, vi } from "vitest";
 
@@ -64,6 +65,7 @@ const product: ProductWithRelations = {
   updatedAt: now,
   category,
   images: [],
+  video: null,
   priceOptions: [price],
 };
 
@@ -281,6 +283,83 @@ describe("ProductWriteService", () => {
     );
     expect(cleanupAfterReplacement).toHaveBeenCalledWith(
       oldImage.cloudinaryPublicId,
+    );
+  });
+
+  it("cleans a replaced product video only after the database update", async () => {
+    const oldVideo: ProductVideo = {
+      id: "824bf462-6765-451c-8db8-d47976ec9595",
+      productId: product.id,
+      cloudinaryPublicId:
+        "mob-greens/products/videos/924bf462-6765-451c-8db8-d47976ec9595",
+      url: "https://res.cloudinary.com/demo/video/upload/old.mp4",
+      posterUrl: "https://res.cloudinary.com/demo/video/upload/old.jpg",
+      altText: "Old spinach video",
+      width: 1280,
+      height: 720,
+      durationSeconds: 12,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const newVideo: ProductVideo = {
+      ...oldVideo,
+      id: "a24bf462-6765-451c-8db8-d47976ec9595",
+      cloudinaryPublicId:
+        "mob-greens/products/videos/b24bf462-6765-451c-8db8-d47976ec9595",
+      url: "https://res.cloudinary.com/demo/video/upload/new.mp4",
+      posterUrl: "https://res.cloudinary.com/demo/video/upload/new.jpg",
+      altText: "New spinach video",
+    };
+    const products = productRepository();
+    vi.mocked(products.findById).mockResolvedValue({
+      ...product,
+      video: oldVideo,
+    });
+    vi.mocked(products.update).mockResolvedValue({
+      ...product,
+      video: newVideo,
+    });
+    const cleanupAfterReplacement = vi.fn().mockResolvedValue(undefined);
+    const service = new ProductWriteService(
+      products,
+      categoryRepository(),
+      undefined,
+      { cleanupAfterReplacement },
+    );
+
+    const result = await service.update(product.id, {
+      categoryId: category.id,
+      name: product.name,
+      shortDescription: product.shortDescription,
+      status: "ACTIVE",
+      images: [],
+      video: {
+        cloudinaryPublicId: newVideo.cloudinaryPublicId,
+        url: newVideo.url,
+        posterUrl: newVideo.posterUrl,
+        altText: newVideo.altText,
+        width: newVideo.width,
+        height: newVideo.height,
+        durationSeconds: newVideo.durationSeconds,
+      },
+      priceOptions: [
+        {
+          weightValue: 500,
+          weightUnit: "G",
+          currency: "GBP",
+          priceMinor: 250n,
+          position: 0,
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(true);
+    expect(vi.mocked(products.update).mock.invocationCallOrder[0]).toBeLessThan(
+      cleanupAfterReplacement.mock.invocationCallOrder[0] ?? Infinity,
+    );
+    expect(cleanupAfterReplacement).toHaveBeenCalledWith(
+      oldVideo.cloudinaryPublicId,
     );
   });
 });

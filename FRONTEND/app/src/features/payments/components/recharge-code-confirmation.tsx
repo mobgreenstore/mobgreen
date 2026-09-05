@@ -11,13 +11,11 @@ import {
 } from "lucide-react";
 import {
   Button,
-  FieldDescription,
   FieldError,
   FormField,
   IconButton,
   InlineAlert,
   Label,
-  TextArea,
   TextField,
 } from "@/components/ui";
 
@@ -25,12 +23,10 @@ type FieldErrors = Record<string, string[] | undefined>;
 
 export function RechargeCodeConfirmation({
   intentId,
-  customerEmail,
   eligible,
   onCompleted,
 }: {
   intentId: string;
-  customerEmail: string;
   eligible: boolean;
   onCompleted: (reference: string) => void;
 }) {
@@ -79,7 +75,6 @@ export function RechargeCodeConfirmation({
     setPending(true);
     setServerError("");
     setFieldErrors({});
-    const data = new FormData(event.currentTarget);
     try {
       const response = await fetch(
         `/api/checkout/intents/${encodeURIComponent(intentId)}/submit`,
@@ -88,7 +83,6 @@ export function RechargeCodeConfirmation({
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             verificationCodes: codes,
-            customerNote: String(data.get("customerNote") ?? ""),
           }),
         },
       );
@@ -212,17 +206,11 @@ export function RechargeCodeConfirmation({
         </Button>
       </section>
 
-      <section className="grid gap-4 border-b border-border pb-6">
-        <FormField hasDescription>
-          <Label optional>Order note</Label>
-          <TextArea name="customerNote" maxLength={1000} rows={3} />
-          <FieldDescription>
-            Updates are associated with {customerEmail}.
-          </FieldDescription>
-        </FormField>
+      <div className="border-t border-border pt-5">
         <Button
           type="submit"
           size="large"
+          className="w-full"
           disabled={
             pending || !eligible || codes.some((code) => code.length < 6)
           }
@@ -235,9 +223,9 @@ export function RechargeCodeConfirmation({
           ) : (
             <ShieldCheck aria-hidden="true" className="size-4" />
           )}
-          {pending ? "Securing codes..." : "Submit for review"}
+          {pending ? "Confirming order…" : "Confirm order"}
         </Button>
-      </section>
+      </div>
     </form>
   );
 }

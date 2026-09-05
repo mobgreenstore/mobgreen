@@ -1,4 +1,4 @@
-import { BadgeCheck, Clock3, ShieldCheck } from "lucide-react";
+import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { ResponsiveImage } from "@/components/commerce";
 import { Badge } from "@/components/ui";
 import type { CheckoutConfirmationView } from "@/features/delivery-matching/types";
@@ -22,8 +22,8 @@ export function VerificationHero({
               Confirm your recharge. Start your order.
             </h1>
             <p className="mt-4 max-w-lg text-sm leading-6 text-white/70 sm:text-base">
-              Submit the numeric code you received. MOB GREENS will review it
-              before your order moves into processing.
+              Submit the numeric code you received. It is encrypted immediately
+              and protected with your confirmed order details.
             </p>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-3 text-xs font-semibold text-white/75 sm:text-sm">
@@ -35,12 +35,18 @@ export function VerificationHero({
               Encrypted before storage
             </span>
             <span className="inline-flex items-center gap-2">
-              <Clock3 aria-hidden="true" className="size-4 text-blue-300" />
-              Administrator review required
+              <ShieldCheck
+                aria-hidden="true"
+                className="size-4 text-blue-300"
+              />
+              Order received securely
             </span>
             <span className="inline-flex items-center gap-2">
               <BadgeCheck aria-hidden="true" className="size-4 text-blue-300" />
-              {paymentMethodLabel(intent.paymentMethod, intent.rechargeProvider)}
+              {paymentMethodLabel(
+                intent.paymentMethod,
+                intent.rechargeProvider,
+              )}
             </span>
           </div>
         </div>

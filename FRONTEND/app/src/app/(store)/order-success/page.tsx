@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CircleCheck, Clock3, MapPin, Navigation } from "lucide-react";
+import { CircleCheck, MapPin, Navigation } from "lucide-react";
 import { BrandLogo } from "@/components/shared/brand-mark";
 import { StoreHeader } from "@/components/shared/store-header";
 import { Card, InlineAlert, buttonVariants } from "@/components/ui";
-import { OrderStatusBadge } from "@/features/orders/components/status-badges";
 import { getGuestOrder } from "@/features/customer-orders/server/queries";
 import { cn } from "@/lib/utils";
 import { getServerGuestSession } from "@/server/guest-session";
@@ -47,7 +46,11 @@ export default async function OrderSuccessPage({
                 priority
                 sizes="48px"
               />
-              {order ? <OrderStatusBadge status={order.status} /> : null}
+              {order ? (
+                <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-2.5 text-xs font-semibold text-foreground-muted">
+                  Order received
+                </span>
+              ) : null}
             </div>
             <div className="mt-7 flex items-start gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-success-subtle text-success">
@@ -59,7 +62,7 @@ export default async function OrderSuccessPage({
                 </p>
                 <h1 className="mt-1 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">
                   {order
-                    ? "Your verification is in review."
+                    ? "Your order has been received."
                     : "We could not load that order."}
                 </h1>
               </div>
@@ -70,10 +73,9 @@ export default async function OrderSuccessPage({
             {order ? (
               <>
                 <p className="max-w-xl text-sm leading-6 text-foreground-muted">
-                  Your order was submitted securely. We will email an update
-                  when payment review changes. Delivery tracking is ready to
-                  follow and the live map becomes available once dispatch
-                  begins.
+                  Your order was submitted successfully. We will send delivery
+                  updates to your email, and your selected delivery profile is
+                  already saved with this order.
                 </p>
 
                 <div className="flex flex-wrap items-end justify-between gap-4 border-y border-border py-5">
@@ -87,11 +89,14 @@ export default async function OrderSuccessPage({
                   </div>
                   <div className="text-left sm:text-right">
                     <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                      Payment
+                      Payment code
                     </p>
                     <p className="mt-2 flex items-center gap-1.5 font-semibold">
-                      <Clock3 aria-hidden="true" className="size-4 text-info" />
-                      Pending verification
+                      <CircleCheck
+                        aria-hidden="true"
+                        className="size-4 text-success"
+                      />
+                      Received securely
                     </p>
                   </div>
                 </div>
@@ -122,20 +127,15 @@ export default async function OrderSuccessPage({
                   </section>
                 )}
 
-                <InlineAlert
-                  tone="info"
-                  title="What happens next"
-                  description="Payment review comes first. After confirmation, your delivery profile and destination are used for dispatch. The tracking page refreshes automatically once a route is available."
-                />
-
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3">
                   <Link
                     href={`/orders/${encodeURIComponent(order.reference)}`}
                     className={cn(buttonVariants({ size: "large" }), "w-full")}
                   >
                     View order
                   </Link>
-                  {order.fulfillmentType === "DELIVERY" ? (
+                  {order.fulfillmentType === "DELIVERY" &&
+                  order.trackingAvailable ? (
                     <Link
                       href={`/orders/${encodeURIComponent(order.reference)}/tracking`}
                       className={cn(

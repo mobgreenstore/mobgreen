@@ -2,11 +2,11 @@
 
 import { Eye } from "lucide-react";
 import { Money } from "@/components/commerce/money";
-import { ResponsiveImage } from "@/components/commerce/responsive-image";
+import { ImageGallery } from "@/components/commerce/image-gallery";
 import { WeightDisplay } from "@/components/commerce/weight-display";
 import { Card, StatusBadge } from "@/components/ui";
 import type { WeightPriceDraft } from "@/components/admin";
-import type { ManagedImage } from "@/types/media";
+import type { ManagedImage, ManagedVideo } from "@/types/media";
 
 export function ProductPreview({
   name,
@@ -14,6 +14,7 @@ export function ProductPreview({
   shortDescription,
   status,
   images,
+  video,
   priceOptions,
 }: {
   name: string;
@@ -21,9 +22,9 @@ export function ProductPreview({
   shortDescription: string;
   status: "DRAFT" | "ACTIVE";
   images: readonly ManagedImage[];
+  video: ManagedVideo | null;
   priceOptions: readonly WeightPriceDraft[];
 }) {
-  const cover = images.find((image) => image.isCover) ?? images[0] ?? null;
   const option = priceOptions[0];
   const major = option ? Number(option.priceMajor) : Number.NaN;
   const validPrice = option && Number.isFinite(major) && major >= 0;
@@ -35,10 +36,10 @@ export function ProductPreview({
         Live product preview
       </div>
       <Card className="overflow-hidden p-0">
-        <ResponsiveImage
-          image={cover}
-          sizes="(max-width: 1024px) 100vw, 22rem"
-          aspect="landscape"
+        <ImageGallery
+          images={images}
+          video={video}
+          label="Product media preview"
         />
         <div className="grid gap-3 p-5">
           <div className="flex items-start justify-between gap-3">

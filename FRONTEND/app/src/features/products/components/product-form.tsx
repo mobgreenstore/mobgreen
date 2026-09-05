@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
-  ImageUploader,
+  ProductMediaUploader,
   WeightPriceEditor,
   type WeightPriceDraft,
 } from "@/components/admin";
@@ -29,7 +29,7 @@ import {
 import type { ProductViewModel } from "@/features/products/server/queries";
 import { ProductPreview } from "@/features/products/components/product-preview";
 import { cn } from "@/lib/utils";
-import type { ManagedImage } from "@/types/media";
+import type { ManagedImage, ManagedVideo } from "@/types/media";
 
 export interface ProductCategoryOption {
   id: string;
@@ -67,6 +67,19 @@ function imagePayload(images: readonly ManagedImage[]) {
     position,
     isCover: image.isCover,
   }));
+}
+
+function videoPayload(video: ManagedVideo | null) {
+  if (!video) return null;
+  return {
+    cloudinaryPublicId: video.publicId,
+    url: video.url,
+    posterUrl: video.posterUrl,
+    altText: video.altText,
+    width: video.width,
+    height: video.height,
+    durationSeconds: video.durationSeconds,
+  };
 }
 
 function SubmitButton({ mode }: { mode: "create" | "edit" }) {
@@ -111,6 +124,9 @@ export function ProductForm({
     product?.status === "ACTIVE" ? "ACTIVE" : "DRAFT",
   );
   const [images, setImages] = useState<ManagedImage[]>(product?.images ?? []);
+  const [video, setVideo] = useState<ManagedVideo | null>(
+    product?.video ?? null,
+  );
   const [priceOptions, setPriceOptions] = useState<WeightPriceDraft[]>(
     initialPrices(product),
   );
@@ -148,6 +164,7 @@ export function ProductForm({
   const categoryError = state.fieldErrors?.categoryId?.[0];
   const shortDescriptionError = state.fieldErrors?.shortDescription?.[0];
   const imageError = state.fieldErrors?.images?.[0];
+  const videoError = state.fieldErrors?.video?.[0];
   const priceError = state.fieldErrors?.priceOptions?.[0];
 
   return (
@@ -156,6 +173,11 @@ export function ProductForm({
         type="hidden"
         name="images"
         value={JSON.stringify(imagePayload(images))}
+      />
+      <input
+        type="hidden"
+        name="video"
+        value={JSON.stringify(videoPayload(video))}
       />
       <input
         type="hidden"
@@ -282,25 +304,25 @@ export function ProductForm({
           <Card className="grid gap-5 p-5 sm:p-7">
             <div>
               <h2 className="text-base font-semibold tracking-[-0.02em]">
-                Product images
+                Product media
               </h2>
               <p className="mt-1 text-sm leading-6 text-foreground-muted">
-                Add up to eight real Cloudinary images, choose the cover, and
-                arrange their storefront order.
+                Select images and one optional product video in one upload.
               </p>
             </div>
-            <ImageUploader
-              scope="product"
+            <ProductMediaUploader
               images={images}
               onImagesChange={setImages}
-              maxFiles={8}
-              label="Add product image"
+              video={video}
+              onVideoChange={setVideo}
+              maxImages={8}
+              label="Add product media"
             />
-            {imageError && (
+            {(imageError || videoError) && (
               <InlineAlert
                 tone="danger"
-                title="Check product images"
-                description={imageError}
+                title="Check product media"
+                description={imageError ?? videoError}
               />
             )}
           </Card>
@@ -341,6 +363,7 @@ export function ProductForm({
           shortDescription={shortDescription}
           status={status}
           images={images}
+          video={video}
           priceOptions={priceOptions}
         />
       </div>

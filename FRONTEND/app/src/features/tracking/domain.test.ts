@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateTrackingProgress,
   coordinateAtProgress,
+  splitLineStringAtProgress,
 } from "@/features/tracking/domain";
 
 const geometry = {
@@ -17,6 +18,51 @@ describe("temporal delivery tracking", () => {
   it("interpolates deterministically along the saved route", () => {
     expect(coordinateAtProgress(geometry, 0.5)).toEqual([1, 0]);
     expect(coordinateAtProgress(geometry, 0.5)).toEqual([1, 0]);
+  });
+
+  it("splits a LineString by travelled distance and inserts the courier coordinate", () => {
+    const split = splitLineStringAtProgress(
+      {
+        type: "LineString",
+        coordinates: [
+          [0, 0],
+          [1, 0],
+          [4, 0],
+        ],
+      },
+      0.5,
+    );
+
+    expect(split.courier).toEqual([2, 0]);
+    expect(split.completed.coordinates).toEqual([
+      [0, 0],
+      [1, 0],
+      [2, 0],
+    ]);
+    expect(split.remaining.coordinates).toEqual([
+      [2, 0],
+      [4, 0],
+    ]);
+  });
+
+  it("clamps split endpoints while preserving valid line geometries", () => {
+    const start = splitLineStringAtProgress(geometry, -1);
+    const end = splitLineStringAtProgress(geometry, 2);
+
+    expect(start.progress).toBe(0);
+    expect(start.courier).toEqual([0, 0]);
+    expect(start.completed.coordinates).toEqual([
+      [0, 0],
+      [0, 0],
+    ]);
+    expect(start.remaining.coordinates).toEqual(geometry.coordinates);
+    expect(end.progress).toBe(1);
+    expect(end.courier).toEqual([2, 0]);
+    expect(end.completed.coordinates).toEqual(geometry.coordinates);
+    expect(end.remaining.coordinates).toEqual([
+      [2, 0],
+      [2, 0],
+    ]);
   });
 
   it("uses server time for distance and time remaining", () => {

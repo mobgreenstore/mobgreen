@@ -26,6 +26,7 @@ const product: ProductViewModel = {
   status: "DRAFT",
   isArchived: false,
   images: [],
+  video: null,
   priceOptions: [
     {
       id: "324bf462-6765-451c-8db8-d47976ec9595",

@@ -10,29 +10,51 @@ import Map, {
   type LayerProps,
   type MapRef,
 } from "react-map-gl/mapbox";
+import { splitLineStringAtProgress } from "@/features/tracking/domain";
 import type {
   PublicDeliveryTracking,
   TrackingCoordinate,
 } from "@/features/tracking/types";
 
-const routeLayer: LayerProps = {
-  id: "delivery-route",
+const completedRouteLayer: LayerProps = {
+  id: "delivery-route-completed",
   type: "line",
   paint: {
-    "line-color": "#2563eb",
+    "line-color": "#047857",
     "line-width": 5,
     "line-opacity": 0.9,
   },
   layout: { "line-cap": "round", "line-join": "round" },
 };
 
-const fallbackLayer: LayerProps = {
-  ...routeLayer,
-  id: "delivery-fallback-route",
+const remainingRouteLayer: LayerProps = {
+  id: "delivery-route-remaining",
+  type: "line",
+  paint: {
+    "line-color": "#2563eb",
+    "line-width": 5,
+    "line-opacity": 0.4,
+  },
+  layout: { "line-cap": "round", "line-join": "round" },
+};
+
+const completedFallbackLayer: LayerProps = {
+  ...completedRouteLayer,
+  id: "delivery-fallback-route-completed",
+  paint: {
+    "line-color": "#334155",
+    "line-width": 4,
+    "line-opacity": 0.9,
+  },
+};
+
+const remainingFallbackLayer: LayerProps = {
+  ...remainingRouteLayer,
+  id: "delivery-fallback-route-remaining",
   paint: {
     "line-color": "#64748b",
     "line-width": 4,
-    "line-opacity": 0.85,
+    "line-opacity": 0.65,
     "line-dasharray": [2, 2],
   },
 };
@@ -124,9 +146,13 @@ export function TrackingMap({
 
   if (!token) {
     return (
-      <div className="grid min-h-72 place-items-center rounded-2xl bg-surface-subtle p-6 text-center text-sm text-foreground-muted">
+      <section
+        aria-label="Delivery map unavailable"
+        className="grid min-h-72 place-items-center rounded-2xl bg-surface-subtle p-6 text-center text-sm text-foreground-muted"
+      >
         Map display is unavailable until the public Mapbox token is configured.
-      </div>
+        Delivery timing and route updates remain available below.
+      </section>
     );
   }
 
@@ -144,10 +170,19 @@ export function TrackingMap({
       maxLatitude: tracking.origin[1],
     },
   );
-  const routeData = {
+  const routeSegments = splitLineStringAtProgress(
+    tracking.geometry,
+    tracking.progress,
+  );
+  const completedRouteData = {
     type: "Feature" as const,
     properties: {},
-    geometry: tracking.geometry,
+    geometry: routeSegments.completed,
+  };
+  const remainingRouteData = {
+    type: "Feature" as const,
+    properties: {},
+    geometry: routeSegments.remaining,
   };
   const destinationData = {
     type: "Feature" as const,
@@ -159,13 +194,22 @@ export function TrackingMap({
   };
 
   return (
-    <div
-      role="img"
-      aria-label="Delivery route with dispatch, simulated courier, and recipient markers"
+    <section
+      aria-labelledby="delivery-map-title"
       className="overflow-hidden rounded-2xl border border-border bg-surface-subtle shadow-sm"
     >
+      <h2 id="delivery-map-title" className="sr-only">
+        Delivery map
+      </h2>
+      <p id="delivery-map-description" className="sr-only">
+        A simulated route from the dispatch point to the recipient. The solid
+        green line is completed travel and the lighter line is the remaining
+        route from the courier to the recipient. Use the map controls to zoom.
+      </p>
       <Map
         ref={mapRef}
+        aria-describedby="delivery-map-description"
+        aria-label="Interactive delivery route map"
         mapboxAccessToken={token}
         initialViewState={{
           latitude: tracking.courier[1],
@@ -196,9 +240,26 @@ export function TrackingMap({
         <Source id="delivery-zone-source" type="geojson" data={destinationData}>
           <Layer {...zoneLayer} />
         </Source>
-        <Source id="delivery-route-source" type="geojson" data={routeData}>
+        <Source
+          id="delivery-route-remaining-source"
+          type="geojson"
+          data={remainingRouteData}
+        >
           <Layer
-            {...(tracking.routeKind === "DRIVING" ? routeLayer : fallbackLayer)}
+            {...(tracking.routeKind === "DRIVING"
+              ? remainingRouteLayer
+              : remainingFallbackLayer)}
+          />
+        </Source>
+        <Source
+          id="delivery-route-completed-source"
+          type="geojson"
+          data={completedRouteData}
+        >
+          <Layer
+            {...(tracking.routeKind === "DRIVING"
+              ? completedRouteLayer
+              : completedFallbackLayer)}
           />
         </Source>
         <Marker
@@ -208,7 +269,7 @@ export function TrackingMap({
         >
           <span className="grid size-9 place-items-center rounded-full border-2 border-white bg-black text-white shadow-md">
             <Store aria-hidden="true" className="size-4" />
-            <span className="sr-only">Private dispatch origin</span>
+            <span className="sr-only">Dispatch point</span>
           </span>
         </Marker>
         <AnimatedCourier target={tracking.courier} />
@@ -223,6 +284,6 @@ export function TrackingMap({
           </span>
         </Marker>
       </Map>
-    </div>
+    </section>
   );
 }

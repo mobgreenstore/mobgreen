@@ -116,40 +116,41 @@ export async function listGuestOrders(
   };
 }
 
-export async function getGuestOrder(
-  guestSessionId: string,
-  reference: string,
+const orderDetailSelect = {
+  ...listSelect,
+  customerName: true,
+  deliveryAddress: true,
+  deliveryPostalCode: true,
+  deliveryCountryCode: true,
+  courierNameSnapshot: true,
+  courierDistanceMeters: true,
+  courierDurationSeconds: true,
+  checkoutIntent: { select: { publicId: true } },
+  items: {
+    orderBy: { createdAt: "asc" as const },
+    select: {
+      productNameSnapshot: true,
+      productImageUrlSnapshot: true,
+      productImageAltTextSnapshot: true,
+      weightValueSnapshot: true,
+      weightUnitSnapshot: true,
+      unitPriceMinor: true,
+      quantity: true,
+      lineTotalMinor: true,
+    },
+  },
+  statusEvents: {
+    orderBy: { createdAt: "asc" as const },
+    select: { toStatus: true, createdAt: true },
+  },
+} satisfies Prisma.OrderSelect;
+
+async function getOrderDetail(
+  where: Prisma.OrderWhereInput,
 ): Promise<PublicOrderDetail | null> {
   const order = await prisma.order.findFirst({
-    where: { guestSessionId, reference, archivedAt: null },
-    select: {
-      ...listSelect,
-      customerName: true,
-      deliveryAddress: true,
-      deliveryPostalCode: true,
-      deliveryCountryCode: true,
-      courierNameSnapshot: true,
-      courierDistanceMeters: true,
-      courierDurationSeconds: true,
-      checkoutIntent: { select: { publicId: true } },
-      items: {
-        orderBy: { createdAt: "asc" },
-        select: {
-          productNameSnapshot: true,
-          productImageUrlSnapshot: true,
-          productImageAltTextSnapshot: true,
-          weightValueSnapshot: true,
-          weightUnitSnapshot: true,
-          unitPriceMinor: true,
-          quantity: true,
-          lineTotalMinor: true,
-        },
-      },
-      statusEvents: {
-        orderBy: { createdAt: "asc" },
-        select: { toStatus: true, createdAt: true },
-      },
-    },
+    where,
+    select: orderDetailSelect,
   });
   if (!order) return null;
   const summary = listItem({
@@ -207,30 +208,43 @@ export async function getGuestOrder(
   };
 }
 
-export async function getGuestTracking(
+export function getGuestOrder(
   guestSessionId: string,
   reference: string,
+): Promise<PublicOrderDetail | null> {
+  return getOrderDetail({ guestSessionId, reference, archivedAt: null });
+}
+
+/** Call only after the signed order-email access token has been verified. */
+export function getEmailAccessibleOrder(
+  reference: string,
+): Promise<PublicOrderDetail | null> {
+  return getOrderDetail({ reference, archivedAt: null });
+}
+
+const trackingSelect = {
+  reference: true,
+  status: true,
+  fulfillmentType: true,
+  deliveryAddress: true,
+  deliveryPostalCode: true,
+  deliveryLocality: true,
+  deliveryTracking: true,
+  statusEvents: {
+    orderBy: { createdAt: "asc" as const },
+    select: { toStatus: true, createdAt: true },
+  },
+} satisfies Prisma.OrderSelect;
+
+async function getTracking(
+  where: Prisma.OrderWhereInput,
 ): Promise<PublicTrackingView | null> {
   const order = await prisma.order.findFirst({
     where: {
-      guestSessionId,
-      reference,
-      archivedAt: null,
+      ...where,
       fulfillmentType: "DELIVERY",
     },
-    select: {
-      reference: true,
-      status: true,
-      fulfillmentType: true,
-      deliveryAddress: true,
-      deliveryPostalCode: true,
-      deliveryLocality: true,
-      deliveryTracking: true,
-      statusEvents: {
-        orderBy: { createdAt: "asc" },
-        select: { toStatus: true, createdAt: true },
-      },
-    },
+    select: trackingSelect,
   });
   if (
     !order ||
@@ -255,4 +269,18 @@ export async function getGuestTracking(
       createdAt: event.createdAt.toISOString(),
     })),
   };
+}
+
+export function getGuestTracking(
+  guestSessionId: string,
+  reference: string,
+): Promise<PublicTrackingView | null> {
+  return getTracking({ guestSessionId, reference, archivedAt: null });
+}
+
+/** Call only after the signed order-email access token has been verified. */
+export function getEmailAccessibleTracking(
+  reference: string,
+): Promise<PublicTrackingView | null> {
+  return getTracking({ reference, archivedAt: null });
 }

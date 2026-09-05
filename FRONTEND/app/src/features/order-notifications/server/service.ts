@@ -2,6 +2,7 @@ import "server-only";
 
 import { brandLogoUrlForEmail } from "@/config/brand";
 import { decryptVerificationCode } from "@/features/checkout/server/code-encryption";
+import { createOrderEmailAccessToken } from "@/features/customer-orders/server/order-email-access";
 import {
   buildAdminOrderEmail,
   buildCustomerOrderEmail,
@@ -212,12 +213,24 @@ export function createCustomerOrderNotificationEnvelope(
   }
 }
 
+function publicOrigin(value: string | undefined) {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+    return localHosts.has(url.hostname.toLowerCase()) ? null : url.origin;
+  } catch {
+    return null;
+  }
+}
+
 function storefrontOrigin() {
   return (
-    process.env.NEXT_PUBLIC_STOREFRONT_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3001"
-  ).replace(/\/$/, "");
+    publicOrigin(process.env.STOREFRONT_PUBLIC_URL) ??
+    publicOrigin(process.env.NEXT_PUBLIC_STOREFRONT_URL) ??
+    publicOrigin(process.env.NEXT_PUBLIC_APP_URL) ??
+    "https://mobgreen.store"
+  );
 }
 
 export async function dispatchCustomerOrderSubmittedNotification(
@@ -249,6 +262,17 @@ export async function dispatchCustomerOrderSubmittedNotification(
       currency: true,
       totalMinor: true,
       createdAt: true,
+      paymentAttempts: {
+        where: { provider: "INTERNAL_RECHARGE" },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: {
+          rechargeCodes: {
+            orderBy: { position: "asc" },
+            select: { maskedValue: true },
+          },
+        },
+      },
       items: {
         orderBy: { createdAt: "asc" },
         select: {
@@ -305,10 +329,12 @@ export async function dispatchCustomerOrderSubmittedNotification(
 
   try {
     const storeUrl = storefrontOrigin();
+    const emailAccessToken = createOrderEmailAccessToken(order.reference);
+    const orderAccessUrl = `${storeUrl}/order-access/${encodeURIComponent(order.reference)}?token=${encodeURIComponent(emailAccessToken)}`;
     const email = buildCustomerOrderEmail({
       storefrontUrl: storeUrl,
-      orderUrl: `${storeUrl}/orders/${encodeURIComponent(order.reference)}`,
-      trackingUrl: `${storeUrl}/orders/${encodeURIComponent(order.reference)}/tracking`,
+      orderUrl: orderAccessUrl,
+      trackingUrl: `${orderAccessUrl}&next=tracking`,
       logoUrl: brandLogoUrlForEmail(storeUrl),
       reference: order.reference,
       customerName: order.customerName,
@@ -320,6 +346,13 @@ export async function dispatchCustomerOrderSubmittedNotification(
       currency: order.currency,
       totalMinor: Number(order.totalMinor),
       createdAt: order.createdAt,
+      ...(order.paymentAttempts[0]?.rechargeCodes.length
+        ? {
+            maskedRechargeCodes: order.paymentAttempts[0].rechargeCodes.map(
+              (code) => code.maskedValue,
+            ),
+          }
+        : {}),
       items: order.items.map((item) => ({
         name: item.productNameSnapshot,
         weightValue: Number(item.weightValueSnapshot),

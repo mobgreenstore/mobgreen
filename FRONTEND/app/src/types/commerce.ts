@@ -8,6 +8,16 @@ export interface CommerceImage {
   height: number;
 }
 
+export interface CommerceVideo {
+  id: string;
+  url: string;
+  posterUrl: string | null;
+  altText: string;
+  width: number;
+  height: number;
+  durationSeconds: number | null;
+}
+
 export interface WeightPriceOption {
   id: string;
   weightValue: number;

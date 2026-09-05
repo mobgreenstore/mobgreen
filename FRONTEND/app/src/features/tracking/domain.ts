@@ -18,6 +18,39 @@ export const trackingGeometrySchema = z.object({
 
 const EARTH_RADIUS_METERS = 6_371_000;
 
+function clampProgress(progress: number) {
+  return Math.max(0, Math.min(1, progress));
+}
+
+function coordinatesEqual(
+  first: TrackingCoordinate,
+  second: TrackingCoordinate,
+) {
+  return first[0] === second[0] && first[1] === second[1];
+}
+
+function interpolateCoordinate(
+  from: TrackingCoordinate,
+  to: TrackingCoordinate,
+  progress: number,
+): TrackingCoordinate {
+  return [
+    from[0] + (to[0] - from[0]) * progress,
+    from[1] + (to[1] - from[1]) * progress,
+  ];
+}
+
+function lineString(coordinates: TrackingCoordinate[]): TrackingGeometry {
+  return { type: "LineString", coordinates };
+}
+
+export interface LineStringProgressSplit {
+  progress: number;
+  courier: TrackingCoordinate;
+  completed: TrackingGeometry;
+  remaining: TrackingGeometry;
+}
+
 export function distanceMeters(
   first: TrackingCoordinate,
   second: TrackingCoordinate,
@@ -46,37 +79,111 @@ export function geometryDistanceMeters(geometry: TrackingGeometry) {
     );
 }
 
+/**
+ * Splits a saved route by its travelled distance, not by its coordinate count.
+ * The inserted courier coordinate lets the completed and remaining LineStrings
+ * meet precisely even when progress falls inside a route segment.
+ */
+export function splitLineStringAtProgress(
+  geometry: TrackingGeometry,
+  requestedProgress: number,
+): LineStringProgressSplit {
+  const progress = clampProgress(requestedProgress);
+  const coordinates = geometry.coordinates;
+  const origin = coordinates[0]!;
+  const destination = coordinates[coordinates.length - 1]!;
+
+  if (progress === 0) {
+    return {
+      progress,
+      courier: origin,
+      completed: lineString([origin, origin]),
+      remaining: lineString([...coordinates]),
+    };
+  }
+
+  if (progress === 1) {
+    return {
+      progress,
+      courier: destination,
+      completed: lineString([...coordinates]),
+      remaining: lineString([destination, destination]),
+    };
+  }
+
+  const segments = coordinates.slice(1).map((to, index) => ({
+    from: coordinates[index]!,
+    to,
+    distance: distanceMeters(coordinates[index]!, to),
+  }));
+  const totalDistance = segments.reduce(
+    (total, segment) => total + segment.distance,
+    0,
+  );
+
+  if (totalDistance <= 0) {
+    return {
+      progress,
+      courier: origin,
+      completed: lineString([origin, origin]),
+      remaining: lineString([...coordinates]),
+    };
+  }
+
+  const targetDistance = totalDistance * progress;
+  let travelledDistance = 0;
+
+  for (const [index, segment] of segments.entries()) {
+    const segmentEnd = travelledDistance + segment.distance;
+    if (segmentEnd >= targetDistance) {
+      const localProgress =
+        segment.distance === 0
+          ? 0
+          : (targetDistance - travelledDistance) / segment.distance;
+      const courier = interpolateCoordinate(
+        segment.from,
+        segment.to,
+        localProgress,
+      );
+      const completedCoordinates = coordinates.slice(0, index + 1);
+      if (!coordinatesEqual(completedCoordinates.at(-1)!, courier)) {
+        completedCoordinates.push(courier);
+      }
+      const remainingCoordinates = [courier];
+      const tail = coordinates.slice(index + 1);
+      if (tail.length && coordinatesEqual(courier, tail[0]!)) {
+        remainingCoordinates.push(...tail.slice(1));
+      } else {
+        remainingCoordinates.push(...tail);
+      }
+
+      return {
+        progress,
+        courier,
+        completed: lineString(completedCoordinates),
+        remaining: lineString(
+          remainingCoordinates.length > 1
+            ? remainingCoordinates
+            : [courier, destination],
+        ),
+      };
+    }
+    travelledDistance = segmentEnd;
+  }
+
+  return {
+    progress,
+    courier: destination,
+    completed: lineString([...coordinates]),
+    remaining: lineString([destination, destination]),
+  };
+}
+
 export function coordinateAtProgress(
   geometry: TrackingGeometry,
   requestedProgress: number,
 ): TrackingCoordinate {
-  const progress = Math.max(0, Math.min(1, requestedProgress));
-  const coordinates = geometry.coordinates;
-  if (progress === 0) return coordinates[0]!;
-  if (progress === 1) return coordinates[coordinates.length - 1]!;
-
-  const segments = coordinates.slice(1).map((coordinate, index) => ({
-    from: coordinates[index]!,
-    to: coordinate,
-    distance: distanceMeters(coordinates[index]!, coordinate),
-  }));
-  const total = segments.reduce((sum, segment) => sum + segment.distance, 0);
-  if (total <= 0) return coordinates[0]!;
-
-  const target = total * progress;
-  let traversed = 0;
-  for (const segment of segments) {
-    if (traversed + segment.distance >= target) {
-      const local =
-        segment.distance === 0 ? 0 : (target - traversed) / segment.distance;
-      return [
-        segment.from[0] + (segment.to[0] - segment.from[0]) * local,
-        segment.from[1] + (segment.to[1] - segment.from[1]) * local,
-      ];
-    }
-    traversed += segment.distance;
-  }
-  return coordinates[coordinates.length - 1]!;
+  return splitLineStringAtProgress(geometry, requestedProgress).courier;
 }
 
 export function calculateTrackingProgress(input: {

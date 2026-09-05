@@ -3,12 +3,15 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, Clock3, MapPin } from "lucide-react";
 import { Card, InlineAlert, buttonVariants } from "@/components/ui";
 import { CustomerOrderTracking } from "@/features/customer-orders/components/customer-order-tracking";
-import { OrderStatusBadge } from "@/features/orders/components/status-badges";
+import { CustomerOrderStatusBadge } from "@/features/orders/components/status-badges";
 import {
+  getEmailAccessibleOrder,
+  getEmailAccessibleTracking,
   getGuestOrder,
   getGuestTracking,
 } from "@/features/customer-orders/server/queries";
 import { cn } from "@/lib/utils";
+import { getServerOrderEmailAccess } from "@/features/customer-orders/server/order-email-access";
 import { getServerGuestSession } from "@/server/guest-session";
 
 export const dynamic = "force-dynamic";
@@ -20,10 +23,16 @@ export default async function TrackingPage({
 }) {
   const { reference } = await params;
   const guest = await getServerGuestSession();
-  if (!guest) notFound();
-  const order = await getGuestOrder(guest.id, reference);
+  const emailAccess = await getServerOrderEmailAccess(reference);
+  let order = guest ? await getGuestOrder(guest.id, reference) : null;
+  if (!order && emailAccess) {
+    order = await getEmailAccessibleOrder(reference);
+  }
   if (!order || order.fulfillmentType !== "DELIVERY") notFound();
-  const tracking = await getGuestTracking(guest.id, reference);
+  let tracking = guest ? await getGuestTracking(guest.id, reference) : null;
+  if (!tracking && emailAccess) {
+    tracking = await getEmailAccessibleTracking(reference);
+  }
 
   return (
     <main className="mx-auto min-h-dvh max-w-5xl px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-8">
@@ -64,13 +73,13 @@ export default async function TrackingPage({
                 </h2>
               </div>
             </div>
-            <OrderStatusBadge status={order.status} />
+            <CustomerOrderStatusBadge status={order.status} />
           </div>
           <p className="mt-5 max-w-xl text-sm leading-6 text-foreground-muted">
-            Payment must be confirmed and the order dispatched before the Mapbox
-            route can start. This page stays private to the browser that placed
-            the order and becomes the live tracking page automatically once the
-            route is available.
+            Your order is being prepared for dispatch. The Mapbox route starts
+            when dispatch begins. This private tracking link stays available
+            from this device and becomes the live tracking page automatically
+            once the route is available.
           </p>
           {order.deliveryLocation && (
             <div className="mt-5 flex items-start gap-3 border-t border-border pt-5 text-sm">
@@ -88,7 +97,7 @@ export default async function TrackingPage({
             description={
               order.courier
                 ? `${order.courier.displayName} remains selected for this order. We will notify you when dispatch begins.`
-                : "A nearby delivery profile will be selected after payment confirmation."
+                : "A nearby delivery profile will be selected when dispatch is being prepared."
             }
           />
           <Link

@@ -44,9 +44,12 @@ describe("order emails", () => {
     expect(email.text).not.toContain(fullCode);
     expect(email.html).not.toContain(fullCode);
     expect(email.html).toContain("Customer &lt;name&gt;");
+    expect(email.html).toContain('role="presentation"');
+    expect(email.html).toContain("Open secure order");
+    expect(email.html).toContain("Masked for email safety");
   });
 
-  it("builds a customer tracking email without any recharge code", () => {
+  it("builds a customer order receipt with only a masked recharge-code reference", () => {
     const fullCode = "123456789012";
     const email = buildCustomerOrderEmail({
       storefrontUrl: "https://mobgreen.store",
@@ -63,6 +66,7 @@ describe("order emails", () => {
       currency: "EUR",
       totalMinor: 25_000,
       createdAt: new Date("2026-08-29T18:00:00.000Z"),
+      maskedRechargeCodes: ["•••• 9012"],
       items: [
         {
           name: "Product <one>",
@@ -74,10 +78,16 @@ describe("order emails", () => {
       ],
     });
     expect(email.subject).toContain("MG-2026-ABC");
-    expect(email.text).toContain("View delivery status");
+    expect(email.subject).toContain("placed");
+    expect(email.text).toContain("Track delivery");
+    expect(email.text).toContain("Secure code reference: •••• 9012");
     expect(email.html).toContain("mobgreen.png");
     expect(email.text).not.toContain(fullCode);
     expect(email.html).not.toContain(fullCode);
     expect(email.html).toContain("Customer &lt;name&gt;");
+    expect(email.html).toContain('meta name="viewport"');
+    expect(email.html).toContain("Order details");
+    expect(email.html).toContain("Track delivery");
+    expect(email.html).toContain("Payment code secured");
   });
 });

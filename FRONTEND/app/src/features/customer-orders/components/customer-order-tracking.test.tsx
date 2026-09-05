@@ -95,6 +95,12 @@ describe("customer delivery tracking", () => {
       screen.getByRole("list", { name: "Order tracking history" }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("progressbar", { name: "Courier progress" }),
+    ).toHaveAttribute("aria-valuenow", "50");
+    expect(
+      screen.getByRole("progressbar", { name: "Courier progress" }),
+    ).toHaveAttribute("aria-valuetext", "50% complete. 5.0 km remaining.");
+    expect(
       screen.getByRole("link", { name: "View order details" }),
     ).toHaveAttribute("href", "/orders/MG-TRACK-1");
   });

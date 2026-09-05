@@ -35,6 +35,40 @@ export const productImageWriteSchema = z.object({
   isCover: z.boolean(),
 });
 
+export const productVideoWriteSchema = z.object({
+  cloudinaryPublicId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .refine(
+      (value) => /^mob-greens\/products\/videos\/[a-f0-9-]+$/i.test(value),
+      "The product video key is invalid.",
+    ),
+  url: z
+    .url()
+    .refine(
+      (value) => new URL(value).hostname === "res.cloudinary.com",
+      "Product videos must use Cloudinary URLs.",
+    ),
+  posterUrl: z
+    .url()
+    .refine(
+      (value) => new URL(value).hostname === "res.cloudinary.com",
+      "Product video posters must use Cloudinary URLs.",
+    )
+    .nullable()
+    .optional(),
+  altText: z
+    .string()
+    .trim()
+    .min(3, "Describe what is visible in the product video.")
+    .max(255),
+  width: z.number().int().positive().max(12_000),
+  height: z.number().int().positive().max(12_000),
+  durationSeconds: z.number().int().positive().max(3_600).nullable().optional(),
+});
+
 export const productPriceOptionWriteSchema = z
   .object({
     weightValue: z.coerce.number().positive().max(999_999_999),
@@ -70,6 +104,7 @@ function validateProductPresentation(
   value: {
     status?: "DRAFT" | "ACTIVE" | undefined;
     images?: z.output<typeof productImageWriteSchema>[] | undefined;
+    video?: z.output<typeof productVideoWriteSchema> | null | undefined;
     priceOptions?: z.output<typeof productPriceOptionWriteSchema>[] | undefined;
   },
   context: z.RefinementCtx,
@@ -143,6 +178,7 @@ export const productFormSchema = z
     description: optionalTrimmedString(10_000),
     status: z.enum(["DRAFT", "ACTIVE"]).default("DRAFT"),
     images: z.array(productImageWriteSchema).max(8).default([]),
+    video: productVideoWriteSchema.nullable().optional().default(null),
     priceOptions: z.array(productPriceOptionWriteSchema).max(50).default([]),
   })
   .superRefine(validateProductPresentation);

@@ -1,6 +1,10 @@
 import type { CategoryDisplayTone } from "@/config/category-presentation";
 import type { SupportedCurrency, WeightUnit } from "@/config/commerce";
-import type { CommerceImage, WeightPriceOption } from "@/types/commerce";
+import type {
+  CommerceImage,
+  CommerceVideo,
+  WeightPriceOption,
+} from "@/types/commerce";
 
 export const CATALOG_SORTS = ["newest", "name-asc", "name-desc"] as const;
 export type CatalogSort = (typeof CATALOG_SORTS)[number];
@@ -50,6 +54,7 @@ export interface CatalogProductDetailViewModel {
   shortDescription: string;
   description: string | null;
   images: CommerceImage[];
+  video: CommerceVideo | null;
   priceOptions: Array<{
     id: string;
     weightValue: number;

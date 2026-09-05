@@ -61,8 +61,8 @@ describe("guest order route", () => {
   it("creates a real anonymous order and returns its reference", async () => {
     create.mockResolvedValue({
       reference: "MG-2026-ABC",
-      status: "PENDING",
-      paymentStatus: "PENDING",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
       currency: "EUR",
       totalMinor: 1000,
       duplicate: false,
@@ -82,7 +82,13 @@ describe("guest order route", () => {
       }),
       expect.objectContaining({ tokenHash: "hash" }),
     );
-    expect((await response.json()).order.reference).toBe("MG-2026-ABC");
+    expect(await response.json()).toMatchObject({
+      order: {
+        reference: "MG-2026-ABC",
+        status: "CONFIRMED",
+        paymentStatus: "PAID",
+      },
+    });
   });
 
   it("rate limits before order creation", async () => {
@@ -111,8 +117,8 @@ describe("guest order route", () => {
   it("returns the existing order for an idempotent retry", async () => {
     create.mockResolvedValue({
       reference: "MG-2026-EXISTING",
-      status: "PENDING",
-      paymentStatus: "PENDING",
+      status: "CONFIRMED",
+      paymentStatus: "PAID",
       currency: "EUR",
       totalMinor: 1000,
       duplicate: true,

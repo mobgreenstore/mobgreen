@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { RECHARGE_PARTNERS } from "@/config/recharge";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,64 @@ export const RECHARGE_PARTNER_DIRECTORY = [
   })),
   ...additionalPartners,
 ] as const;
+
+export function RechargePartnerDirectory({
+  className,
+  selectedPartnerId,
+}: {
+  className?: string;
+  selectedPartnerId?: string | null;
+}) {
+  return (
+    <section aria-labelledby="approved-recharge-partners" className={className}>
+      <h2
+        id="approved-recharge-partners"
+        className="text-base font-bold tracking-[-0.02em]"
+      >
+        Approved recharge partners
+      </h2>
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
+        {RECHARGE_PARTNERS.map((partner) => {
+          const selected = partner.id === selectedPartnerId;
+          return (
+            <a
+              key={partner.id}
+              href={partner.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-current={selected ? "true" : undefined}
+              aria-label={"Open " + partner.name + " in a new tab"}
+              className={cn(
+                "group overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none",
+                selected && "border-foreground ring-1 ring-foreground",
+              )}
+            >
+              <div className="grid h-24 place-items-center bg-surface-subtle px-4 sm:h-28">
+                <Image
+                  src={partner.iconUrl}
+                  width={72}
+                  height={72}
+                  alt=""
+                  sizes="72px"
+                  className="size-14 rounded-2xl bg-background object-contain p-2 shadow-sm sm:size-16"
+                />
+              </div>
+              <div className="flex min-h-12 items-center justify-between gap-2 px-3.5 py-3 sm:px-4">
+                <span className="text-sm font-bold tracking-[-0.02em] text-foreground">
+                  {partner.name}
+                </span>
+                <ExternalLink
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-foreground-subtle transition-colors group-hover:text-foreground"
+                />
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 export function RechargePartnerRail({
   className,

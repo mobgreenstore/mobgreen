@@ -365,10 +365,7 @@ export function StoreLocationControl({
                       <OrderGroup title="Confirmed orders" orders={confirmed} />
                     )}
                     {pending.length > 0 && (
-                      <OrderGroup
-                        title="Pending verification"
-                        orders={pending}
-                      />
+                      <OrderGroup title="Submitted orders" orders={pending} />
                     )}
                     {orders?.length === 0 && (
                       <p className="rounded-lg bg-surface-subtle p-4 text-sm text-foreground-muted">

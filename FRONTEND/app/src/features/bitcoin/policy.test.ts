@@ -5,6 +5,7 @@ import {
   bitcoinInvoiceExpired,
   calculateBitcoinDeposit,
   classifyBitcoinReceipt,
+  satoshisToBitcoinDecimal,
 } from "@/features/bitcoin/policy";
 
 describe("Bitcoin payment policy", () => {
@@ -34,6 +35,14 @@ describe("Bitcoin payment policy", () => {
     expect(bitcoinDecimalToSatoshis("1.23456789")).toBe(123_456_789n);
     expect(() => bitcoinDecimalToSatoshis("0.000000001")).toThrow(TypeError);
     expect(() => bitcoinDecimalToSatoshis("prefix1.0")).toThrow(TypeError);
+  });
+
+  it("formats satoshis exactly without converting through Number", () => {
+    expect(satoshisToBitcoinDecimal(1n)).toBe("0.00000001");
+    expect(satoshisToBitcoinDecimal(123_456_789n)).toBe("1.23456789");
+    expect(satoshisToBitcoinDecimal(9_007_199_254_740_993n)).toBe(
+      "90071992.54740993",
+    );
   });
 
   it("classifies exact, underpaid, and overpaid receipts", () => {

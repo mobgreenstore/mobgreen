@@ -5,7 +5,7 @@ import type {
   ProductWithRelations,
 } from "@/server/repositories/contracts";
 import { PrismaProductRepository } from "@/server/repositories/prisma";
-import type { ManagedImage } from "@/types/media";
+import type { ManagedImage, ManagedVideo } from "@/types/media";
 
 export interface ProductPriceViewModel {
   id: string;
@@ -30,6 +30,7 @@ export interface ProductViewModel {
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   isArchived: boolean;
   images: ManagedImage[];
+  video: ManagedVideo | null;
   priceOptions: ProductPriceViewModel[];
   currencies: ("GBP" | "EUR" | "USD")[];
   updatedAt: string;
@@ -57,6 +58,19 @@ function toViewModel(product: ProductWithRelations): ProductViewModel {
       isCover: image.isCover,
       persisted: true,
     })),
+    video: product.video
+      ? {
+          id: product.video.id,
+          publicId: product.video.cloudinaryPublicId,
+          url: product.video.url,
+          posterUrl: product.video.posterUrl,
+          altText: product.video.altText,
+          width: product.video.width,
+          height: product.video.height,
+          durationSeconds: product.video.durationSeconds,
+          persisted: true,
+        }
+      : null,
     priceOptions: product.priceOptions.map((option) => ({
       id: option.id,
       weightValue: option.weightValue.toString(),

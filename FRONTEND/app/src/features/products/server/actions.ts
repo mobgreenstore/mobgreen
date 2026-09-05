@@ -46,6 +46,7 @@ function normalizeProductInput(value: Record<string, unknown>) {
     description: value.description,
     status: value.status,
     images: value.images,
+    video: value.video,
     priceOptions,
   };
 }
@@ -58,6 +59,7 @@ function productInput(formData: FormData) {
     description: formData.get("description"),
     status: formData.get("status"),
     images: parseJson(formData.get("images")),
+    video: parseJson(formData.get("video")),
     priceOptions: parseJson(formData.get("priceOptions")),
   });
 }

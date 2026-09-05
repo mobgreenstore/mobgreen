@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const prisma = vi.hoisted(() => ({
   order: { findUnique: vi.fn() },
@@ -9,6 +9,7 @@ const prisma = vi.hoisted(() => ({
   },
 }));
 const sendMail = vi.hoisted(() => vi.fn());
+const createOrderEmailAccessToken = vi.hoisted(() => vi.fn());
 
 vi.mock("@/server/db/client", () => ({ prisma }));
 vi.mock("@/server/mail/environment", () => ({
@@ -28,6 +29,9 @@ vi.mock("@/server/mail/transport", () => ({
 }));
 vi.mock("@/features/checkout/server/code-encryption", () => ({
   decryptVerificationCode: () => "123456789012",
+}));
+vi.mock("@/features/customer-orders/server/order-email-access", () => ({
+  createOrderEmailAccessToken,
 }));
 vi.mock("@/server/core/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -59,6 +63,7 @@ const order = {
   totalMinor: 10_000n,
   createdAt: new Date("2026-08-29T18:00:00.000Z"),
   verificationCodeEncrypted: "encrypted",
+  paymentAttempts: [{ rechargeCodes: [{ maskedValue: "•••• 9012" }] }],
   items: [
     {
       productNameSnapshot: "Product",
@@ -78,6 +83,7 @@ describe("order notification outbox", () => {
     prisma.orderNotification.updateMany.mockResolvedValue({ count: 1 });
     prisma.orderNotification.update.mockResolvedValue({});
     sendMail.mockResolvedValue({ messageId: "gmail-message-id" });
+    createOrderEmailAccessToken.mockReturnValue("signed-email-access");
   });
 
   it("does not send an already delivered notification twice", async () => {
@@ -119,15 +125,28 @@ describe("order notification outbox", () => {
 });
 
 describe("customer order notification", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     prisma.order.findUnique.mockResolvedValue(order);
     prisma.orderNotification.updateMany.mockResolvedValue({ count: 1 });
     prisma.orderNotification.update.mockResolvedValue({});
     sendMail.mockResolvedValue({ messageId: "gmail-message-id" });
+    createOrderEmailAccessToken.mockReturnValue("signed-email-access");
   });
 
-  it("sends the customer a tracking link without a recharge code", async () => {
+  it("uses the public storefront in customer links and includes only a masked code reference", async () => {
+    vi.stubEnv("NEXT_PUBLIC_STOREFRONT_URL", "http://localhost:3001");
+    vi.stubEnv("STOREFRONT_PUBLIC_URL", "");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
+    prisma.order.findUnique.mockResolvedValue({
+      ...order,
+      fulfillmentType: "DELIVERY",
+      deliveryAddress: "10 Example Street",
+    });
     await expect(
       dispatchCustomerOrderSubmittedNotification(order.reference),
     ).resolves.toEqual({ status: "SENT" });
@@ -138,7 +157,12 @@ describe("customer order notification", () => {
       }),
     );
     const sent = sendMail.mock.calls[0]?.[0] as { text: string; html: string };
-    expect(sent.text).toContain("View delivery status");
+    expect(sent.text).toContain("Track delivery");
+    expect(sent.text).toContain(
+      "https://mobgreen.store/order-access/MG-2026-TEST?token=signed-email-access",
+    );
+    expect(sent.text).toContain("next=tracking");
+    expect(sent.text).toContain("Secure code reference: •••• 9012");
     expect(sent.text).not.toContain("123456789012");
     expect(sent.html).not.toContain("123456789012");
   });

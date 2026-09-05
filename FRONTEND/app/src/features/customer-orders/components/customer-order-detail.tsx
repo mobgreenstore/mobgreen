@@ -9,8 +9,9 @@ import { Badge, ErrorState, InlineAlert } from "@/components/ui";
 import { CourierAssignmentCard } from "@/features/delivery-matching/components/courier-assignment-card";
 import type { PublicOrderDetail } from "@/features/customer-orders/types";
 import {
-  OrderStatusBadge,
-  PaymentStatusBadge,
+  CustomerOrderStatusBadge,
+  CustomerPaymentStatusBadge,
+  customerOrderStatusLabel,
 } from "@/features/orders/components/status-badges";
 
 export function CustomerOrderDetailView({
@@ -57,8 +58,8 @@ export function CustomerOrderDetailView({
     <div className="grid gap-6">
       <section className="rounded-xl bg-surface-subtle p-5">
         <div className="flex flex-wrap gap-2" aria-live="polite">
-          <OrderStatusBadge status={order.status} />
-          <PaymentStatusBadge status={order.paymentStatus} />
+          <CustomerOrderStatusBadge status={order.status} />
+          <CustomerPaymentStatusBadge status={order.paymentStatus} />
           <Badge>
             {order.fulfillmentType === "DELIVERY" ? "Delivery" : "Pickup"}
           </Badge>
@@ -77,14 +78,6 @@ export function CustomerOrderDetailView({
           }).format(new Date(order.createdAt))}
         </time>
       </section>
-
-      {order.paymentStatus !== "PAID" && (
-        <InlineAlert
-          tone="info"
-          title="Verification pending"
-          description="The administrator must verify the submitted recharge before processing this order."
-        />
-      )}
 
       {order.deliveryMatchingIntentId && (
         <InlineAlert
@@ -177,8 +170,8 @@ export function CustomerOrderDetailView({
                 />
               )}
               <div>
-                <p className="font-semibold capitalize">
-                  {event.status.toLowerCase().replaceAll("_", " ")}
+                <p className="font-semibold">
+                  {customerOrderStatusLabel(event.status)}
                 </p>
                 <time className="text-sm text-foreground-muted">
                   {new Intl.DateTimeFormat("en", {

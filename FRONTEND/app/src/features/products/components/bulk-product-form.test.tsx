@@ -10,7 +10,7 @@ vi.mock("@/features/products/server/actions", () => ({
 }));
 
 vi.mock("@/components/admin", () => ({
-  ImageUploader: ({
+  ProductMediaUploader: ({
     onUploadProgressChange,
   }: {
     onUploadProgressChange?: (state: {

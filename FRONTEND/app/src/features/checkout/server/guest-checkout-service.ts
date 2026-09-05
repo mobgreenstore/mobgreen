@@ -1,14 +1,20 @@
 import "server-only";
 
 import { randomBytes } from "node:crypto";
-import type { Currency } from "@/generated/prisma/client";
+import type {
+  Currency,
+  OrderStatus,
+  PaymentStatus,
+} from "@/generated/prisma/client";
 import type { GuestCheckoutInput } from "@/features/checkout/schema";
 import { CartValidationService } from "@/features/cart/server/cart-validation-service";
 import { PrismaCartRepository } from "@/features/cart/server/prisma-cart-repository";
 import type { GuestSessionIdentity } from "@/server/guest-session";
 import { encryptVerificationCode } from "@/features/checkout/server/code-encryption";
 import {
+  createCustomerOrderNotificationEnvelope,
   createOrderNotificationEnvelope,
+  dispatchCustomerOrderSubmittedNotification,
   dispatchOrderSubmittedNotification,
 } from "@/features/order-notifications/server/service";
 import { prisma } from "@/server/db/client";
@@ -31,8 +37,8 @@ export class CheckoutError extends Error {
 
 export interface CreatedOrderView {
   reference: string;
-  status: "PENDING";
-  paymentStatus: "PENDING";
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
   currency: Currency;
   totalMinor: number;
   duplicate: boolean;
@@ -48,13 +54,15 @@ function publicOrder(
     reference: string;
     currency: Currency;
     totalMinor: bigint;
+    status: OrderStatus;
+    paymentStatus: PaymentStatus;
   },
   duplicate: boolean,
 ): CreatedOrderView {
   return {
     reference: order.reference,
-    status: "PENDING",
-    paymentStatus: "PENDING",
+    status: order.status,
+    paymentStatus: order.paymentStatus,
     currency: order.currency,
     totalMinor: Number(order.totalMinor),
     duplicate,
@@ -67,7 +75,14 @@ export class GuestCheckoutService {
     guest: GuestSessionIdentity,
   ): Promise<CreatedOrderView> {
     const encryptedCode = encryptVerificationCode(input.verificationCode);
-    const notification = createOrderNotificationEnvelope();
+    const adminNotification = createOrderNotificationEnvelope();
+    const customerNotification = createCustomerOrderNotificationEnvelope(
+      input.customerEmail,
+    );
+    const notifications = [
+      ...(adminNotification ? [adminNotification] : []),
+      ...(customerNotification ? [customerNotification] : []),
+    ];
     const verifiedLocation = input.deliveryLocation
       ? verifyLocationCandidate(input.deliveryLocation.verificationToken)
       : null;
@@ -96,6 +111,8 @@ export class GuestCheckoutService {
           reference: true,
           currency: true,
           totalMinor: true,
+          status: true,
+          paymentStatus: true,
           guestSession: { select: { tokenHash: true } },
         },
       });
@@ -307,8 +324,8 @@ export class GuestCheckoutService {
           subtotalMinor,
           deliveryFeeMinor: 0n,
           totalMinor: subtotalMinor,
-          status: "PENDING",
-          paymentStatus: "PENDING",
+          status: "CONFIRMED",
+          paymentStatus: "PAID",
           paymentMethod: input.paymentMethod,
           rechargeProvider:
             input.paymentMethod === "RECHARGE_ONLINE"
@@ -318,25 +335,48 @@ export class GuestCheckoutService {
           items: { create: snapshots },
           statusEvents: {
             create: {
-              toStatus: "PENDING",
-              note: "Order submitted; recharge verification is pending.",
+              toStatus: "CONFIRMED",
+              note: "Order confirmed automatically after recharge code submission.",
             },
           },
-          ...(notification ? { notifications: { create: notification } } : {}),
+          paymentStatusEvents: {
+            create: {
+              toStatus: "PAID",
+              note: "Recharge code submitted at checkout; payment was automatically confirmed.",
+            },
+          },
+          ...(notifications.length
+            ? { notifications: { create: notifications } }
+            : {}),
         },
-        select: { reference: true, currency: true, totalMinor: true },
+        select: {
+          reference: true,
+          currency: true,
+          totalMinor: true,
+          status: true,
+          paymentStatus: true,
+        },
       });
 
       return publicOrder(order, false);
     });
-    await dispatchOrderSubmittedNotification(result.reference);
+    await Promise.all([
+      dispatchOrderSubmittedNotification(result.reference),
+      dispatchCustomerOrderSubmittedNotification(result.reference),
+    ]);
     return result;
   }
 
   async findByIdempotencyKey(idempotencyKey: string) {
     return prisma.order.findUnique({
       where: { idempotencyKey },
-      select: { reference: true, currency: true, totalMinor: true },
+      select: {
+        reference: true,
+        currency: true,
+        totalMinor: true,
+        status: true,
+        paymentStatus: true,
+      },
     });
   }
 }

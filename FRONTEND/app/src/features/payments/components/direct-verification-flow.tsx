@@ -278,7 +278,8 @@ function VerificationForm({
       )}
       <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-xl text-sm leading-6 text-foreground-muted">
-          Payment remains pending until the server verifies it.
+          Continue to location to prepare a secure checkout. An order is only
+          created from a server-owned checkout.
         </p>
         <Button type="submit" size="large" className="shrink-0">
           Continue to location

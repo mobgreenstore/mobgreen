@@ -23,7 +23,7 @@ export default function CheckoutPage() {
           <ChevronLeft aria-hidden="true" className="size-4" />
           Back to cart
         </Link>
-        <div className="mt-4 mb-8 max-w-3xl">
+        <div className="mt-3 mb-6 max-w-3xl sm:mt-4 sm:mb-8">
           <p className="text-sm font-semibold text-foreground-muted">
             Checkout
           </p>

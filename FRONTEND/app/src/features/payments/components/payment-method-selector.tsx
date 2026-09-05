@@ -1,6 +1,5 @@
 "use client";
 
-import { InlineAlert } from "@/components/ui";
 import { PaymentMethodGlyph } from "@/features/payments/components/payment-method-glyph";
 import type { PaymentMethodId } from "@/features/payments/payment-method";
 import { cn } from "@/lib/utils";
@@ -13,21 +12,25 @@ type PaymentMethodSelectorProps = {
 
 const choices: Array<{
   id: PaymentMethodId;
+  shortLabel: string;
   title: string;
   description: string;
 }> = [
   {
     id: "RECHARGE_FROM_STORE",
+    shortLabel: "Store",
     title: "Recharge from store",
     description: "Use a code bought in person.",
   },
   {
     id: "RECHARGE_ONLINE",
+    shortLabel: "Online",
     title: "Recharge online",
     description: "Buy a code from a listed partner.",
   },
   {
     id: "BITCOIN_DEPOSIT",
+    shortLabel: "Bitcoin",
     title: "Bitcoin — 50% deposit",
     description: "50% now, rest cash.",
   },
@@ -38,74 +41,71 @@ export function PaymentMethodSelector({
   bitcoinAvailable,
   onChange,
 }: PaymentMethodSelectorProps) {
-  return (
-    <div>
-      <fieldset>
-        <legend className="text-sm font-semibold tracking-[-0.01em] text-foreground">
-          Choose how you want to pay
-        </legend>
-        <div className="-mx-1 mt-3 flex snap-x gap-2 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0">
-          {choices.map((choice) => {
-            const disabled =
-              choice.id === "BITCOIN_DEPOSIT" && !bitcoinAvailable;
-            const selected = choice.id === value;
-            return (
-              <label
-                key={choice.id}
-                className={cn(
-                  "group flex min-h-32 min-w-[11.25rem] flex-1 snap-start flex-col justify-between rounded-xl border border-border bg-surface p-4 transition-[border-color,background-color,box-shadow,transform] focus-within:ring-2 focus-within:ring-foreground/18 hover:border-border-strong has-checked:border-foreground has-checked:bg-surface-subtle has-checked:shadow-sm sm:min-w-0",
-                  disabled
-                    ? "cursor-not-allowed opacity-45"
-                    : "cursor-pointer hover:-translate-y-px",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value={choice.id}
-                  checked={selected}
-                  disabled={disabled}
-                  onChange={() => onChange(choice.id)}
-                  className="sr-only"
-                />
-                <div className="flex items-start justify-between gap-3">
-                  <PaymentMethodGlyph
-                    method={choice.id}
-                    className={cn(
-                      "size-7 text-foreground-muted transition-colors",
-                      selected && "text-foreground",
-                    )}
-                  />
-                  {selected ? (
-                    <span className="text-[0.6875rem] font-bold tracking-[0.08em] text-foreground-subtle uppercase">
-                      Selected
-                    </span>
-                  ) : null}
-                </div>
-                <div className="mt-5">
-                  <p className="text-sm font-semibold tracking-[-0.015em]">
-                    {choice.title}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-foreground-muted">
-                    {disabled
-                      ? "Secure invoice setup pending."
-                      : choice.description}
-                  </p>
-                </div>
-              </label>
-            );
-          })}
-        </div>
-      </fieldset>
+  const selectedChoice =
+    choices.find((choice) => choice.id === value) ?? choices[0]!;
+  const bitcoinSelected = selectedChoice.id === "BITCOIN_DEPOSIT";
 
-      {value === "BITCOIN_DEPOSIT" && (
-        <InlineAlert
-          className="mt-4"
-          tone="info"
-          title="Pay half to confirm"
-          description="Pay 50% of the confirmed order total in Bitcoin. The remaining balance is collected in cash at delivery."
-        />
-      )}
-    </div>
+  return (
+    <fieldset
+      className="min-w-0"
+      aria-describedby="payment-method-selection-detail"
+    >
+      <legend className="sr-only">Payment method</legend>
+      <div className="grid grid-cols-3 gap-1 rounded-xl border border-border bg-surface-subtle p-1">
+        {choices.map((choice) => {
+          const disabled = choice.id === "BITCOIN_DEPOSIT" && !bitcoinAvailable;
+          const selected = choice.id === value;
+
+          return (
+            <label
+              key={choice.id}
+              className={cn(
+                "flex min-h-16 min-w-0 flex-col items-center justify-center gap-1.5 rounded-lg px-1.5 text-center text-xs font-semibold transition-[background-color,box-shadow,color,opacity] focus-within:ring-2 focus-within:ring-foreground/20 xs:flex-row xs:text-sm",
+                selected
+                  ? "bg-surface text-foreground shadow-sm"
+                  : "text-foreground-muted",
+                disabled
+                  ? "cursor-not-allowed opacity-40"
+                  : "cursor-pointer hover:text-foreground",
+              )}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value={choice.id}
+                checked={selected}
+                disabled={disabled}
+                onChange={() => onChange(choice.id)}
+                aria-label={choice.title}
+                className="sr-only"
+              />
+              <PaymentMethodGlyph
+                method={choice.id}
+                className="size-5 shrink-0"
+              />
+              <span className="min-w-0 truncate">{choice.shortLabel}</span>
+            </label>
+          );
+        })}
+      </div>
+
+      <div
+        id="payment-method-selection-detail"
+        className="mt-3 border-l-2 border-info pl-3"
+      >
+        <p className="text-sm font-semibold">{selectedChoice.title}</p>
+        <p className="mt-0.5 text-sm leading-6 text-foreground-muted">
+          {bitcoinSelected && !bitcoinAvailable
+            ? "Secure invoice setup pending."
+            : selectedChoice.description}
+        </p>
+        {bitcoinSelected && bitcoinAvailable ? (
+          <p className="mt-1 text-xs leading-5 text-foreground-muted">
+            Pay 50% of the confirmed order total in Bitcoin. The remaining
+            balance is collected in cash at delivery.
+          </p>
+        ) : null}
+      </div>
+    </fieldset>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Clock3 } from "lucide-react";
 import { Money } from "@/components/commerce";
 import { Card, InlineAlert } from "@/components/ui";
@@ -114,7 +114,8 @@ export function PaymentMethodSummary({
         <strong className="text-foreground">
           {paymentMethodLabel(method, rechargeProvider)}
         </strong>
-        . To choose another method, return to checkout and begin a new verification.
+        . To choose another method, return to checkout and begin a new
+        verification.
       </p>
     </Card>
   );
@@ -219,6 +220,7 @@ type BitcoinAttempt = {
   paymentAddress: string | null;
   paymentUri: string | null;
   bitcoinAmount: string | null;
+  orderReference: string | null;
   depositMinor: number;
   cashBalanceMinor: number;
   status: string;
@@ -230,16 +232,19 @@ export function BitcoinInvoicePanel({
   currency,
   depositMinor,
   cashBalanceMinor,
+  onCompleted,
 }: {
   intentId: string;
   currency: SupportedCurrency;
   depositMinor: number;
   cashBalanceMinor: number;
+  onCompleted: (reference: string) => void;
 }) {
   const [attempt, setAttempt] = useState<BitcoinAttempt | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const completedReference = useRef<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     const endpoint = `/api/checkout/intents/${encodeURIComponent(intentId)}/bitcoin`;
@@ -285,7 +290,9 @@ export function BitcoinInvoicePanel({
   useEffect(() => {
     if (
       !attempt ||
-      ["SETTLED", "EXPIRED", "INVALID", "FAILED"].includes(attempt.status)
+      ["SETTLED", "OVERPAID", "EXPIRED", "INVALID", "FAILED"].includes(
+        attempt.status,
+      )
     )
       return;
     const timer = window.setInterval(async () => {
@@ -301,6 +308,16 @@ export function BitcoinInvoicePanel({
     }, 5000);
     return () => window.clearInterval(timer);
   }, [attempt, intentId]);
+  useEffect(() => {
+    if (
+      attempt?.status !== "SETTLED" ||
+      !attempt.orderReference ||
+      completedReference.current === attempt.orderReference
+    )
+      return;
+    completedReference.current = attempt.orderReference;
+    onCompleted(attempt.orderReference);
+  }, [attempt, onCompleted]);
   async function copyAddress() {
     if (!attempt?.paymentAddress) return;
     await navigator.clipboard.writeText(attempt.paymentAddress);
@@ -338,9 +355,46 @@ export function BitcoinInvoicePanel({
         ? "Confirming on the network"
         : attempt.status === "PAYMENT_DETECTED"
           ? "Payment detected"
+          : attempt.status === "UNDERPAID"
+            ? "Payment is short"
+            : attempt.status === "OVERPAID"
+              ? "Amount needs review"
+              : attempt.status === "EXPIRED"
+                ? "Invoice expired"
+                : attempt.status === "FAILED"
+                  ? "Payment failed"
+                  : "Waiting for payment";
+  const paymentProblem = [
+    "UNDERPAID",
+    "OVERPAID",
+    "EXPIRED",
+    "INVALID",
+    "FAILED",
+  ].includes(attempt.status);
+  const alertTitle =
+    attempt.status === "SETTLED"
+      ? "Deposit settled"
+      : attempt.status === "UNDERPAID"
+        ? "Deposit not fully paid"
+        : attempt.status === "OVERPAID"
+          ? "Payment requires review"
           : attempt.status === "EXPIRED"
             ? "Invoice expired"
-            : "Waiting for payment";
+            : attempt.status === "FAILED" || attempt.status === "INVALID"
+              ? "Payment could not be confirmed"
+              : "Keep this page open";
+  const alertDescription =
+    attempt.status === "SETTLED"
+      ? "The server confirmed settlement. Your order is ready to continue."
+      : attempt.status === "UNDERPAID"
+        ? "The amount received is below the exact deposit. Keep this page open while the provider updates the invoice; contact support if it does not change."
+        : attempt.status === "OVERPAID"
+          ? "More than the requested deposit was received. The order is paused for a safe manual review."
+          : attempt.status === "EXPIRED"
+            ? "This payment request has expired. Return to checkout to create a new invoice."
+            : attempt.status === "FAILED" || attempt.status === "INVALID"
+              ? "The provider rejected this payment. Return to checkout before trying again."
+              : "After authorizing payment in your wallet, return here while confirmation completes.";
   return (
     <Card className="grid gap-5 overflow-hidden p-5 sm:p-6">
       <div>
@@ -401,20 +455,12 @@ export function BitcoinInvoicePanel({
         tone={
           attempt.status === "SETTLED"
             ? "success"
-            : attempt.status === "EXPIRED" || attempt.status === "INVALID"
+            : paymentProblem
               ? "danger"
               : "info"
         }
-        title={
-          attempt.status === "SETTLED"
-            ? "Deposit settled"
-            : "Keep this page open"
-        }
-        description={
-          attempt.status === "SETTLED"
-            ? "The server confirmed settlement. Delivery matching can continue."
-            : "After authorizing payment in your wallet, return here while confirmation completes."
-        }
+        title={alertTitle}
+        description={alertDescription}
       />
     </Card>
   );

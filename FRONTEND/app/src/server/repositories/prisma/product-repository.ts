@@ -11,6 +11,7 @@ import type {
 const productRelations = {
   category: true,
   images: { orderBy: { position: "asc" as const } },
+  video: true,
   priceOptions: { orderBy: { position: "asc" as const } },
 };
 
@@ -18,6 +19,18 @@ function imageData(
   images: CreateProductInput["images"],
 ): Prisma.ProductImageCreateWithoutProductInput[] {
   return images.map((image) => ({ ...image }));
+}
+
+function videoData(video: NonNullable<CreateProductInput["video"]>) {
+  return {
+    cloudinaryPublicId: video.cloudinaryPublicId,
+    url: video.url,
+    posterUrl: video.posterUrl ?? null,
+    altText: video.altText,
+    width: video.width,
+    height: video.height,
+    durationSeconds: video.durationSeconds ?? null,
+  };
 }
 
 function priceData(
@@ -98,7 +111,13 @@ export class PrismaProductRepository implements ProductRepository {
     });
   }
 
-  create({ categoryId, images, priceOptions, ...input }: CreateProductInput) {
+  create({
+    categoryId,
+    images,
+    video,
+    priceOptions,
+    ...input
+  }: CreateProductInput) {
     return this.write((database) =>
       database.product.create({
         data: {
@@ -106,6 +125,7 @@ export class PrismaProductRepository implements ProductRepository {
           description: input.description ?? null,
           category: { connect: { id: categoryId } },
           images: { create: imageData(images) },
+          ...(video ? { video: { create: videoData(video) } } : {}),
           priceOptions: { create: priceData(priceOptions) },
         },
         include: productRelations,
@@ -116,7 +136,13 @@ export class PrismaProductRepository implements ProductRepository {
   createMany(inputs: readonly CreateProductInput[]) {
     return this.write(async (database) => {
       const products = [];
-      for (const { categoryId, images, priceOptions, ...input } of inputs) {
+      for (const {
+        categoryId,
+        images,
+        video,
+        priceOptions,
+        ...input
+      } of inputs) {
         products.push(
           await database.product.create({
             data: {
@@ -124,6 +150,7 @@ export class PrismaProductRepository implements ProductRepository {
               description: input.description ?? null,
               category: { connect: { id: categoryId } },
               images: { create: imageData(images) },
+              ...(video ? { video: { create: videoData(video) } } : {}),
               priceOptions: { create: priceData(priceOptions) },
             },
             include: productRelations,
@@ -138,11 +165,15 @@ export class PrismaProductRepository implements ProductRepository {
     id,
     categoryId,
     images,
+    video,
     priceOptions,
     ...input
   }: UpdateProductInput) {
-    return this.write((database) =>
-      database.product.update({
+    return this.write(async (database) => {
+      if (!video) {
+        await database.productVideo.deleteMany({ where: { productId: id } });
+      }
+      return database.product.update({
         where: { id },
         data: {
           ...input,
@@ -152,14 +183,24 @@ export class PrismaProductRepository implements ProductRepository {
             deleteMany: {},
             create: imageData(images),
           },
+          ...(video
+            ? {
+                video: {
+                  upsert: {
+                    create: videoData(video),
+                    update: videoData(video),
+                  },
+                },
+              }
+            : {}),
           priceOptions: {
             deleteMany: {},
             create: priceData(priceOptions),
           },
         },
         include: productRelations,
-      }),
-    );
+      });
+    });
   }
 
   setStatus(id: string, status: "DRAFT" | "ACTIVE") {

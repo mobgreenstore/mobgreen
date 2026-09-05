@@ -1,5 +1,9 @@
 import type { NextRequest } from "next/server";
-import { getGuestTracking } from "@/features/customer-orders/server/queries";
+import { getRequestOrderEmailAccess } from "@/features/customer-orders/server/order-email-access";
+import {
+  getEmailAccessibleTracking,
+  getGuestTracking,
+} from "@/features/customer-orders/server/queries";
 import { logger } from "@/server/core/logger";
 import { requireGuestSession } from "@/server/guest-session";
 import {
@@ -10,7 +14,10 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const headers = { "cache-control": "private, no-store, max-age=0" };
+const headers = {
+  "cache-control": "private, no-store, max-age=0",
+  "referrer-policy": "no-referrer",
+};
 
 export async function GET(
   request: NextRequest,
@@ -18,11 +25,13 @@ export async function GET(
 ) {
   try {
     const guest = await requireGuestSession(request);
-    if (!guest)
+    const { reference } = await context.params;
+    const emailAccess = getRequestOrderEmailAccess(request, reference);
+    if (!guest && !emailAccess)
       return Response.json({ error: "Not found." }, { status: 404, headers });
     const allowed = await consumePublicRequest(
       "CUSTOMER_ORDERS",
-      publicThrottleKey(guest.tokenHash),
+      publicThrottleKey(guest?.tokenHash ?? emailAccess!.tokenHash),
       { max: 120, windowMs: 60 * 60 * 1000 },
     );
     if (!allowed) {
@@ -31,8 +40,10 @@ export async function GET(
         { status: 429, headers },
       );
     }
-    const { reference } = await context.params;
-    const tracking = await getGuestTracking(guest.id, reference);
+    let tracking = guest ? await getGuestTracking(guest.id, reference) : null;
+    if (!tracking && emailAccess) {
+      tracking = await getEmailAccessibleTracking(reference);
+    }
     if (!tracking)
       return Response.json({ error: "Not found." }, { status: 404, headers });
     return Response.json({ tracking }, { headers });
