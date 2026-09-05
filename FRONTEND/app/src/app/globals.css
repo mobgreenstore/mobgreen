@@ -161,6 +161,20 @@ button:not(:disabled),
   color: var(--foreground);
 }
 
+/* Category tones are chosen server-side, while the active theme is client-side.
+ * Explicit control colours from a light category must therefore never hide the
+ * persistent discovery controls after a user switches to dark mode. */
+:root[data-theme="dark"] .store-discovery-header .store-discovery-control {
+  color: var(--foreground) !important;
+  border-color: rgb(255 255 255 / 18%) !important;
+}
+
+:root[data-theme="dark"]
+  .store-discovery-header
+  .store-discovery-control:hover {
+  background: rgb(255 255 255 / 8%) !important;
+}
+
 :root[data-theme="dark"] .store-search-submit:hover {
   background: rgb(255 255 255 / 8%);
 }
@@ -221,6 +235,19 @@ button:not(:disabled),
 
   :root:not([data-theme]) .store-search-submit {
     color: var(--foreground);
+  }
+
+  :root:not([data-theme])
+    .store-discovery-header
+    .store-discovery-control {
+    color: var(--foreground) !important;
+    border-color: rgb(255 255 255 / 18%) !important;
+  }
+
+  :root:not([data-theme])
+    .store-discovery-header
+    .store-discovery-control:hover {
+    background: rgb(255 255 255 / 8%) !important;
   }
 
   :root:not([data-theme]) .store-search-submit:hover {

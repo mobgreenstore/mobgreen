@@ -30,6 +30,10 @@ export function StoreDiscoveryHeader({
   const controlClassName = darkSurface
     ? "text-white hover:bg-white/10 disabled:opacity-55"
     : "text-[#121212] hover:bg-black/5 disabled:opacity-50";
+  const discoveryControlClassName = cn(
+    "store-discovery-control",
+    controlClassName,
+  );
 
   return (
     <header
@@ -48,11 +52,11 @@ export function StoreDiscoveryHeader({
           <div className="flex min-h-11 items-center justify-between md:hidden">
             <BrandMark
               compact
-              className={cn("text-inherit", controlClassName)}
+              className={cn("text-inherit", discoveryControlClassName)}
             />
             <div className="flex items-center gap-1">
-              <ThemeToggle className={controlClassName} />
-              <CartButton className={controlClassName} />
+              <ThemeToggle className={discoveryControlClassName} />
+              <CartButton className={discoveryControlClassName} />
             </div>
           </div>
 
@@ -60,13 +64,13 @@ export function StoreDiscoveryHeader({
             <BrandMark
               className={cn(
                 "hidden shrink-0 text-inherit md:inline-flex",
-                controlClassName,
+                discoveryControlClassName,
               )}
             />
             <StorefrontMenu
               triggerClassName={cn(
                 "shrink-0 rounded-full border border-current/15",
-                controlClassName,
+                discoveryControlClassName,
               )}
             />
             <StoreSearchBar
@@ -78,12 +82,12 @@ export function StoreDiscoveryHeader({
             <StoreLocationControl
               className={cn(
                 "shrink-0 rounded-full border border-current/15",
-                controlClassName,
+                discoveryControlClassName,
               )}
             />
             <div className="hidden shrink-0 items-center gap-1 md:flex">
-              <ThemeToggle className={controlClassName} />
-              <CartButton className={controlClassName} />
+              <ThemeToggle className={discoveryControlClassName} />
+              <CartButton className={discoveryControlClassName} />
             </div>
           </div>
         </div>
