@@ -14,18 +14,13 @@ const createOrderEmailAccessToken = vi.hoisted(() => vi.fn());
 vi.mock("@/server/db/client", () => ({ prisma }));
 vi.mock("@/server/mail/environment", () => ({
   mailEnvironmentConfigured: () => true,
-  getMailEnvironment: () => ({
-    SMTP_HOST: "smtp.gmail.com",
-    SMTP_PORT: 465,
-    SMTP_SECURE: true,
-    SMTP_USER: "mobgreenstore@gmail.com",
-    SMTP_APP_PASSWORD: "redacted-test-value",
+  getNotificationEnvironment: () => ({
     ORDER_NOTIFICATION_TO: "mobgreenstore@gmail.com",
     ORDER_NOTIFICATION_FROM: "mobgreenstore@gmail.com",
   }),
 }));
 vi.mock("@/server/mail/transport", () => ({
-  getMailTransport: () => ({ sendMail }),
+  sendMail,
 }));
 vi.mock("@/features/checkout/server/code-encryption", () => ({
   decryptVerificationCode: () => "123456789012",
@@ -76,6 +71,10 @@ const order = {
   notifications: [notification],
 };
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("order notification outbox", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,13 +121,23 @@ describe("order notification outbox", () => {
       data: { status: "FAILED", lastError: "provider unavailable" },
     });
   });
+
+  it("never puts a localhost URL in the administrator email", async () => {
+    vi.stubEnv("ADMIN_APP_URL", "http://localhost:3000");
+
+    await expect(
+      dispatchOrderSubmittedNotification(order.reference),
+    ).resolves.toEqual({ status: "SENT" });
+
+    const sent = sendMail.mock.calls[0]?.[0] as { html: string; text: string };
+    expect(sent.html).toContain(
+      "https://admin.mobgreen.store/admin/orders/order-id",
+    );
+    expect(sent.text).not.toContain("localhost");
+  });
 });
 
 describe("customer order notification", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     prisma.order.findUnique.mockResolvedValue(order);
@@ -155,6 +164,7 @@ describe("customer order notification", () => {
         to: "customer@example.com",
         subject: expect.stringContaining(order.reference),
       }),
+      expect.objectContaining({ idempotencyKey: notification.id }),
     );
     const sent = sendMail.mock.calls[0]?.[0] as { text: string; html: string };
     expect(sent.text).toContain("Track delivery");

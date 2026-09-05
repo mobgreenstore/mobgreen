@@ -178,8 +178,9 @@ export default async function AdminOrderDetailsPage({
                 <div className="mt-5 border-t border-border pt-5">
                   <h3 className="font-semibold">Courier candidates</h3>
                   <p className="mt-1 mb-4 text-sm text-foreground-muted">
-                    Review the preserved checkout candidates or change the
-                    simulated assignment before dispatch.
+                    The customer-selected profile starts this delivery
+                    simulation. Existing orders can be adjusted before it
+                    starts.
                   </p>
                   <AdminCourierAssignment
                     orderId={order.id}
@@ -214,13 +215,19 @@ export default async function AdminOrderDetailsPage({
                       </dd>
                     </div>
                   </dl>
-                  {order.tracking.routeKind === "DIRECT_FALLBACK" && (
+                  {order.tracking.isSimulated ? (
+                    <InlineAlert
+                      tone="info"
+                      title="Courier simulation active"
+                      description="This route uses the selected delivery profile’s saved distance and ETA with the customer’s confirmed destination."
+                    />
+                  ) : order.tracking.routeKind === "DIRECT_FALLBACK" ? (
                     <InlineAlert
                       tone="info"
                       title="Direct simulated fallback"
                       description="The provider did not return a supported road route. This trajectory is not a driving route."
                     />
-                  )}
+                  ) : null}
                 </div>
               )}
             </Card>

@@ -130,6 +130,59 @@ button:not(:disabled),
   display: none;
 }
 
+:root[data-theme="dark"] .store-discovery-header,
+:root[data-theme="dark"] .catalog-category-tabs,
+:root[data-theme="dark"] .catalog-showcase-rail {
+  background: #111312 !important;
+  color: var(--foreground);
+}
+
+:root[data-theme="dark"] .store-search-input {
+  border-color: #3a3d3a;
+  background: #1b1e1c;
+  color: var(--foreground);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .store-search-input::placeholder {
+  color: var(--foreground-subtle);
+}
+
+:root[data-theme="dark"] .store-search-input:hover {
+  border-color: #565a56;
+}
+
+:root[data-theme="dark"] .store-search-input:focus {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px rgb(120 167 255 / 16%);
+}
+
+:root[data-theme="dark"] .store-search-submit {
+  color: var(--foreground);
+}
+
+:root[data-theme="dark"] .store-search-submit:hover {
+  background: rgb(255 255 255 / 8%);
+}
+
+:root[data-theme="dark"] .catalog-category-tabs [data-category-tab] {
+  border-color: rgb(255 255 255 / 16%);
+}
+
+:root[data-theme="dark"]
+  .catalog-category-tabs
+  [data-category-tab][aria-current="page"] {
+  border-color: rgb(255 255 255 / 28%);
+  background: #2a2d2b;
+}
+
+:root[data-theme="dark"]
+  .catalog-category-tabs
+  [data-category-tab]:not([aria-current]):hover {
+  border-color: rgb(255 255 255 / 36%);
+  background: rgb(255 255 255 / 8%);
+}
+
 :root[data-theme="dark"] .theme-icon-light {
   display: none;
 }
@@ -139,6 +192,59 @@ button:not(:disabled),
 }
 
 @media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .store-discovery-header,
+  :root:not([data-theme]) .catalog-category-tabs,
+  :root:not([data-theme]) .catalog-showcase-rail {
+    background: #111312 !important;
+    color: var(--foreground);
+  }
+
+  :root:not([data-theme]) .store-search-input {
+    border-color: #3a3d3a;
+    background: #1b1e1c;
+    color: var(--foreground);
+    box-shadow: none;
+  }
+
+  :root:not([data-theme]) .store-search-input::placeholder {
+    color: var(--foreground-subtle);
+  }
+
+  :root:not([data-theme]) .store-search-input:hover {
+    border-color: #565a56;
+  }
+
+  :root:not([data-theme]) .store-search-input:focus {
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px rgb(120 167 255 / 16%);
+  }
+
+  :root:not([data-theme]) .store-search-submit {
+    color: var(--foreground);
+  }
+
+  :root:not([data-theme]) .store-search-submit:hover {
+    background: rgb(255 255 255 / 8%);
+  }
+
+  :root:not([data-theme]) .catalog-category-tabs [data-category-tab] {
+    border-color: rgb(255 255 255 / 16%);
+  }
+
+  :root:not([data-theme])
+    .catalog-category-tabs
+    [data-category-tab][aria-current="page"] {
+    border-color: rgb(255 255 255 / 28%);
+    background: #2a2d2b;
+  }
+
+  :root:not([data-theme])
+    .catalog-category-tabs
+    [data-category-tab]:not([aria-current]):hover {
+    border-color: rgb(255 255 255 / 36%);
+    background: rgb(255 255 255 / 8%);
+  }
+
   :root:not([data-theme]) .theme-icon-light {
     display: none;
   }

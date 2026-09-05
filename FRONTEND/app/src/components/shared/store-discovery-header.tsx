@@ -34,7 +34,7 @@ export function StoreDiscoveryHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 transition-colors duration-200",
+        "store-discovery-header sticky top-0 z-40 transition-colors duration-200",
         tone.surfaceClassName,
       )}
       style={

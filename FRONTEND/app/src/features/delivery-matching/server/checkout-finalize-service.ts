@@ -22,6 +22,10 @@ import {
   dispatchOrderSubmittedNotification,
 } from "@/features/order-notifications/server/service";
 import {
+  createSelectedCourierSimulation,
+  trackingCreateData,
+} from "@/features/tracking/server/service";
+import {
   CheckoutError,
   type CreatedOrderView,
 } from "@/features/checkout/server/guest-checkout-service";
@@ -363,6 +367,27 @@ export class CheckoutFinalizeService {
         ...(adminNotification ? [adminNotification] : []),
         ...(customerNotification ? [customerNotification] : []),
       ];
+      const deliveryTracking =
+        intent.fulfillmentType === "DELIVERY" &&
+        intent.destinationLatitude !== null &&
+        intent.destinationLongitude !== null &&
+        intent.selectedCourierProfileId &&
+        intent.selectedDistanceMeters !== null &&
+        intent.selectedDurationSeconds !== null
+          ? createSelectedCourierSimulation({
+              destination: [
+                Number(intent.destinationLongitude),
+                Number(intent.destinationLatitude),
+              ],
+              distanceMeters: intent.selectedDistanceMeters,
+              durationSeconds: intent.selectedDurationSeconds,
+              seed: [
+                guest.tokenHash,
+                intent.publicId,
+                intent.selectedCourierProfileId,
+              ].join(":"),
+            })
+          : null;
 
       const order = await transaction.order.create({
         data: {
@@ -390,17 +415,29 @@ export class CheckoutFinalizeService {
           subtotalMinor,
           deliveryFeeMinor: 0n,
           totalMinor: subtotalMinor,
-          status: "CONFIRMED",
+          status: deliveryTracking ? "OUT_FOR_DELIVERY" : "CONFIRMED",
           paymentStatus: "PAID",
           paymentMethod: intent.paymentMethod,
           rechargeProvider: intent.rechargeProvider,
           verificationCodeEncrypted: encryptedCode,
           items: { create: snapshots },
           statusEvents: {
-            create: {
-              toStatus: "CONFIRMED",
-              note: "Order confirmed automatically after recharge code submission.",
-            },
+            create: deliveryTracking
+              ? [
+                  {
+                    toStatus: "CONFIRMED",
+                    note: "Order confirmed automatically after recharge code submission.",
+                  },
+                  {
+                    fromStatus: "CONFIRMED",
+                    toStatus: "OUT_FOR_DELIVERY",
+                    note: "Selected courier simulation started automatically.",
+                  },
+                ]
+              : {
+                  toStatus: "CONFIRMED",
+                  note: "Order confirmed automatically after recharge code submission.",
+                },
           },
           paymentStatusEvents: {
             create: {
@@ -421,6 +458,12 @@ export class CheckoutFinalizeService {
           paymentStatus: true,
         },
       });
+
+      if (deliveryTracking) {
+        await transaction.deliveryTracking.create({
+          data: trackingCreateData(order.id, deliveryTracking),
+        });
+      }
 
       await transaction.paymentAttempt.create({
         data: {

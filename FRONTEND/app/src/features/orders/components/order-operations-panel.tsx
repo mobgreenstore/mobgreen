@@ -101,7 +101,7 @@ function TrackingRegenerationForm({ orderId }: { orderId: string }) {
       <input type="hidden" name="operation" value="tracking" />
       <input type="hidden" name="orderId" value={orderId} />
       <Button type="submit" variant="secondary" disabled={pending}>
-        {pending ? "Generating route..." : "Regenerate delivery route"}
+        {pending ? "Restarting simulation..." : "Restart delivery simulation"}
       </Button>
     </form>
   );
@@ -145,10 +145,10 @@ export function OrderOperationsPanel({
       </section>
       {trackingAvailable && (
         <section className="border-t border-border pt-6">
-          <h3 className="text-sm font-semibold">Delivery route</h3>
+          <h3 className="text-sm font-semibold">Delivery simulation</h3>
           <p className="mt-1 mb-4 text-xs leading-5 text-foreground-muted">
-            Request a fresh provider route and restart deterministic simulated
-            progress.
+            Restart the simulated route using the selected profile&apos;s saved
+            distance and estimated time.
           </p>
           <TrackingRegenerationForm orderId={orderId} />
         </section>

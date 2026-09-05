@@ -173,7 +173,7 @@ export function CategoryShowcaseRail({
   return (
     <section
       aria-label="Category showcase"
-      className={`${tone.surfaceClassName} py-3 transition-colors duration-200 motion-reduce:transition-none sm:py-5`}
+      className={`catalog-showcase-rail ${tone.surfaceClassName} py-3 transition-colors duration-200 motion-reduce:transition-none sm:py-5`}
     >
       <div className="mx-auto max-w-[var(--content-max)]">
         <div className="mb-3 hidden items-center justify-end gap-2 px-6 md:flex lg:px-8">

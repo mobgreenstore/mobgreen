@@ -6,6 +6,10 @@ import { CartValidationService } from "@/features/cart/server/cart-validation-se
 import { PrismaCartRepository } from "@/features/cart/server/prisma-cart-repository";
 import { calculateBitcoinDeposit } from "@/features/bitcoin/policy";
 import { parseIntentCartLines } from "@/features/delivery-matching/server/checkout-intent-service";
+import {
+  createSelectedCourierSimulation,
+  trackingCreateData,
+} from "@/features/tracking/server/service";
 import { withTransaction } from "@/server/db/transaction";
 
 const ACTIVE_ATTEMPTS: PaymentAttemptStatus[] = [
@@ -371,7 +375,17 @@ export async function applyNowPaymentsEvent(input: {
         receivedSatoshis: true,
         orderId: true,
         order: {
-          select: { reference: true, status: true, paymentStatus: true },
+          select: {
+            reference: true,
+            status: true,
+            paymentStatus: true,
+            fulfillmentType: true,
+            destinationLatitude: true,
+            destinationLongitude: true,
+            courierProfileIdSnapshot: true,
+            courierDistanceMeters: true,
+            courierDurationSeconds: true,
+          },
         },
         checkoutIntentId: true,
       },
@@ -436,17 +450,47 @@ export async function applyNowPaymentsEvent(input: {
       return { duplicate: false, settledReference: null };
 
     if (attempt.order.paymentStatus !== "PAID") {
+      const deliveryTracking =
+        attempt.order.fulfillmentType === "DELIVERY" &&
+        attempt.order.destinationLatitude !== null &&
+        attempt.order.destinationLongitude !== null &&
+        attempt.order.courierProfileIdSnapshot &&
+        attempt.order.courierDistanceMeters !== null &&
+        attempt.order.courierDurationSeconds !== null
+          ? createSelectedCourierSimulation({
+              destination: [
+                Number(attempt.order.destinationLongitude),
+                Number(attempt.order.destinationLatitude),
+              ],
+              distanceMeters: attempt.order.courierDistanceMeters,
+              durationSeconds: attempt.order.courierDurationSeconds,
+              seed: `${attempt.order.reference}:${attempt.order.courierProfileIdSnapshot}`,
+            })
+          : null;
       await transaction.order.update({
         where: { id: attempt.orderId },
         data: {
-          status: "CONFIRMED",
+          status: deliveryTracking ? "OUT_FOR_DELIVERY" : "CONFIRMED",
           paymentStatus: "PAID",
           statusEvents: {
-            create: {
-              fromStatus: attempt.order.status,
-              toStatus: "CONFIRMED",
-              note: "Bitcoin deposit settled.",
-            },
+            create: deliveryTracking
+              ? [
+                  {
+                    fromStatus: attempt.order.status,
+                    toStatus: "CONFIRMED",
+                    note: "Bitcoin deposit settled.",
+                  },
+                  {
+                    fromStatus: "CONFIRMED",
+                    toStatus: "OUT_FOR_DELIVERY",
+                    note: "Selected courier simulation started automatically.",
+                  },
+                ]
+              : {
+                  fromStatus: attempt.order.status,
+                  toStatus: "CONFIRMED",
+                  note: "Bitcoin deposit settled.",
+                },
           },
           paymentStatusEvents: {
             create: {
@@ -457,6 +501,13 @@ export async function applyNowPaymentsEvent(input: {
           },
         },
       });
+      if (deliveryTracking) {
+        await transaction.deliveryTracking.upsert({
+          where: { orderId: attempt.orderId },
+          create: trackingCreateData(attempt.orderId, deliveryTracking),
+          update: {},
+        });
+      }
       await transaction.checkoutIntent.update({
         where: { id: attempt.checkoutIntentId },
         data: { status: "SUBMITTED", submittedAt: new Date() },

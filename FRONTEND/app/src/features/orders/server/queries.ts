@@ -164,11 +164,6 @@ export async function getAdminOrder(
     },
   });
   if (!order) return null;
-  const settings = await prisma.storeSettings.findUnique({
-    where: { id: "default" },
-    select: { dispatchLatitude: true, dispatchLongitude: true },
-  });
-
   const timeline = [
     ...order.statusEvents.map((event) => ({
       id: event.id,
@@ -250,11 +245,6 @@ export async function getAdminOrder(
             simulated: true,
           }
         : null,
-    dispatchConfigured:
-      settings?.dispatchLatitude !== null &&
-      settings?.dispatchLatitude !== undefined &&
-      settings.dispatchLongitude !== null &&
-      settings.dispatchLongitude !== undefined,
     tracking: order.deliveryTracking
       ? {
           ...publicTrackingFromRecord(order.deliveryTracking),

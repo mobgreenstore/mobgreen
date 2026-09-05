@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const transaction = vi.hoisted(() => ({
   checkoutIntent: { findFirst: vi.fn(), update: vi.fn() },
   order: { findUnique: vi.fn(), create: vi.fn() },
+  deliveryTracking: { create: vi.fn() },
   paymentAttempt: { create: vi.fn() },
   productPriceOption: { findMany: vi.fn() },
   specialOffer: { findMany: vi.fn() },
@@ -93,7 +94,7 @@ describe("checkout intent finalization transaction", () => {
       reference: "MG-2026-MATCHED",
       currency: "EUR",
       totalMinor: 2_500n,
-      status: "CONFIRMED",
+      status: "OUT_FOR_DELIVERY",
       paymentStatus: "PAID",
     });
   });
@@ -117,13 +118,19 @@ describe("checkout intent finalization transaction", () => {
           courierDurationSeconds: 1_100,
           subtotalMinor: 2_500n,
           verificationCodeEncrypted: "encrypted-code",
-          status: "CONFIRMED",
+          status: "OUT_FOR_DELIVERY",
           paymentStatus: "PAID",
           statusEvents: {
-            create: expect.objectContaining({
-              toStatus: "CONFIRMED",
-              note: "Order confirmed automatically after recharge code submission.",
-            }),
+            create: expect.arrayContaining([
+              expect.objectContaining({
+                toStatus: "CONFIRMED",
+                note: "Order confirmed automatically after recharge code submission.",
+              }),
+              expect.objectContaining({
+                fromStatus: "CONFIRMED",
+                toStatus: "OUT_FOR_DELIVERY",
+              }),
+            ]),
           },
           paymentStatusEvents: {
             create: expect.objectContaining({
@@ -150,13 +157,21 @@ describe("checkout intent finalization transaction", () => {
         },
       }),
     });
+    expect(transaction.deliveryTracking.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        orderId: "order-id",
+        routeDistanceMeters: 1_250,
+        estimatedDurationSeconds: 1_100,
+        routeProviderId: "mob-greens-courier-simulation-v1",
+      }),
+    });
     expect(transaction.checkoutIntent.update).toHaveBeenCalledWith({
       where: { id: "intent-id" },
       data: { status: "SUBMITTED", submittedAt: expect.any(Date) },
     });
     expect(result).toMatchObject({
       reference: "MG-2026-MATCHED",
-      status: "CONFIRMED",
+      status: "OUT_FOR_DELIVERY",
       paymentStatus: "PAID",
       duplicate: false,
     });

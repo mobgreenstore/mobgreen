@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Navigation, Store } from "lucide-react";
+import { MapPin, Navigation } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Map, {
   Layer,
@@ -202,9 +202,10 @@ export function TrackingMap({
         Delivery map
       </h2>
       <p id="delivery-map-description" className="sr-only">
-        A simulated route from the dispatch point to the recipient. The solid
-        green line is completed travel and the lighter line is the remaining
-        route from the courier to the recipient. Use the map controls to zoom.
+        A simulated route from the selected courier&apos;s fictional starting point
+        to the recipient. The solid green line is completed travel and the
+        lighter line is the remaining route from the courier to the recipient.
+        Use the map controls to zoom.
       </p>
       <Map
         ref={mapRef}
@@ -246,7 +247,7 @@ export function TrackingMap({
           data={remainingRouteData}
         >
           <Layer
-            {...(tracking.routeKind === "DRIVING"
+            {...(tracking.routeKind === "DRIVING" || tracking.isSimulated
               ? remainingRouteLayer
               : remainingFallbackLayer)}
           />
@@ -257,7 +258,7 @@ export function TrackingMap({
           data={completedRouteData}
         >
           <Layer
-            {...(tracking.routeKind === "DRIVING"
+            {...(tracking.routeKind === "DRIVING" || tracking.isSimulated
               ? completedRouteLayer
               : completedFallbackLayer)}
           />
@@ -268,8 +269,8 @@ export function TrackingMap({
           anchor="center"
         >
           <span className="grid size-9 place-items-center rounded-full border-2 border-white bg-black text-white shadow-md">
-            <Store aria-hidden="true" className="size-4" />
-            <span className="sr-only">Dispatch point</span>
+            <Navigation aria-hidden="true" className="size-4" />
+            <span className="sr-only">Simulated courier starting point</span>
           </span>
         </Marker>
         <AnimatedCourier target={tracking.courier} />

@@ -11,10 +11,10 @@ import {
 import { prisma } from "@/server/db/client";
 import { logger } from "@/server/core/logger";
 import {
-  getMailEnvironment,
+  getNotificationEnvironment,
   mailEnvironmentConfigured,
 } from "@/server/mail/environment";
-import { getMailTransport } from "@/server/mail/transport";
+import { sendMail } from "@/server/mail/transport";
 
 const STALE_PROCESSING_MS = 5 * 60 * 1000;
 
@@ -27,7 +27,7 @@ function safeError(error: unknown) {
 export function createOrderNotificationEnvelope() {
   if (!mailEnvironmentConfigured()) return null;
   try {
-    const environment = getMailEnvironment();
+    const environment = getNotificationEnvironment();
     return {
       kind: "ADMIN_ORDER_SUBMITTED" as const,
       recipient: environment.ORDER_NOTIFICATION_TO,
@@ -132,11 +132,8 @@ export async function dispatchOrderSubmittedNotification(reference: string) {
     const maskedCodes = order.paymentAttempts?.[0]?.rechargeCodes?.map(
       (entry) => entry.maskedValue,
     );
-    const appUrl = (
-      process.env.ADMIN_APP_URL ?? "http://localhost:3000"
-    ).replace(/\/$/, "");
     const email = buildAdminOrderEmail({
-      adminOrderUrl: `${appUrl}/admin/orders/${order.id}`,
+      adminOrderUrl: `${adminOrigin()}/admin/orders/${order.id}`,
       reference: order.reference,
       customerName: order.customerName,
       customerEmail: order.customerEmail,
@@ -162,11 +159,14 @@ export async function dispatchOrderSubmittedNotification(reference: string) {
         lineTotalMinor: Number(item.lineTotalMinor),
       })),
     });
-    const info = await getMailTransport().sendMail({
-      from: environment.sender,
-      to: environment.recipient,
-      ...email,
-    });
+    const info = await sendMail(
+      {
+        from: environment.sender,
+        to: environment.recipient,
+        ...email,
+      },
+      { idempotencyKey: notification.id },
+    );
     await prisma.orderNotification.update({
       where: { id: notification.id },
       data: {
@@ -201,7 +201,7 @@ export function createCustomerOrderNotificationEnvelope(
   const normalizedRecipient = recipient?.trim().toLowerCase();
   if (!normalizedRecipient || !mailEnvironmentConfigured()) return null;
   try {
-    const environment = getMailEnvironment();
+    const environment = getNotificationEnvironment();
     return {
       kind: "CUSTOMER_ORDER_SUBMITTED" as const,
       recipient: normalizedRecipient,
@@ -230,6 +230,12 @@ function storefrontOrigin() {
     publicOrigin(process.env.NEXT_PUBLIC_STOREFRONT_URL) ??
     publicOrigin(process.env.NEXT_PUBLIC_APP_URL) ??
     "https://mobgreen.store"
+  );
+}
+
+function adminOrigin() {
+  return (
+    publicOrigin(process.env.ADMIN_APP_URL) ?? "https://admin.mobgreen.store"
   );
 }
 
@@ -361,11 +367,14 @@ export async function dispatchCustomerOrderSubmittedNotification(
         lineTotalMinor: Number(item.lineTotalMinor),
       })),
     });
-    const info = await getMailTransport().sendMail({
-      from: environment.sender,
-      to: environment.recipient,
-      ...email,
-    });
+    const info = await sendMail(
+      {
+        from: environment.sender,
+        to: environment.recipient,
+        ...email,
+      },
+      { idempotencyKey: notification.id },
+    );
     await prisma.orderNotification.update({
       where: { id: notification.id },
       data: {

@@ -33,6 +33,8 @@ export interface TrackingProgress {
 export interface PublicDeliveryTracking {
   state: TrackingState;
   routeKind: TrackingRouteKind;
+  /** A route generated from the selected simulated courier's saved metrics. */
+  isSimulated?: boolean;
   routeDisclosure: string;
   geometry: TrackingGeometry;
   origin: TrackingCoordinate;

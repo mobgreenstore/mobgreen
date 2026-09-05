@@ -134,8 +134,7 @@ export default async function OrderSuccessPage({
                   >
                     View order
                   </Link>
-                  {order.fulfillmentType === "DELIVERY" &&
-                  order.trackingAvailable ? (
+                  {order.fulfillmentType === "DELIVERY" ? (
                     <Link
                       href={`/orders/${encodeURIComponent(order.reference)}/tracking`}
                       className={cn(

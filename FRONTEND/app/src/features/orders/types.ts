@@ -71,7 +71,6 @@ export interface AdminOrderDetail extends AdminOrderListItem {
     simulated: true;
   } | null;
   destinationCoordinatesPresent: boolean;
-  dispatchConfigured: boolean;
   tracking:
     | (PublicDeliveryTracking & {
         providerId: string;

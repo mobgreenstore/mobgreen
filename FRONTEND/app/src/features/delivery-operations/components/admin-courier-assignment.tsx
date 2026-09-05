@@ -59,7 +59,7 @@ export function AdminCourierAssignment({
         <InlineAlert
           tone="info"
           title="Assignment locked"
-          description="Courier reassignment closes when delivery is dispatched, completed, or cancelled."
+          description="This simulation has already started, so its selected courier can no longer change."
         />
       )}
       <CourierCandidateGrid

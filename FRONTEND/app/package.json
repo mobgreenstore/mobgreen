@@ -17,6 +17,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:health": "NODE_OPTIONS=--conditions=react-server tsx scripts/db-health.ts",
     "mail:health": "NODE_OPTIONS=--conditions=react-server tsx scripts/mail-health.ts",
+    "tracking:backfill": "NODE_OPTIONS=--conditions=react-server tsx scripts/backfill-simulated-delivery-tracking.ts",
     "orders:confirm-submitted": "NODE_OPTIONS=--conditions=react-server tsx scripts/confirm-submitted-recharge-orders.ts",
     "postinstall": "prisma generate",
     "db:tunnel": "railway connect Postgres --tunnel-only --ssh --port 15432",

@@ -147,7 +147,7 @@ export function CustomerOrderTracking({
           description="You are offline. Tracking will refresh automatically after reconnecting."
         />
       )}
-      {data.routeKind === "DIRECT_FALLBACK" && (
+      {data.routeKind === "DIRECT_FALLBACK" && !data.isSimulated && (
         <InlineAlert
           tone="info"
           title="Direct trajectory fallback"

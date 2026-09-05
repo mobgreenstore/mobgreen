@@ -7,7 +7,6 @@ const transaction = vi.hoisted(() => ({
   },
   orderStatusEvent: { create: vi.fn() },
   orderPaymentStatusEvent: { create: vi.fn() },
-  storeSettings: { findUnique: vi.fn() },
   deliveryTracking: { upsert: vi.fn(), updateMany: vi.fn() },
 }));
 const prepareDeliveryTracking = vi.hoisted(() => vi.fn());
@@ -21,7 +20,7 @@ vi.mock("@/server/db/transaction", () => ({ withTransaction }));
 vi.mock("@/features/tracking/server/service", () => ({
   prepareDeliveryTracking,
   DeliveryTrackingError: class DeliveryTrackingError extends Error {
-    code = "MISSING_ORIGIN";
+    code = "MISSING_COURIER";
   },
   trackingCreateData: (orderId: string, plan: unknown) => ({ orderId, plan }),
   trackingUpdateData: (plan: unknown) => ({ plan }),
@@ -65,10 +64,6 @@ describe("admin order operations", () => {
     prepareDeliveryTracking.mockResolvedValue(routePlan);
     transaction.orderStatusEvent.create.mockResolvedValue({});
     transaction.orderPaymentStatusEvent.create.mockResolvedValue({});
-    transaction.storeSettings.findUnique.mockResolvedValue({
-      dispatchLatitude: 3.8,
-      dispatchLongitude: 11.5,
-    });
   });
 
   it("exposes fulfillment-aware transitions", () => {

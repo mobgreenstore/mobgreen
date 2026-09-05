@@ -103,7 +103,10 @@ export function CategoryTabRail({
   return (
     <nav
       aria-label="Product categories"
-      className={cn("transition-colors duration-200", tone.surfaceClassName)}
+      className={cn(
+        "catalog-category-tabs transition-colors duration-200",
+        tone.surfaceClassName,
+      )}
       style={
         {
           "--category-rail-surface": tone.surfaceColor,

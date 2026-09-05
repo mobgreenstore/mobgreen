@@ -4,6 +4,7 @@ const transaction = vi.hoisted(() => ({
   paymentEvent: { findUnique: vi.fn(), create: vi.fn() },
   paymentAttempt: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
   order: { create: vi.fn(), update: vi.fn() },
+  deliveryTracking: { upsert: vi.fn() },
   checkoutIntent: { findFirst: vi.fn(), update: vi.fn() },
   specialOffer: { findMany: vi.fn() },
 }));
@@ -39,6 +40,12 @@ function attempt(status = "CONFIRMING") {
       reference: "MG-2026-BTC",
       status: "PENDING",
       paymentStatus: "PENDING",
+      fulfillmentType: "DELIVERY",
+      destinationLatitude: 3.8667,
+      destinationLongitude: 11.5167,
+      courierProfileIdSnapshot: "courier-1",
+      courierDistanceMeters: 1_200,
+      courierDurationSeconds: 900,
     },
     checkoutIntentId: "intent-1",
   };
@@ -101,8 +108,18 @@ describe("NOWPayments settlement policy", () => {
     expect(transaction.order.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          status: "CONFIRMED",
+          status: "OUT_FOR_DELIVERY",
           paymentStatus: "PAID",
+        }),
+      }),
+    );
+    expect(transaction.deliveryTracking.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { orderId: "order-1" },
+        create: expect.objectContaining({
+          routeDistanceMeters: 1_200,
+          estimatedDurationSeconds: 900,
+          routeProviderId: "mob-greens-courier-simulation-v1",
         }),
       }),
     );

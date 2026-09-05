@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Navigation } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Money } from "@/components/commerce/money";
 import { ResponsiveImage } from "@/components/commerce/responsive-image";
@@ -185,12 +185,13 @@ export function CustomerOrderDetailView({
         </ol>
       </section>
 
-      {order.trackingAvailable && (
+      {order.fulfillmentType === "DELIVERY" && (
         <Link
-          href={`/orders/${order.reference}/tracking`}
+          href={`/orders/${encodeURIComponent(order.reference)}/tracking`}
           className="inline-flex min-h-11 items-center justify-center rounded-md bg-inverse px-4 text-sm font-semibold text-inverse-foreground"
         >
-          Track delivery
+          <Navigation aria-hidden="true" className="mr-2 size-4" />
+          View tracking
         </Link>
       )}
     </div>
