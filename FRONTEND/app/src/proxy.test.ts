@@ -49,6 +49,18 @@ describe("presentation server separation", () => {
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
+  it.each(["/favicon.ico", "/icon.png", "/apple-icon.png"])(
+    "serves the shared metadata asset %s on the admin server",
+    (pathname) => {
+      process.env.MOB_GREENS_SURFACE = "admin";
+      const response = proxy(
+        new NextRequest(`http://localhost:3000${pathname}`),
+      );
+      expect(response.headers.get("x-middleware-next")).toBe("1");
+      expect(response.headers.get("location")).toBeNull();
+    },
+  );
+
   it("keeps admin routes off the storefront server", () => {
     process.env.MOB_GREENS_SURFACE = "store";
     const response = proxy(new NextRequest("http://localhost:3001/admin"));
