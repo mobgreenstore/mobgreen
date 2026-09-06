@@ -163,8 +163,7 @@ export function CheckoutForm({
         title="Your card is not ready for checkout"
         description={
           <span>
-            Refresh the card and ensure every item is available and uses one
-            currency.{" "}
+            Refresh the card and ensure every item is currently available.{" "}
             <Link href="/cart" className="font-semibold underline">
               Return to card
             </Link>

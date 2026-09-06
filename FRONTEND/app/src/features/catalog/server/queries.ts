@@ -10,6 +10,7 @@ import type {
 } from "@/features/catalog/types";
 import type { SupportedCurrency } from "@/config/commerce";
 import { prisma } from "@/server/db/client";
+import { convertPrice } from "@/features/catalog/server/currency-conversion";
 
 const CATALOG_PAGE_SIZE = 12;
 const CATALOG_CACHE_SECONDS = 300;
@@ -124,7 +125,6 @@ export const getCatalogPage = unstable_cache(
             startsAt: { lte: now },
             endsAt: { gt: now },
             archivedAt: null,
-            currency: input.currency,
             product: { status: "ACTIVE", archivedAt: null },
             priceOption: { isActive: true, archivedAt: null },
           },
@@ -150,7 +150,6 @@ export const getCatalogPage = unstable_cache(
                   some: {
                     isActive: true,
                     archivedAt: null,
-                    currency: input.currency,
                   },
                 },
               },
@@ -206,7 +205,6 @@ export const getCatalogPage = unstable_cache(
         some: {
           isActive: true,
           archivedAt: null,
-          currency: input.currency,
         },
       },
     };
@@ -232,7 +230,7 @@ export const getCatalogPage = unstable_cache(
           orderBy: { position: "asc" },
         },
         priceOptions: {
-          where: { ...activePriceWhere, currency: input.currency },
+          where: activePriceWhere,
           select: {
             id: true,
             weightValue: true,
@@ -248,31 +246,36 @@ export const getCatalogPage = unstable_cache(
       take: CATALOG_PAGE_SIZE,
     });
 
-    const cards: CatalogProductCardViewModel[] = products.flatMap((product) => {
-      const price = product.priceOptions[0];
-      if (!price) return [];
-      const cover =
-        product.images.find((image) => image.isCover) ??
-        product.images[0] ??
-        null;
-      return [
-        {
-          id: product.id,
-          slug: product.slug,
-          name: product.name,
-          categoryName: product.category.name,
-          coverImage: cover ? imageView(cover) : null,
-          primaryPrice: {
-            id: price.id,
-            weightValue: Number(price.weightValue),
-            weightUnit: price.weightUnit,
-            currency: price.currency,
-            priceMinor: Number(price.priceMinor),
-            available: true,
+    const cards: CatalogProductCardViewModel[] = await Promise.all(
+      products.flatMap(async (product) => {
+        const price = product.priceOptions[0];
+        if (!price) return [];
+        const cover =
+          product.images.find((image) => image.isCover) ??
+          product.images[0] ??
+          null;
+        return [
+          {
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            categoryName: product.category.name,
+            coverImage: cover ? imageView(cover) : null,
+            primaryPrice: await convertPrice(
+              {
+                id: price.id,
+                weightValue: Number(price.weightValue),
+                weightUnit: price.weightUnit,
+                currency: price.currency,
+                priceMinor: Number(price.priceMinor),
+                available: true,
+              },
+              input.currency,
+            ),
           },
-        },
-      ];
-    });
+        ];
+      }),
+    ).then((groups) => groups.flat());
 
     return {
       categories,

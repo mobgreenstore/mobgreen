@@ -161,7 +161,7 @@ export function CartPage() {
               <InlineAlert
                 tone="danger"
                 title="This card contains multiple currencies"
-                description="Remove items until every remaining selection uses only GBP, EUR, or USD. Currency conversion is never automatic."
+                description="Refresh the card to display every item in your selected currency."
               />
             )}
             {availableLines.map((line) => {

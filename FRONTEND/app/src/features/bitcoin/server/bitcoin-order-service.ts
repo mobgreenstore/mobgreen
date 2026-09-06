@@ -153,7 +153,7 @@ export async function prepareBitcoinAttempt(
     const lines = parseIntentCartLines(intent.cartLines);
     const cart = await new CartValidationService(
       new PrismaCartRepository(transaction),
-    ).validate(lines);
+    ).validate(lines, intent.currency);
     if (
       !cart.checkoutEligible ||
       cart.currency !== intent.currency ||

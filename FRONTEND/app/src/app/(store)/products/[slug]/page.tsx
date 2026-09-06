@@ -14,6 +14,7 @@ import {
   isSupportedCurrency,
   STOREFRONT_CURRENCY_COOKIE,
 } from "@/features/catalog/currency-preference";
+import { convertPrice } from "@/features/catalog/server/currency-conversion";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -64,6 +65,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const preferredCurrency = hasCurrencyPreference
     ? currencyCookie
     : DEFAULT_STOREFRONT_CURRENCY;
+  const displayOptions = await Promise.all(
+    product.priceOptions.map((option) =>
+      convertPrice(option, preferredCurrency),
+    ),
+  );
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -112,7 +118,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="mt-7">
               <ProductOptionPanel
                 productId={product.id}
-                options={product.priceOptions}
+                options={displayOptions}
                 preferredCurrency={preferredCurrency}
                 hasCurrencyPreference={hasCurrencyPreference}
               />

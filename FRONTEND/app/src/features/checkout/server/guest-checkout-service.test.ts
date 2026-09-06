@@ -225,7 +225,7 @@ describe("guest order transaction", () => {
     expect(transaction.productPriceOption.findMany).not.toHaveBeenCalled();
   });
 
-  it("rejects mixed authoritative currencies", async () => {
+  it("accepts mixed base currencies after checkout currency normalization", async () => {
     const mixed = {
       ...input,
       lines: [
@@ -272,10 +272,7 @@ describe("guest order transaction", () => {
       },
     ]);
     await expect(
-      new GuestCheckoutService().create(mixed, guest),
-    ).rejects.toMatchObject({
-      code: "MIXED_CURRENCY",
-      status: 409,
-    });
+      new GuestCheckoutService().create(mixed, guest, "USD"),
+    ).resolves.toMatchObject({ status: "CONFIRMED" });
   });
 });

@@ -20,6 +20,7 @@ import {
 import { prisma } from "@/server/db/client";
 import { withTransaction } from "@/server/db/transaction";
 import { verifyLocationCandidate } from "@/server/location/verification";
+import type { SupportedCurrency } from "@/config/commerce";
 
 export type CheckoutErrorCode =
   "CART_CHANGED" | "MIXED_CURRENCY" | "INVALID_SELECTION" | "ORDER_FAILED";
@@ -73,6 +74,7 @@ export class GuestCheckoutService {
   async create(
     input: GuestCheckoutInput,
     guest: GuestSessionIdentity,
+    targetCurrency?: SupportedCurrency,
   ): Promise<CreatedOrderView> {
     const encryptedCode = encryptVerificationCode(input.verificationCode);
     const adminNotification = createOrderNotificationEnvelope();
@@ -136,7 +138,7 @@ export class GuestCheckoutService {
 
       const authoritativeCart = await new CartValidationService(
         new PrismaCartRepository(transaction),
-      ).validate(input.lines);
+      ).validate(input.lines, targetCurrency);
       if (!authoritativeCart.checkoutEligible) {
         throw new CheckoutError(
           authoritativeCart.hasCurrencyConflict
@@ -210,6 +212,9 @@ export class GuestCheckoutService {
         specialOffers.map((offer) => [offer.publicId, offer]),
       );
 
+      const validatedByOption = new Map(
+        authoritativeCart.lines.map((line) => [line.priceOptionId, line]),
+      );
       const snapshots = input.lines.map((line) => {
         const option = byId.get(line.priceOptionId);
         if (!option || option.productId !== line.productId) {
@@ -248,7 +253,15 @@ export class GuestCheckoutService {
             409,
           );
         }
-        const unitPriceMinor = offer?.offerTotalMinor ?? option.priceMinor;
+        const validatedLine = validatedByOption.get(line.priceOptionId);
+        if (!validatedLine?.option) {
+          throw new CheckoutError(
+            "CART_CHANGED",
+            "A product price changed. Review the card and retry.",
+            409,
+          );
+        }
+        const unitPriceMinor = BigInt(validatedLine.option.priceMinor);
         return {
           productId: line.productId,
           priceOptionId: line.priceOptionId,
@@ -261,14 +274,18 @@ export class GuestCheckoutService {
             option.product.images?.[0]?.cloudinaryPublicId ?? null,
           weightValueSnapshot: offer?.totalWeightGrams ?? option.weightValue,
           weightUnitSnapshot: offer ? "G" : option.weightUnit,
-          currencySnapshot: option.currency,
+          currencySnapshot: authoritativeCart.currency!,
           unitPriceMinor,
           quantity: line.quantity,
           lineTotalMinor: unitPriceMinor * BigInt(line.quantity),
-          offerOriginalTotalMinorSnapshot: offer?.originalTotalMinor ?? null,
+          offerOriginalTotalMinorSnapshot: validatedLine.offer
+            ? BigInt(validatedLine.offer.originalTotalMinor)
+            : null,
           offerDiscountBpsSnapshot: offer?.discountBps ?? null,
-          offerDiscountMinorSnapshot: offer?.discountMinor ?? null,
-          offerTotalMinorSnapshot: offer?.offerTotalMinor ?? null,
+          offerDiscountMinorSnapshot: validatedLine.offer
+            ? BigInt(validatedLine.offer.discountMinor)
+            : null,
+          offerTotalMinorSnapshot: validatedLine.offer ? unitPriceMinor : null,
           offerBundleQuantitySnapshot: offer?.bundleQuantity ?? null,
           offerEndsAtSnapshot: offer?.endsAt ?? null,
         };

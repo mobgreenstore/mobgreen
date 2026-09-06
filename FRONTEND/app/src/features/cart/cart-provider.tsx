@@ -199,10 +199,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       void validateAndAccept(synchronized, false);
     };
     window.addEventListener("storage", synchronize);
+    const refreshCurrency = () =>
+      void validateAndAccept(linesRef.current, false);
+    window.addEventListener("mob-greens-currency-change", refreshCurrency);
     return () => {
       active = false;
       requestSequence.current += 1;
       window.removeEventListener("storage", synchronize);
+      window.removeEventListener("mob-greens-currency-change", refreshCurrency);
     };
   }, [validateAndAccept]);
 
@@ -235,16 +239,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
             description:
               selected?.issues[0]?.message ??
               "The store could not confirm this selection.",
-            tone: "danger",
-          });
-          return false;
-        }
-        if (result.hasCurrencyConflict) {
-          setStatus("ready");
-          toast({
-            title: "Choose one currency",
-            description:
-              "A card can contain GBP, EUR, or USD items, but not more than one currency at a time.",
             tone: "danger",
           });
           return false;

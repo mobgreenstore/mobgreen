@@ -11,6 +11,8 @@ import type {
   CartPriceRecord,
   CartRepository,
 } from "@/features/cart/server/cart-repository";
+import type { SupportedCurrency } from "@/config/commerce";
+import { convertMinorUnits } from "@/features/catalog/server/currency-conversion";
 
 function unavailableLine(
   line: StoredCartLine,
@@ -44,6 +46,7 @@ export class CartValidationService {
 
   async validate(
     lines: readonly StoredCartLine[],
+    targetCurrency?: SupportedCurrency,
   ): Promise<CartValidationResult> {
     const records = await this.repository.findPriceOptions(
       lines.map((line) => line.priceOptionId),
@@ -260,7 +263,44 @@ export class CartValidationService {
       };
     });
 
-    const availableLines = validatedLines.filter(
+    const displayLines = targetCurrency
+      ? await Promise.all(
+          validatedLines.map(async (line) => {
+            if (!line.option) return line;
+            const sourceCurrency = line.option.currency;
+            const convertedOption = {
+              ...line.option,
+              currency: targetCurrency,
+              priceMinor: await convertMinorUnits(
+                line.option.priceMinor,
+                sourceCurrency,
+                targetCurrency,
+              ),
+            };
+            const convertedOffer = line.offer
+              ? {
+                  ...line.offer,
+                  originalTotalMinor: await convertMinorUnits(
+                    line.offer.originalTotalMinor,
+                    sourceCurrency,
+                    targetCurrency,
+                  ),
+                  discountMinor: await convertMinorUnits(
+                    line.offer.discountMinor,
+                    sourceCurrency,
+                    targetCurrency,
+                  ),
+                }
+              : line.offer;
+            return {
+              ...line,
+              option: convertedOption,
+              offer: convertedOffer ?? null,
+            };
+          }),
+        )
+      : validatedLines;
+    const availableLines = displayLines.filter(
       (
         line,
       ): line is ValidatedCartLine & {
@@ -278,11 +318,10 @@ export class CartValidationService {
           0,
         );
     const allAvailable =
-      validatedLines.length > 0 &&
-      validatedLines.every((line) => line.available);
+      displayLines.length > 0 && displayLines.every((line) => line.available);
 
     return {
-      lines: validatedLines,
+      lines: displayLines,
       itemCount: lines.reduce((total, line) => total + line.quantity, 0),
       currency: currencies.length === 1 ? (currencies[0] ?? null) : null,
       currencies,

@@ -21,6 +21,7 @@ import type {
   CheckoutIntentView,
 } from "@/features/delivery-matching/types";
 import type { GuestSessionIdentity } from "@/server/guest-session";
+import type { SupportedCurrency } from "@/config/commerce";
 import { prisma } from "@/server/db/client";
 import { withTransaction } from "@/server/db/transaction";
 import { verifyLocationCandidate } from "@/server/location/verification";
@@ -162,6 +163,7 @@ export class CheckoutIntentService {
   async create(
     input: StartCheckoutIntentInput,
     guest: GuestSessionIdentity,
+    currency: SupportedCurrency,
   ): Promise<CheckoutIntentView> {
     if (
       input.paymentMethod === "BITCOIN_DEPOSIT" &&
@@ -175,7 +177,7 @@ export class CheckoutIntentService {
     }
     const cart = await new CartValidationService(
       new PrismaCartRepository(),
-    ).validate(input.lines);
+    ).validate(input.lines, currency);
     if (
       !cart.checkoutEligible ||
       cart.subtotalMinor === null ||
@@ -308,7 +310,7 @@ export class CheckoutIntentService {
     const storedLines = parseIntentCartLines(intent.cartLines);
     const cart = await new CartValidationService(
       new PrismaCartRepository(),
-    ).validate(storedLines);
+    ).validate(storedLines, intent.currency);
     const confirmationEligible =
       view.status !== "EXPIRED" &&
       cart.checkoutEligible &&

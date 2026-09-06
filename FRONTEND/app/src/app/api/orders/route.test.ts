@@ -81,6 +81,7 @@ describe("guest order route", () => {
         lines: input.lines,
       }),
       expect.objectContaining({ tokenHash: "hash" }),
+      "USD",
     );
     expect(await response.json()).toMatchObject({
       order: {

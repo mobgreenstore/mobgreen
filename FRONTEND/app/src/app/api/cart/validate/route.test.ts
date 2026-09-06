@@ -42,7 +42,7 @@ describe("public cart validation route", () => {
       }),
     );
     expect(response.status).toBe(200);
-    expect(validate).toHaveBeenCalledWith([line]);
+    expect(validate).toHaveBeenCalledWith([line], "USD");
   });
 
   it("rejects browser prices before reaching the service", async () => {

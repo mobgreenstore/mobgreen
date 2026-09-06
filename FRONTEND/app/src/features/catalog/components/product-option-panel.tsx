@@ -24,34 +24,14 @@ export function ProductOptionPanel({
 }) {
   const { addItem } = useCart();
   const router = useRouter();
-  const visibleOptions = options.filter(
-    (option) => option.currency === preferredCurrency,
-  );
+  const visibleOptions = options;
   const [selectedId, setSelectedId] = useState(visibleOptions[0]?.id);
   const [pending, setPending] = useState(false);
   const selected =
     visibleOptions.find((option) => option.id === selectedId) ??
     visibleOptions[0];
 
-  if (!selected) {
-    return (
-      <Card className="grid gap-4 p-5">
-        <div className="flex items-center justify-between gap-3">
-          <p className="font-semibold">
-            Price unavailable in {preferredCurrency}
-          </p>
-          <StoreCurrencyControl
-            currency={preferredCurrency}
-            hasPreference={hasCurrencyPreference}
-          />
-        </div>
-        <p className="text-sm text-foreground-muted">
-          Choose another display currency to see the prices configured for this
-          product.
-        </p>
-      </Card>
-    );
-  }
+  if (!selected) return null;
 
   const addSelected = async () => {
     setPending(true);
@@ -107,7 +87,7 @@ export function ProductOptionPanel({
       </Button>
       <p className="text-xs leading-5 text-foreground-muted">
         The store confirms the current price and availability before this item
-        is saved. Prices stay in their original currency.
+        is saved. Your selected currency follows you through checkout.
       </p>
     </Card>
   );

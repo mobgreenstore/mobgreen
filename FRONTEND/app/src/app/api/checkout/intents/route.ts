@@ -14,6 +14,11 @@ import {
   prepareGuestSession,
   setGuestSessionCookie,
 } from "@/server/guest-session";
+import {
+  DEFAULT_STOREFRONT_CURRENCY,
+  isSupportedCurrency,
+  STOREFRONT_CURRENCY_COOKIE,
+} from "@/features/catalog/currency-preference";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +58,15 @@ export async function POST(request: NextRequest) {
       );
     }
     const guest = await prepareGuestSession(request);
-    const intent = await new CheckoutIntentService().create(input, guest);
+    const rawCurrency = request.cookies.get(STOREFRONT_CURRENCY_COOKIE)?.value;
+    const currency = isSupportedCurrency(rawCurrency)
+      ? rawCurrency
+      : DEFAULT_STOREFRONT_CURRENCY;
+    const intent = await new CheckoutIntentService().create(
+      input,
+      guest,
+      currency,
+    );
     logger.info("checkout_intent.created", {
       intentId: intent.publicId,
       fulfillmentType: intent.fulfillmentType,

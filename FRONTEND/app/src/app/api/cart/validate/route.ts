@@ -3,6 +3,11 @@ import { validateCartRequestSchema } from "@/features/cart/schema";
 import { PrismaCartRepository } from "@/features/cart/server/prisma-cart-repository";
 import { CartValidationService } from "@/features/cart/server/cart-validation-service";
 import { logger } from "@/server/core/logger";
+import {
+  DEFAULT_STOREFRONT_CURRENCY,
+  isSupportedCurrency,
+  STOREFRONT_CURRENCY_COOKIE,
+} from "@/features/catalog/currency-preference";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,9 +30,17 @@ export async function POST(request: Request) {
 
   try {
     const input = validateCartRequestSchema.parse(await request.json());
+    const rawCurrency = request.headers
+      .get("cookie")
+      ?.match(
+        new RegExp(`(?:^|;\\s*)${STOREFRONT_CURRENCY_COOKIE}=([^;]+)`),
+      )?.[1];
+    const currency = isSupportedCurrency(rawCurrency)
+      ? rawCurrency
+      : DEFAULT_STOREFRONT_CURRENCY;
     const cart = await new CartValidationService(
       new PrismaCartRepository(),
-    ).validate(input.lines);
+    ).validate(input.lines, currency);
     return Response.json({ cart });
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof ZodError) {

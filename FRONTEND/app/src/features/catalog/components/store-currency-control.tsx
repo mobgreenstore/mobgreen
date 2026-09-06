@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Check, ChevronDown, LoaderCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -24,6 +24,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 function saveCurrency(currency: SupportedCurrency) {
   document.cookie = `${STOREFRONT_CURRENCY_COOKIE}=${currency}; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+  window.dispatchEvent(new CustomEvent("mob-greens-currency-change"));
 }
 
 function browserCountry() {
@@ -45,6 +46,7 @@ export function StoreCurrencyControl({
 }) {
   const router = useRouter();
   const initialized = useRef(false);
+  const [changing, setChanging] = useState(false);
 
   useEffect(() => {
     if (initialized.current || hasPreference) return;
@@ -54,11 +56,14 @@ export function StoreCurrencyControl({
       ? currencyForCountry(location.countryCode)
       : currencyForCountry(browserCountry());
     saveCurrency(detected);
-    if (detected !== currency) router.refresh();
+    if (detected !== currency) {
+      router.refresh();
+    }
   }, [currency, hasPreference, router]);
 
   function selectCurrency(next: SupportedCurrency) {
-    if (next === currency) return;
+    if (next === currency || changing) return;
+    setChanging(true);
     saveCurrency(next);
     router.refresh();
   }
@@ -72,18 +77,36 @@ export function StoreCurrencyControl({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={`Display currency, currently ${selected.label}`}
+          aria-label={
+            changing
+              ? "Updating prices for your selected currency"
+              : `Display currency, currently ${selected.label}`
+          }
+          aria-busy={changing}
+          disabled={changing}
           className={cn(
             "inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-subtle px-3 text-sm font-semibold text-foreground transition-colors hover:bg-border focus-visible:ring-2 focus-visible:ring-foreground/35 focus-visible:outline-none",
             className,
           )}
         >
-          <span className="font-mono">{selected.symbol}</span>
-          <span>{selected.code}</span>
-          <ChevronDown
-            aria-hidden="true"
-            className="size-4 text-foreground-muted"
-          />
+          {changing ? (
+            <>
+              <LoaderCircle
+                aria-hidden="true"
+                className="size-4 animate-spin motion-reduce:animate-none"
+              />
+              <span>Updating prices</span>
+            </>
+          ) : (
+            <>
+              <span className="font-mono">{selected.symbol}</span>
+              <span>{selected.code}</span>
+              <ChevronDown
+                aria-hidden="true"
+                className="size-4 text-foreground-muted"
+              />
+            </>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="min-w-52">

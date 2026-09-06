@@ -5,6 +5,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { PublicSpecialOfferPage } from "@/features/special-offers/public-types";
 import { prisma } from "@/server/db/client";
 import type { SupportedCurrency } from "@/config/commerce";
+import { convertMinorUnits } from "@/features/catalog/server/currency-conversion";
 
 const OFFER_PAGE_SIZE = 12;
 const OFFER_CACHE_SECONDS = 60;
@@ -30,7 +31,6 @@ export const getPublicSpecialOffers = unstable_cache(
       startsAt: { lte: now },
       endsAt: { gt: now },
       archivedAt: null,
-      currency: input.currency,
       category: {
         slug: input.categorySlug,
         isActive: true,
@@ -86,24 +86,38 @@ export const getPublicSpecialOffers = unstable_cache(
       },
     });
     return {
-      offers: records.map((offer) => ({
-        publicId: offer.publicId,
-        categorySlug: offer.category.slug,
-        productId: offer.productId,
-        productSlug: offer.product.slug,
-        productName: offer.product.name,
-        image: offer.product.images[0] ?? null,
-        priceOptionId: offer.priceOptionId,
-        currency: offer.currency,
-        bundleQuantity: offer.bundleQuantity,
-        totalWeightGrams: offer.totalWeightGrams.toString(),
-        originalTotalMinor: Number(offer.originalTotalMinor),
-        discountBps: offer.discountBps,
-        discountMinor: Number(offer.discountMinor),
-        offerTotalMinor: Number(offer.offerTotalMinor),
-        startsAt: offer.startsAt.toISOString(),
-        endsAt: offer.endsAt.toISOString(),
-      })),
+      offers: await Promise.all(
+        records.map(async (offer) => ({
+          publicId: offer.publicId,
+          categorySlug: offer.category.slug,
+          productId: offer.productId,
+          productSlug: offer.product.slug,
+          productName: offer.product.name,
+          image: offer.product.images[0] ?? null,
+          priceOptionId: offer.priceOptionId,
+          currency: input.currency,
+          bundleQuantity: offer.bundleQuantity,
+          totalWeightGrams: offer.totalWeightGrams.toString(),
+          originalTotalMinor: await convertMinorUnits(
+            Number(offer.originalTotalMinor),
+            offer.currency,
+            input.currency,
+          ),
+          discountBps: offer.discountBps,
+          discountMinor: await convertMinorUnits(
+            Number(offer.discountMinor),
+            offer.currency,
+            input.currency,
+          ),
+          offerTotalMinor: await convertMinorUnits(
+            Number(offer.offerTotalMinor),
+            offer.currency,
+            input.currency,
+          ),
+          startsAt: offer.startsAt.toISOString(),
+          endsAt: offer.endsAt.toISOString(),
+        })),
+      ),
       page,
       pageSize: OFFER_PAGE_SIZE,
       totalCount,

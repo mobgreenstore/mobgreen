@@ -104,21 +104,24 @@ describe("cart server validation", () => {
     expect(result.lines[0]?.issues[0]?.code).toBe("PRODUCT_MISMATCH");
   });
 
-  it("enforces the single-currency cart rule", async () => {
+  it("converts base prices into the selected shopper currency", async () => {
     const secondOption = "ec22096c-f944-4c1f-b310-397f7221af31";
     const result = await service([
       record(),
       record({ id: secondOption, currency: "EUR" }),
-    ]).validate([
-      { productId, priceOptionId: optionId, quantity: 1 },
-      { productId, priceOptionId: secondOption, quantity: 1 },
-    ]);
+    ]).validate(
+      [
+        { productId, priceOptionId: optionId, quantity: 1 },
+        { productId, priceOptionId: secondOption, quantity: 1 },
+      ],
+      "USD",
+    );
     expect(result).toMatchObject({
-      hasCurrencyConflict: true,
-      currency: null,
-      subtotalMinor: null,
-      checkoutEligible: false,
+      hasCurrencyConflict: false,
+      currency: "USD",
+      checkoutEligible: true,
     });
+    expect(result.subtotalMinor).toBeGreaterThan(0);
   });
   it("uses the authoritative offer total and bundle weight", async () => {
     const price = record({

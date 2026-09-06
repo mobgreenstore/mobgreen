@@ -76,6 +76,7 @@ describe("checkout intent route", () => {
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({ fulfillmentType: "DELIVERY" }),
       expect.objectContaining({ tokenHash: "guest-hash" }),
+      "USD",
     );
     expect(setCookie).toHaveBeenCalledOnce();
   });
