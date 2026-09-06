@@ -28,8 +28,10 @@ function durationLabel(durationSeconds: number) {
 
 export function DeliveryMatchingFlow({
   initialIntent,
+  onIntentChange,
 }: {
   initialIntent: CheckoutIntentView;
+  onIntentChange?: (intent: CheckoutIntentView) => void;
 }) {
   const [intent, setIntent] = useState(initialIntent);
   const [requestState, setRequestState] = useState<RequestState>(
@@ -95,6 +97,7 @@ export function DeliveryMatchingFlow({
         throw new Error(result.error ?? "Delivery options could not be found.");
       }
       setIntent(result.intent);
+      onIntentChange?.(result.intent);
     } catch (reason) {
       setRequestState("error");
       setError(
@@ -133,6 +136,7 @@ export function DeliveryMatchingFlow({
       }
       setIntent(result.intent);
       setSelected(result.intent.selectedCourier);
+      onIntentChange?.(result.intent);
       setRequestState("idle");
     } catch (reason) {
       setRequestState("error");
@@ -174,15 +178,15 @@ export function DeliveryMatchingFlow({
             Location is required
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
-            Confirm your delivery location so MOB GREENS can generate simulated
-            nearby delivery options and estimated times.
+            Add your delivery location to view nearby delivery options and
+            estimated times.
           </p>
         </div>
         <StoreLocationControl
-          triggerVariant="text"
-          triggerLabel="Activate location"
+          triggerVariant="primary"
+          triggerLabel="Add delivery location"
           onLocationChange={applyLocation}
-          className="w-fit text-base font-bold text-info"
+          className="w-fit bg-info text-white hover:bg-info/88"
         />
       </Card>
     );

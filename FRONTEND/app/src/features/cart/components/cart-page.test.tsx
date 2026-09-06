@@ -66,6 +66,36 @@ describe("cart page", () => {
     expect(screen.getByText(/prices confirmed by the store/i)).toBeVisible();
   });
 
+  it("renders every saved product line in the cart", () => {
+    useCart.mockReturnValue(
+      context({
+        cart: {
+          ...cart,
+          lines: [
+            ...cart.lines,
+            {
+              ...cart.lines[0]!,
+              key: "beans:option",
+              productName: "Fresh beans",
+              priceOptionId: "beans-option",
+              quantity: 1,
+              option: {
+                ...cart.lines[0]!.option!,
+                id: "beans-option",
+                priceMinor: 1400,
+              },
+            },
+          ],
+        },
+        itemCount: 3,
+      }),
+    );
+    render(<CartPage />);
+    expect(screen.getByText("Fresh kale")).toBeVisible();
+    expect(screen.getByText("Fresh beans")).toBeVisible();
+    expect(screen.getByText(/3 items/i)).toBeVisible();
+  });
+
   it("requires confirmation before removing a line", () => {
     const removeItem = vi.fn();
     useCart.mockReturnValue(context({ removeItem }));

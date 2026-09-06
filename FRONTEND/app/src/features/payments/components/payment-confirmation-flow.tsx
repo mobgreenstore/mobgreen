@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, MailCheck, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { InlineAlert, buttonVariants } from "@/components/ui";
 import { useCart } from "@/features/cart/cart-provider";
 import { DeliveryMatchingFlow } from "@/features/delivery-matching/components/delivery-matching-flow";
@@ -15,10 +16,7 @@ import {
   PaymentMethodSummary,
 } from "@/features/payments/components/payment-confirmation";
 import { RechargeCodeConfirmation } from "@/features/payments/components/recharge-code-confirmation";
-import {
-  RechargePartnerDirectory,
-  RechargePartnerRail,
-} from "@/features/payments/components/recharge-partner-rail";
+import { RechargePartnerRail } from "@/features/payments/components/recharge-partner-rail";
 import { calculateBitcoinDeposit } from "@/features/bitcoin/policy";
 import { cn } from "@/lib/utils";
 
@@ -29,12 +27,14 @@ export function PaymentConfirmationFlow({
 }) {
   const router = useRouter();
   const { clear } = useCart();
-  const bitcoin = intent.paymentMethod === "BITCOIN_DEPOSIT";
+  const [currentIntent, setCurrentIntent] = useState(intent);
+  const bitcoin = currentIntent.paymentMethod === "BITCOIN_DEPOSIT";
   const needsDeliverySelection =
-    intent.fulfillmentType === "DELIVERY" && !intent.selectedCourier;
+    currentIntent.fulfillmentType === "DELIVERY" &&
+    !currentIntent.selectedCourier;
   const split = bitcoin
-    ? calculateBitcoinDeposit(intent.subtotalMinor)
-    : { depositMinor: intent.subtotalMinor, remainingCashMinor: 0 };
+    ? calculateBitcoinDeposit(currentIntent.subtotalMinor)
+    : { depositMinor: currentIntent.subtotalMinor, remainingCashMinor: 0 };
 
   function completed(reference: string) {
     clear();
@@ -44,12 +44,12 @@ export function PaymentConfirmationFlow({
   const aside = (
     <>
       <OrderAmountSummary
-        currency={intent.currency}
-        totalMinor={intent.subtotalMinor}
+        currency={currentIntent.currency}
+        totalMinor={currentIntent.subtotalMinor}
         depositMinor={split.depositMinor}
         cashBalanceMinor={split.remainingCashMinor}
       />
-      <VerificationOrderSummary intent={intent} />
+      <VerificationOrderSummary intent={currentIntent} />
       <Link
         href="/checkout"
         className={cn(buttonVariants({ variant: "secondary" }), "w-full")}
@@ -77,17 +77,11 @@ export function PaymentConfirmationFlow({
     >
       <div className="grid gap-7">
         <PaymentMethodSummary
-          method={intent.paymentMethod}
-          rechargeProvider={intent.rechargeProvider}
+          method={currentIntent.paymentMethod}
+          rechargeProvider={currentIntent.rechargeProvider}
         />
 
-        {intent.paymentMethod === "RECHARGE_ONLINE" ? (
-          <RechargePartnerDirectory
-            selectedPartnerId={intent.rechargeProvider}
-          />
-        ) : null}
-
-        {!intent.confirmationEligible && (
+        {!currentIntent.confirmationEligible && (
           <InlineAlert
             tone="danger"
             title="Your card changed"
@@ -105,7 +99,7 @@ export function PaymentConfirmationFlow({
             <p className="mt-1 text-sm leading-5 text-foreground-muted">
               This verified order is already linked to{" "}
               <strong className="text-foreground">
-                {intent.customer.email}
+                {currentIntent.customer.email}
               </strong>
               .
             </p>
@@ -126,20 +120,32 @@ export function PaymentConfirmationFlow({
                 nearby profiles before you submit payment.
               </p>
             </div>
-            <DeliveryMatchingFlow initialIntent={intent} />
+            <DeliveryMatchingFlow
+              initialIntent={currentIntent}
+              onIntentChange={(updated) =>
+                setCurrentIntent((current) => ({
+                  ...current,
+                  ...updated,
+                  customer: current.customer,
+                  lines: current.lines,
+                  itemCount: current.itemCount,
+                  confirmationEligible: current.confirmationEligible,
+                }))
+              }
+            />
           </section>
         ) : bitcoin ? (
           <BitcoinInvoicePanel
-            intentId={intent.publicId}
-            currency={intent.currency}
+            intentId={currentIntent.publicId}
+            currency={currentIntent.currency}
             depositMinor={split.depositMinor}
             cashBalanceMinor={split.remainingCashMinor}
             onCompleted={completed}
           />
         ) : (
           <RechargeCodeConfirmation
-            intentId={intent.publicId}
-            eligible={intent.confirmationEligible}
+            intentId={currentIntent.publicId}
+            eligible={currentIntent.confirmationEligible}
             onCompleted={completed}
           />
         )}

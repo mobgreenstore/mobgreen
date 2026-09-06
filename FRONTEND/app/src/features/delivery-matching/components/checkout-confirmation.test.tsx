@@ -14,7 +14,6 @@ import {
   PaymentMethodSummary,
 } from "@/features/payments/components/payment-confirmation";
 import { RechargeCodeConfirmation } from "@/features/payments/components/recharge-code-confirmation";
-import { RechargePartnerDirectory } from "@/features/payments/components/recharge-partner-rail";
 import { VerificationHero } from "@/features/delivery-matching/components/verification-hero";
 import type { CheckoutConfirmationView } from "@/features/delivery-matching/types";
 
@@ -82,7 +81,7 @@ describe("checkout confirmation presentation", () => {
     expect(screen.queryByText(/balance is available/i)).not.toBeTruthy();
   });
 
-  it("shows the locked method with three secure code fields and can add another", () => {
+  it("shows the locked method with one required code field and optional extras", () => {
     render(
       <>
         <PaymentMethodSummary
@@ -96,31 +95,16 @@ describe("checkout confirmation presentation", () => {
         />
       </>,
     );
-    expect(screen.getByText(/selected:/i).parentElement?.textContent).toContain(
-      "Recharge online",
-    );
-    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(3);
+    expect(
+      screen.getByRole("heading", { name: "Recharge online" }),
+    ).toBeTruthy();
+    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(1);
     fireEvent.click(
       screen.getByRole("button", { name: "Add another recharge code" }),
     );
-    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(4);
+    expect(screen.getAllByLabelText(/Recharge code \d+$/)).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Confirm order" })).toBeTruthy();
     expect(screen.queryByText("Order note")).toBeNull();
-  });
-
-  it("shows four trusted online partners and marks the selected partner", () => {
-    render(<RechargePartnerDirectory selectedPartnerId="DUNDLE" />);
-
-    expect(
-      screen.getByRole("heading", { name: "Approved recharge partners" }),
-    ).toBeTruthy();
-    expect(screen.getAllByRole("link")).toHaveLength(4);
-    const dundle = screen.getByRole("link", {
-      name: "Open Dundle in a new tab",
-    });
-    expect(dundle.getAttribute("aria-current")).toBe("true");
-    expect(dundle.getAttribute("target")).toBe("_blank");
-    expect(dundle.getAttribute("rel")).toContain("noopener");
   });
 
   it("submits only recharge codes, never a customer note", async () => {
@@ -139,13 +123,7 @@ describe("checkout confirmation presentation", () => {
       />,
     );
     fireEvent.change(getByLabelText("Recharge code 1"), {
-      target: { value: "123456" },
-    });
-    fireEvent.change(getByLabelText("Recharge code 2"), {
-      target: { value: "234567" },
-    });
-    fireEvent.change(getByLabelText("Recharge code 3"), {
-      target: { value: "345678" },
+      target: { value: "1234-5678-9012-3456" },
     });
     fireEvent.click(getByRole("button", { name: "Confirm order" }));
 
@@ -155,7 +133,7 @@ describe("checkout confirmation presentation", () => {
     const [, options] = fetchMock.mock.calls[0] ?? [];
     const body = JSON.parse(String((options as RequestInit | undefined)?.body));
     expect(body).toEqual({
-      verificationCodes: ["123456", "234567", "345678"],
+      verificationCodes: ["1234567890123456"],
     });
   });
 

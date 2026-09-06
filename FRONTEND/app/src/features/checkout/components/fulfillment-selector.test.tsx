@@ -43,7 +43,7 @@ describe("checkout fulfillment selector", () => {
     expect(delivery).toBeChecked();
     expect(pickup).not.toBeChecked();
     expect(
-      screen.getByText(/Confirm your location, then choose a nearby/i),
+      screen.getByText(/Add your delivery location now/i),
     ).toBeInTheDocument();
   });
 });

@@ -75,6 +75,32 @@ describe("delivery matching flow recovery", () => {
     expect(request).toHaveBeenCalledOnce();
   });
 
+  it("advances the parent flow after a courier is selected", async () => {
+    const onIntentChange = vi.fn();
+    const updatedIntent = {
+      ...initialIntent,
+      selectedCourier: candidates[1]!,
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ intent: updatedIntent }), {
+          status: 200,
+        }),
+      ),
+    );
+    render(
+      <DeliveryMatchingFlow
+        initialIntent={initialIntent}
+        onIntentChange={onIntentChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Choose Gustavo874/i }));
+    await waitFor(() =>
+      expect(onIntentChange).toHaveBeenCalledWith(updatedIntent),
+    );
+  });
+
   it("disables selection offline and recovers on the online event", async () => {
     Object.defineProperty(window.navigator, "onLine", {
       configurable: true,

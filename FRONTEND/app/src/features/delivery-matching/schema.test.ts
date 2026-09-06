@@ -77,7 +77,7 @@ describe("delivery matching write boundaries", () => {
     expect(
       finalizeCheckoutSchema.safeParse({
         intentId: "a".repeat(32),
-        verificationCodes: ["1234567890"],
+        verificationCodes: ["1234567890123456"],
         customerNote: "",
       }).success,
     ).toBe(true);

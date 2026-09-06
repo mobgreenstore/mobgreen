@@ -1,14 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import {
-  Eye,
-  EyeOff,
-  LoaderCircle,
-  Plus,
-  ShieldCheck,
-  Trash2,
-} from "lucide-react";
+import { useRef, useState, type FormEvent } from "react";
+import { LoaderCircle, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import {
   Button,
   FieldError,
@@ -30,41 +23,61 @@ export function RechargeCodeConfirmation({
   eligible: boolean;
   onCompleted: (reference: string) => void;
 }) {
-  const [codes, setCodes] = useState(["", "", ""]);
-  const [visible, setVisible] = useState<Set<number>>(new Set());
+  const [codes, setCodes] = useState([""]);
+  const codesRef = useRef(codes);
+  const [checkingCode, setCheckingCode] = useState<number | null>(null);
+  const [readyCodes, setReadyCodes] = useState<Set<number>>(new Set());
   const [pending, setPending] = useState(false);
   const [serverError, setServerError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   function updateCode(index: number, value: string) {
-    setCodes((current) =>
-      current.map((code, position) =>
-        position === index ? value.replace(/\D/g, "").slice(0, 64) : code,
-      ),
-    );
+    const normalized = value.replace(/\D/g, "").slice(0, 16);
+    setCodes((current) => {
+      const next = current.map((code, position) =>
+        position === index ? normalized : code,
+      );
+      codesRef.current = next;
+      return next;
+    });
+    setReadyCodes((current) => {
+      const next = new Set(current);
+      next.delete(index);
+      return next;
+    });
+    if (normalized.length >= 16) {
+      setCheckingCode(index);
+      window.setTimeout(() => {
+        setCheckingCode((current) => (current === index ? null : current));
+        if (codesRef.current[index]?.length === 16) {
+          setReadyCodes((current) => new Set(current).add(index));
+        }
+      }, 450);
+    } else if (checkingCode === index) {
+      setCheckingCode(null);
+    }
   }
 
   function addCode() {
-    setCodes((current) => (current.length < 10 ? [...current, ""] : current));
+    setCodes((current) => {
+      const next = current.length < 10 ? [...current, ""] : current;
+      codesRef.current = next;
+      return next;
+    });
   }
 
   function removeCode(index: number) {
-    setCodes((current) => current.filter((_, position) => position !== index));
-    setVisible((current) => {
+    setCodes((current) => {
+      const next = current.filter((_, position) => position !== index);
+      codesRef.current = next;
+      return next;
+    });
+    setReadyCodes((current) => {
       const next = new Set<number>();
       current.forEach((position) => {
         if (position < index) next.add(position);
         if (position > index) next.add(position - 1);
       });
-      return next;
-    });
-  }
-
-  function toggleVisible(index: number) {
-    setVisible((current) => {
-      const next = new Set(current);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
       return next;
     });
   }
@@ -82,7 +95,7 @@ export function RechargeCodeConfirmation({
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            verificationCodes: codes,
+            verificationCodes: codes.filter(Boolean),
           }),
         },
       );
@@ -132,7 +145,7 @@ export function RechargeCodeConfirmation({
             Add recharge codes
           </h2>
           <p className="mt-2 text-sm leading-6 text-foreground-muted">
-            Add each recharge separately. Three fields are ready.
+            Enter one code to place your order. Add another only when needed.
           </p>
         </div>
         <div className="mt-5 grid gap-4">
@@ -142,41 +155,25 @@ export function RechargeCodeConfirmation({
               invalid={Boolean(fieldErrors.verificationCodes)}
               hasError={Boolean(fieldErrors.verificationCodes)}
             >
-              <Label required>Recharge code {index + 1}</Label>
-              <div className="grid grid-cols-[minmax(0,1fr)_2.75rem_auto] gap-2">
+              <Label required={index === 0}>
+                {index === 0 ? "Recharge code" : "Additional code (optional)"}
+              </Label>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 <TextField
                   name="verificationCodes"
-                  type={visible.has(index) ? "text" : "password"}
-                  value={
-                    visible.has(index)
-                      ? code.replace(/(\d{4})(?=\d)/g, "$1 ")
-                      : code
-                  }
+                  type="text"
+                  value={code.replace(/(\d{4})(?=\d)/g, "$1-")}
                   onChange={(event) => updateCode(index, event.target.value)}
                   inputMode="numeric"
                   autoComplete="off"
-                  pattern="[0-9]+"
-                  minLength={6}
-                  maxLength={79}
-                  required
+                  placeholder="0000-0000-0000-0000"
+                  pattern="[0-9-]+"
+                  minLength={19}
+                  maxLength={19}
+                  required={index === 0}
                   aria-label={`Recharge code ${index + 1}`}
                 />
-                <IconButton
-                  type="button"
-                  aria-label={
-                    visible.has(index)
-                      ? `Hide recharge code ${index + 1}`
-                      : `Show recharge code ${index + 1}`
-                  }
-                  onClick={() => toggleVisible(index)}
-                >
-                  {visible.has(index) ? (
-                    <EyeOff aria-hidden="true" />
-                  ) : (
-                    <Eye aria-hidden="true" />
-                  )}
-                </IconButton>
-                {codes.length > 3 && (
+                {index > 0 && (
                   <IconButton
                     type="button"
                     aria-label={`Remove recharge code ${index + 1}`}
@@ -186,6 +183,20 @@ export function RechargeCodeConfirmation({
                   </IconButton>
                 )}
               </div>
+              {checkingCode === index && (
+                <p className="mt-2 flex items-center gap-2 text-xs font-medium text-info">
+                  <LoaderCircle
+                    aria-hidden="true"
+                    className="size-3.5 animate-spin motion-reduce:animate-none"
+                  />
+                  Verifying code…
+                </p>
+              )}
+              {readyCodes.has(index) && checkingCode !== index && (
+                <p className="mt-2 text-xs font-medium text-success">
+                  Code format ready
+                </p>
+              )}
             </FormField>
           ))}
         </div>
@@ -212,7 +223,10 @@ export function RechargeCodeConfirmation({
           size="large"
           className="w-full"
           disabled={
-            pending || !eligible || codes.some((code) => code.length < 6)
+            pending ||
+            !eligible ||
+            !codes.some((code) => code.length === 16) ||
+            codes.some((code) => code.length > 0 && code.length !== 16)
           }
         >
           {pending ? (

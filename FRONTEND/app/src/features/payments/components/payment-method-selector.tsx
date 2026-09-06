@@ -20,13 +20,15 @@ const choices: Array<{
     id: "RECHARGE_FROM_STORE",
     shortLabel: "Store",
     title: "Recharge from store",
-    description: "Use a code bought in person.",
+    description:
+      "Buy a recharge code in person, then enter it securely in verification.",
   },
   {
     id: "RECHARGE_ONLINE",
     shortLabel: "Online",
     title: "Recharge online",
-    description: "Buy a code from a listed partner.",
+    description:
+      "Choose a partner, buy your recharge code in a new tab, then return to enter it.",
   },
   {
     id: "BITCOIN_DEPOSIT",

@@ -70,7 +70,7 @@ describe("store location control", () => {
       await screen.findByRole("button", { name: "Choose your location" }),
     );
     await user.click(
-      screen.getByRole("button", { name: "Use my current location" }),
+      screen.getByRole("button", { name: "Find my current location" }),
     );
     expect(
       await screen.findByText(/Location permission was denied/i),
@@ -142,7 +142,7 @@ describe("store location control", () => {
       await screen.findByRole("button", { name: "Choose your location" }),
     );
     await user.click(
-      screen.getByRole("button", { name: "Use my current location" }),
+      screen.getByRole("button", { name: "Find my current location" }),
     );
     expect(
       await screen.findByRole("button", { name: /1 Test Street/i }),

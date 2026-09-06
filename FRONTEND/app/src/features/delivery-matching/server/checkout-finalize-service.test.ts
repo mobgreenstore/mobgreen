@@ -103,7 +103,7 @@ describe("checkout intent finalization transaction", () => {
     const result = await new CheckoutFinalizeService().createFromIntent(
       {
         intentId: "a".repeat(32),
-        verificationCodes: ["1234567890"],
+        verificationCodes: ["1234567890123456"],
         customerNote: "",
       },
       guest,
@@ -193,7 +193,7 @@ describe("checkout intent finalization transaction", () => {
     const result = await new CheckoutFinalizeService().createFromIntent(
       {
         intentId: "a".repeat(32),
-        verificationCodes: ["1234567890"],
+        verificationCodes: ["1234567890123456"],
         customerNote: "",
       },
       guest,
@@ -282,7 +282,7 @@ describe("checkout intent finalization transaction", () => {
     await new CheckoutFinalizeService().createFromIntent(
       {
         intentId: "a".repeat(32),
-        verificationCodes: ["1234567890"],
+        verificationCodes: ["1234567890123456"],
         customerNote: "",
       },
       guest,
@@ -327,7 +327,7 @@ describe("checkout intent finalization transaction", () => {
       new CheckoutFinalizeService().createFromIntent(
         {
           intentId: "a".repeat(32),
-          verificationCodes: ["1234567890"],
+          verificationCodes: ["1234567890123456"],
           customerNote: "",
         },
         guest,
@@ -360,7 +360,7 @@ describe("checkout intent finalization transaction", () => {
       new CheckoutFinalizeService().createFromIntent(
         {
           intentId: "a".repeat(32),
-          verificationCodes: ["1234567890"],
+          verificationCodes: ["1234567890123456"],
           customerNote: "",
         },
         guest,

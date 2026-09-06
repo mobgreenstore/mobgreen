@@ -3,12 +3,12 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Check, Clock3 } from "lucide-react";
+import Image from "next/image";
 import { Money } from "@/components/commerce";
 import { Card, InlineAlert } from "@/components/ui";
 import type { SupportedCurrency } from "@/config/commerce";
-import { PaymentMethodGlyph } from "@/features/payments/components/payment-method-glyph";
 import type { PaymentMethodId } from "@/features/payments/payment-method";
-import { paymentMethodLabel } from "@/features/payments/payment-method";
+import { getRechargePartner } from "@/config/recharge";
 import { cn } from "@/lib/utils";
 
 export function PaymentConfirmationShell({
@@ -80,12 +80,22 @@ export function PaymentMethodSummary({
   method: PaymentMethodId;
   rechargeProvider: string | null;
 }) {
+  const partner = getRechargePartner(rechargeProvider);
+  const title =
+    method === "RECHARGE_FROM_STORE"
+      ? "Recharge from store"
+      : method === "RECHARGE_ONLINE"
+        ? "Recharge online"
+        : "Bitcoin deposit";
   return (
-    <Card className="p-2">
+    <section
+      aria-labelledby="payment-verification"
+      className="border-b border-border pb-6"
+    >
       <div
         role="group"
         aria-label="Payment method fixed for this checkout"
-        className="grid grid-cols-3 gap-1"
+        className="grid grid-cols-3 overflow-hidden rounded-xl border border-border"
       >
         {methods.map((option) => {
           const active = option.id === method;
@@ -94,30 +104,47 @@ export function PaymentMethodSummary({
               key={option.id}
               aria-current={active ? "true" : undefined}
               className={cn(
-                "flex min-h-14 items-center justify-center gap-1.5 rounded-xl px-2 text-center text-xs font-bold",
+                "flex min-h-12 items-center justify-center border-r border-border px-2 text-center text-xs font-bold last:border-r-0",
                 active
-                  ? "bg-foreground text-background shadow-sm"
-                  : "text-foreground-subtle opacity-55",
+                  ? "bg-foreground text-background"
+                  : "text-foreground-muted",
               )}
             >
-              <PaymentMethodGlyph
-                method={option.id}
-                className="size-4 shrink-0"
-              />
               {option.shortLabel}
             </div>
           );
         })}
       </div>
-      <p className="px-2 pt-3 pb-2 text-xs leading-5 text-foreground-muted">
-        Selected:{" "}
-        <strong className="text-foreground">
-          {paymentMethodLabel(method, rechargeProvider)}
-        </strong>
-        . To choose another method, return to checkout and begin a new
-        verification.
-      </p>
-    </Card>
+      <div className="mt-5 flex items-center gap-3">
+        {partner ? (
+          <Image
+            src={partner.iconUrl}
+            alt=""
+            width={36}
+            height={36}
+            className="size-9 rounded-lg border border-border bg-surface object-contain p-1"
+          />
+        ) : null}
+        <div>
+          <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
+            Payment verification
+          </p>
+          <h2
+            id="payment-verification"
+            className="mt-1 text-2xl font-black tracking-[-0.035em]"
+          >
+            {title}
+          </h2>
+          <p className="mt-1 text-sm text-foreground-muted">
+            {partner
+              ? `Code purchased from ${partner.name}`
+              : method === "RECHARGE_FROM_STORE"
+                ? "Enter the recharge code you purchased in person."
+                : "Continue with your secured payment details."}
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 

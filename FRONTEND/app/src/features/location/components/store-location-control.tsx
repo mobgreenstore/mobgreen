@@ -66,7 +66,7 @@ export function StoreLocationControl({
 }: {
   className?: string;
   onLocationChange?: (location: DeliveryLocation | null) => void;
-  triggerVariant?: "icon" | "text";
+  triggerVariant?: "icon" | "text" | "primary";
   triggerLabel?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -257,6 +257,18 @@ export function StoreLocationControl({
             {triggerLabel ??
               (location ? "Change location" : "Activate location")}
           </Button>
+        ) : triggerVariant === "primary" ? (
+          <Button
+            className={cn("bg-info text-white hover:bg-info/88", className)}
+            aria-label={
+              location
+                ? `Change location: ${locationLine(location)}`
+                : "Add delivery location"
+            }
+          >
+            <MapPin aria-hidden="true" className="size-4" />
+            {triggerLabel ?? (location ? "Change location" : "Add location")}
+          </Button>
         ) : (
           <IconButton
             aria-label={
@@ -283,6 +295,7 @@ export function StoreLocationControl({
         onPointerMove={pointerMove}
         onPointerUp={pointerUp}
         onPointerCancel={pointerUp}
+        onOpenAutoFocus={(event) => event.preventDefault()}
       >
         <div onPointerDown={(event) => event.stopPropagation()}>
           <BottomSheetTitle className="text-2xl font-semibold tracking-[-0.04em]">
@@ -396,8 +409,7 @@ export function StoreLocationControl({
               </form>
 
               <Button
-                variant="secondary"
-                className="w-full justify-start"
+                className="w-full justify-start bg-info text-white hover:bg-info/88"
                 onClick={useCurrentLocation}
                 disabled={status === "loading"}
               >
@@ -409,7 +421,7 @@ export function StoreLocationControl({
                 ) : (
                   <LocateFixed aria-hidden="true" className="size-4" />
                 )}
-                Use my current location
+                Find my current location
               </Button>
 
               {suggestions.length > 0 && (

@@ -27,6 +27,11 @@ import { loadDeliveryLocation } from "@/features/location/storage";
 import { PaymentMethodSelector } from "@/features/payments/components/payment-method-selector";
 import type { PaymentMethodId } from "@/features/payments/payment-method";
 import { RechargePartnerCard } from "@/features/recharge/components/recharge-partner-card";
+import {
+  loadCheckoutContact,
+  saveCheckoutContact,
+  type CheckoutContact,
+} from "@/features/checkout/contact-storage";
 import { cn } from "@/lib/utils";
 
 type FieldErrors = Record<string, string[] | undefined>;
@@ -75,6 +80,10 @@ export function CheckoutForm({
   const [pending, setPending] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  const [contact, setContact] = useState<CheckoutContact>({
+    customerName: "",
+    customerEmail: "",
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(
@@ -83,6 +92,19 @@ export function CheckoutForm({
     );
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setContact(loadCheckoutContact()), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  function updateContact(field: keyof CheckoutContact, value: string) {
+    setContact((current) => ({ ...current, [field]: value }));
+  }
+
+  function persistContact() {
+    saveCheckoutContact(contact);
+  }
 
   const summaryReady =
     cart.checkoutEligible &&
@@ -106,11 +128,11 @@ export function CheckoutForm({
     setPending(true);
     setServerError(null);
     setFieldErrors({});
-    const formData = new FormData(event.currentTarget);
+    persistContact();
     const payload = {
       idempotencyKey: idempotencyKey.current,
-      customerName: String(formData.get("customerName") ?? ""),
-      customerEmail: String(formData.get("customerEmail") ?? ""),
+      customerName: contact.customerName,
+      customerEmail: contact.customerEmail,
       fulfillmentType,
       deliveryLocation:
         fulfillmentType === "DELIVERY" ? deliveryLocation : null,
@@ -208,6 +230,11 @@ export function CheckoutForm({
               <Label required>Full name</Label>
               <TextField
                 name="customerName"
+                value={contact.customerName}
+                onChange={(event) =>
+                  updateContact("customerName", event.target.value)
+                }
+                onBlur={persistContact}
                 autoComplete="name"
                 required
                 maxLength={120}
@@ -222,6 +249,11 @@ export function CheckoutForm({
               <Label required>Email</Label>
               <TextField
                 name="customerEmail"
+                value={contact.customerEmail}
+                onChange={(event) =>
+                  updateContact("customerEmail", event.target.value)
+                }
+                onBlur={persistContact}
                 type="email"
                 inputMode="email"
                 autoComplete="email"
@@ -257,14 +289,26 @@ export function CheckoutForm({
                   <p className="mt-1 text-sm leading-6 text-foreground-muted">
                     {deliveryLocation
                       ? deliveryLocation.formattedAddress
-                      : "Confirm a real location before continuing."}
+                      : "Add your location to continue to delivery options."}
                   </p>
                 </div>
                 <StoreLocationControl
                   onLocationChange={setDeliveryLocation}
-                  className="shrink-0 rounded-md border border-border bg-surface"
+                  triggerVariant="primary"
+                  triggerLabel={
+                    deliveryLocation ? "Change location" : "Add location"
+                  }
+                  className="shrink-0 bg-info text-white hover:bg-info/88"
                 />
               </div>
+              {!deliveryLocation && (
+                <InlineAlert
+                  className="mt-4"
+                  tone="info"
+                  title="Add delivery location"
+                  description="Choose your location to unlock delivery options."
+                />
+              )}
               <FieldError className="mt-3">
                 {fieldErrors.deliveryLocation?.[0]}
               </FieldError>
@@ -281,8 +325,8 @@ export function CheckoutForm({
               Choose a payment method
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-foreground-muted">
-              The selected method, products, and exact total are secured
-              together before verification opens.
+              Choose how you will get the recharge code used to confirm this
+              order.
             </p>
           </div>
           <PaymentMethodSelector
@@ -298,8 +342,8 @@ export function CheckoutForm({
                   Approved recharge partners
                 </h3>
                 <p className="mt-1 text-sm leading-6 text-foreground-muted">
-                  Select where you will buy the code. The partner website opens
-                  in a new tab.
+                  Choose where to buy your recharge code. It opens in a new tab;
+                  return here when you have the code.
                 </p>
               </div>
               <div

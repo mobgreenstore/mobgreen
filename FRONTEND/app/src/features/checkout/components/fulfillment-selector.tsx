@@ -21,7 +21,7 @@ const choices: Array<{
     id: "DELIVERY",
     label: "Delivery",
     description:
-      "Confirm your location, then choose a nearby delivery profile in verification.",
+      "Add your delivery location now. Choose a delivery profile in verification.",
     icon: Truck,
   },
 ];

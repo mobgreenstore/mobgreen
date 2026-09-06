@@ -77,8 +77,7 @@ export const finalizeCheckoutSchema = z
         z
           .string()
           .trim()
-          .min(6, "Enter a valid recharge verification code.")
-          .max(64)
+          .length(16, "Enter the complete 16-digit recharge code.")
           .regex(/^\d+$/, "Verification codes must contain digits only."),
       )
       .min(1, "Add at least one recharge verification code.")

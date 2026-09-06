@@ -40,7 +40,7 @@ describe("checkout payment method selector", () => {
     expect(online.closest("label")).toHaveClass("min-w-0");
     expect(store).toBeChecked();
     expect(
-      screen.getByText("Use a code bought in person."),
+      screen.getByText(/Buy a recharge code in person/i),
     ).toBeInTheDocument();
 
     await user.click(online);
@@ -48,7 +48,7 @@ describe("checkout payment method selector", () => {
     expect(online).toBeChecked();
     expect(store).not.toBeChecked();
     expect(
-      screen.getByText("Buy a code from a listed partner."),
+      screen.getByText(/Choose a partner, buy your recharge code/i),
     ).toBeInTheDocument();
   });
 
