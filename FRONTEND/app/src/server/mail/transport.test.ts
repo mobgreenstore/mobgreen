@@ -45,4 +45,25 @@ describe("HTTP mail transport", () => {
       }),
     );
   });
+
+  it("preserves Resend's safe failure reason for operational diagnosis", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ message: "The mobgreen.store domain is not verified." }),
+        { status: 403 },
+      ),
+    );
+
+    await expect(
+      sendMail({
+        from: "orders@mail.mobgreen.store",
+        to: "customer@example.com",
+        subject: "Order received",
+        text: "Order received",
+        html: "<p>Order received</p>",
+      }),
+    ).rejects.toThrow(
+      "Email API request failed (403): The mobgreen.store domain is not verified.",
+    );
+  });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, LoaderCircle } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
@@ -46,7 +46,7 @@ export function StoreCurrencyControl({
 }) {
   const router = useRouter();
   const initialized = useRef(false);
-  const [changing, setChanging] = useState(false);
+  const [changing, startCurrencyChange] = useTransition();
 
   useEffect(() => {
     if (initialized.current || hasPreference) return;
@@ -57,15 +57,14 @@ export function StoreCurrencyControl({
       : currencyForCountry(browserCountry());
     saveCurrency(detected);
     if (detected !== currency) {
-      router.refresh();
+      startCurrencyChange(() => router.refresh());
     }
-  }, [currency, hasPreference, router]);
+  }, [currency, hasPreference, router, startCurrencyChange]);
 
   function selectCurrency(next: SupportedCurrency) {
     if (next === currency || changing) return;
-    setChanging(true);
     saveCurrency(next);
-    router.refresh();
+    startCurrencyChange(() => router.refresh());
   }
 
   const selected =

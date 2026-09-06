@@ -104,9 +104,13 @@ async function sendWithResend(message: MailMessage, idempotencyKey?: string) {
   });
   const payload = (await response.json().catch(() => null)) as {
     id?: string;
+    message?: string;
   } | null;
   if (!response.ok || !payload?.id) {
-    throw new Error(`Email API request failed (${response.status}).`);
+    const providerMessage = payload?.message?.trim().slice(0, 300);
+    throw new Error(
+      `Email API request failed (${response.status})${providerMessage ? `: ${providerMessage}` : "."}`,
+    );
   }
   return { messageId: payload.id };
 }

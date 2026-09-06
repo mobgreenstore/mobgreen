@@ -301,14 +301,6 @@ export function CheckoutForm({
                   className="shrink-0 bg-info text-white hover:bg-info/88"
                 />
               </div>
-              {!deliveryLocation && (
-                <InlineAlert
-                  className="mt-4"
-                  tone="info"
-                  title="Add delivery location"
-                  description="Choose your location to unlock delivery options."
-                />
-              )}
               <FieldError className="mt-3">
                 {fieldErrors.deliveryLocation?.[0]}
               </FieldError>
