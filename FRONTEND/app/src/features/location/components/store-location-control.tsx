@@ -151,24 +151,37 @@ export function StoreLocationControl({
       return;
     }
     setStatus("loading");
+    const resolvePosition: PositionCallback = (position) => {
+      void requestSuggestions({
+        mode: "CURRENT_LOCATION",
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+    };
+    const failPosition: PositionErrorCallback = (reason) => {
+      setStatus("error");
+      setError(
+        reason.code === reason.PERMISSION_DENIED
+          ? "Allow location access in your browser, or search by postal code."
+          : "We couldn't get your GPS location. Try again or search by postal code.",
+      );
+    };
+    const retryWithPreciseLocation: PositionErrorCallback = (reason) => {
+      if (reason.code === reason.PERMISSION_DENIED) {
+        failPosition(reason);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(resolvePosition, failPosition, {
+        enableHighAccuracy: true,
+        timeout: 30_000,
+        maximumAge: 0,
+      });
+    };
+
     navigator.geolocation.getCurrentPosition(
-      (position) =>
-        requestSuggestions({
-          mode: "CURRENT_LOCATION",
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        }),
-      (reason) => {
-        setStatus("error");
-        setError(
-          reason.code === reason.PERMISSION_DENIED
-            ? "Location permission was denied. Allow it in browser settings or search by postal code."
-            : reason.code === reason.TIMEOUT
-              ? "Getting your location timed out. Retry or search by postal code."
-              : "Your current location is unavailable. Search by postal code instead.",
-        );
-      },
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+      resolvePosition,
+      retryWithPreciseLocation,
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 300_000 },
     );
   }
 

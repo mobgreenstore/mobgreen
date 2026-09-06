@@ -73,8 +73,83 @@ describe("store location control", () => {
       screen.getByRole("button", { name: "Find my current location" }),
     );
     expect(
-      await screen.findByText(/Location permission was denied/i),
+      await screen.findByText(/Allow location access in your browser/i),
     ).toBeInTheDocument();
+  });
+
+  it("retries a timed-out mobile location request with precise GPS", async () => {
+    const user = userEvent.setup();
+    const getCurrentPosition = vi.fn(
+      (
+        success: PositionCallback,
+        error: PositionErrorCallback,
+        options?: PositionOptions,
+      ) => {
+        if (options?.enableHighAccuracy === false) {
+          error({
+            code: 3,
+            message: "timeout",
+            PERMISSION_DENIED: 1,
+            POSITION_UNAVAILABLE: 2,
+            TIMEOUT: 3,
+          });
+          return;
+        }
+        success({
+          coords: {
+            latitude: 53.34,
+            longitude: -6.26,
+            accuracy: 5,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+            toJSON: () => ({}),
+          },
+          timestamp: Date.now(),
+          toJSON: () => ({}),
+        });
+      },
+    );
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            suggestions: [{ ...candidate, source: "CURRENT_LOCATION" }],
+          }),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    render(<StoreLocationControl />);
+    await user.click(
+      await screen.findByRole("button", { name: "Choose your location" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Find my current location" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: /1 Test Street/i }),
+    ).toBeInTheDocument();
+    expect(getCurrentPosition).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Function),
+      expect.any(Function),
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 300_000 },
+    );
+    expect(getCurrentPosition).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Function),
+      expect.any(Function),
+      { enableHighAccuracy: true, timeout: 30_000, maximumAge: 0 },
+    );
   });
 
   it("requires an exact postal suggestion and confirms it through the server", async () => {

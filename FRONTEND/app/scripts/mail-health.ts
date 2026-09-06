@@ -7,11 +7,9 @@ async function main() {
     await import("@/server/mail/environment");
   const { verifyMailTransport } = await import("@/server/mail/transport");
   const environment = getNotificationEnvironment();
-  const result = await verifyMailTransport();
+  await verifyMailTransport();
   process.stdout.write(
-    result.provider === "smtp"
-      ? `SMTP connection verified for ${environment.ORDER_NOTIFICATION_TO}\n`
-      : `Resend HTTPS mail configuration is ready for ${environment.ORDER_NOTIFICATION_TO}\n`,
+    `SMTP connection verified for ${environment.ORDER_NOTIFICATION_TO}\n`,
   );
 }
 

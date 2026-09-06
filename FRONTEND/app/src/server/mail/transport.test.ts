@@ -1,69 +1,58 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/server/mail/environment", () => ({
-  getMailEnvironment: vi.fn(),
-  getResendEnvironment: () => ({ RESEND_API_KEY: "re_test_key" }),
-  resendEnvironmentConfigured: () => true,
+const sendMailThroughSmtp = vi.hoisted(() => vi.fn());
+const verifySmtp = vi.hoisted(() => vi.fn());
+const createTransport = vi.hoisted(() =>
+  vi.fn(() => ({
+    sendMail: sendMailThroughSmtp,
+    verify: verifySmtp,
+  })),
+);
+
+vi.mock("nodemailer", () => ({
+  default: { createTransport },
 }));
 
-import { sendMail } from "@/server/mail/transport";
+vi.mock("@/server/mail/environment", () => ({
+  getMailEnvironment: () => ({
+    SMTP_HOST: "smtp.gmail.com",
+    SMTP_PORT: 465,
+    SMTP_SECURE: true,
+    SMTP_USER: "sender@example.com",
+    SMTP_APP_PASSWORD: "app-password-value",
+  }),
+}));
 
-describe("HTTP mail transport", () => {
+import { sendMail, verifyMailTransport } from "@/server/mail/transport";
+
+describe("SMTP mail transport", () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ id: "resend-message-id" }), {
-          status: 200,
-        }),
-      ),
-    );
+    vi.clearAllMocks();
+    sendMailThroughSmtp.mockResolvedValue({ messageId: "smtp-message-id" });
+    verifySmtp.mockResolvedValue(true);
   });
 
-  it("uses Resend's HTTPS endpoint with an idempotency key", async () => {
-    await expect(
-      sendMail(
-        {
-          from: "sender@example.com",
-          to: "customer@example.com",
-          subject: "Order received",
-          text: "Order received",
-          html: "<p>Order received</p>",
-        },
-        { idempotencyKey: "notification-id" },
-      ),
-    ).resolves.toEqual({ messageId: "resend-message-id" });
+  it("sends every message through the configured SMTP transport", async () => {
+    const message = {
+      from: "sender@example.com",
+      to: "customer@example.com",
+      subject: "Order received",
+      text: "Order received",
+      html: "<p>Order received</p>",
+    };
 
-    expect(fetch).toHaveBeenCalledWith(
-      "https://api.resend.com/emails",
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({
-          Authorization: "Bearer re_test_key",
-          "Idempotency-Key": "notification-id",
-        }),
-      }),
-    );
+    await expect(sendMail(message)).resolves.toEqual({
+      messageId: "smtp-message-id",
+    });
+    expect(sendMailThroughSmtp).toHaveBeenCalledWith(message);
+    expect(createTransport).toHaveBeenCalledOnce();
   });
 
-  it("preserves Resend's safe failure reason for operational diagnosis", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ message: "The mobgreen.store domain is not verified." }),
-        { status: 403 },
-      ),
-    );
-
-    await expect(
-      sendMail({
-        from: "orders@mail.mobgreen.store",
-        to: "customer@example.com",
-        subject: "Order received",
-        text: "Order received",
-        html: "<p>Order received</p>",
-      }),
-    ).rejects.toThrow(
-      "Email API request failed (403): The mobgreen.store domain is not verified.",
-    );
+  it("checks the same SMTP transport used to send mail", async () => {
+    await expect(verifyMailTransport()).resolves.toEqual({
+      ok: true,
+      provider: "smtp",
+    });
+    expect(verifySmtp).toHaveBeenCalledOnce();
   });
 });

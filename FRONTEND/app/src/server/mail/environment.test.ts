@@ -30,7 +30,7 @@ describe("mail environment", () => {
     });
   });
 
-  it("accepts Resend with notification addresses and no SMTP credentials", async () => {
+  it("requires SMTP even when an unrelated mail API key exists", async () => {
     delete process.env.SMTP_HOST;
     delete process.env.SMTP_PORT;
     delete process.env.SMTP_SECURE;
@@ -41,19 +41,13 @@ describe("mail environment", () => {
       ORDER_NOTIFICATION_TO: "admin@example.com",
       ORDER_NOTIFICATION_FROM: "sender@example.com",
     });
-    const {
-      getNotificationEnvironment,
-      getResendEnvironment,
-      mailEnvironmentConfigured,
-    } = await import("@/server/mail/environment");
-    expect(mailEnvironmentConfigured()).toBe(true);
+    const { getNotificationEnvironment, mailEnvironmentConfigured } =
+      await import("@/server/mail/environment");
+    expect(mailEnvironmentConfigured()).toBe(false);
     expect(getNotificationEnvironment()).toEqual({
       ORDER_NOTIFICATION_TO: "admin@example.com",
       ORDER_NOTIFICATION_FROM: "sender@example.com",
     });
-    expect(getResendEnvironment().RESEND_API_KEY).toBe(
-      "re_test_sending_access_key",
-    );
   });
 
   it("does not treat empty credential placeholders as configured", async () => {

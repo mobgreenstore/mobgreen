@@ -19,10 +19,6 @@ const mailEnvironmentSchema = notificationEnvironmentSchema.extend(
   smtpEnvironmentSchema.shape,
 );
 
-const resendEnvironmentSchema = z.object({
-  RESEND_API_KEY: z.string().trim().min(8),
-});
-
 export type MailEnvironment = z.output<typeof mailEnvironmentSchema>;
 export type NotificationEnvironment = z.output<
   typeof notificationEnvironmentSchema
@@ -47,16 +43,6 @@ export function getMailEnvironment(): MailEnvironment {
   });
 }
 
-export function getResendEnvironment() {
-  return resendEnvironmentSchema.parse({
-    RESEND_API_KEY: process.env.RESEND_API_KEY,
-  });
-}
-
-export function resendEnvironmentConfigured() {
-  return Boolean(process.env.RESEND_API_KEY?.trim());
-}
-
 export function smtpEnvironmentConfigured() {
   return [
     process.env.SMTP_HOST,
@@ -72,8 +58,5 @@ export function mailEnvironmentConfigured() {
     process.env.ORDER_NOTIFICATION_TO,
     process.env.ORDER_NOTIFICATION_FROM,
   ].every((value) => Boolean(value?.trim()));
-  return (
-    notificationConfigured &&
-    (resendEnvironmentConfigured() || smtpEnvironmentConfigured())
-  );
+  return notificationConfigured && smtpEnvironmentConfigured();
 }
