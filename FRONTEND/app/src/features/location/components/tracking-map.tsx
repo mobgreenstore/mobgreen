@@ -139,11 +139,10 @@ function AnimatedCourier({
     const startedAt = performance.now();
     let frame = 0;
     const animate = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / 950);
-      const eased = 1 - (1 - progress) ** 3;
+      const progress = Math.min(1, (now - startedAt) / 1_100);
       const next: TrackingCoordinate = [
-        start[0] + (target[0] - start[0]) * eased,
-        start[1] + (target[1] - start[1]) * eased,
+        start[0] + (target[0] - start[0]) * progress,
+        start[1] + (target[1] - start[1]) * progress,
       ];
       current.current = next;
       setCoordinate(next);

@@ -20,6 +20,7 @@ import { withTransaction } from "@/server/db/transaction";
 const EARTH_RADIUS_METERS = 6_371_000;
 const SIMULATED_COURIER_PROVIDER = "mob-greens-courier-simulation-v1";
 const ROAD_ROUTE_RETRY_MS = 15 * 60 * 1000;
+const COURIER_PREPARATION_MS = 45 * 1000;
 
 export class DeliveryTrackingError extends Error {
   constructor(
@@ -153,7 +154,8 @@ export function createSelectedCourierSimulation(input: {
     distanceMeters,
     seed: input.seed,
   });
-  const dispatchedAt = input.dispatchedAt ?? new Date();
+  const dispatchedAt =
+    input.dispatchedAt ?? new Date(Date.now() + COURIER_PREPARATION_MS);
   return {
     origin,
     destination,

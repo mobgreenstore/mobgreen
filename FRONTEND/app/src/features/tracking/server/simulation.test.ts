@@ -37,6 +37,24 @@ describe("selected courier tracking simulation", () => {
     expect(first.geometry.coordinates.at(-1)).toEqual(destination);
   });
 
+  it("waits briefly before a newly created courier route starts moving", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-05T20:00:00.000Z"));
+
+    const plan = createSelectedCourierSimulation({
+      destination,
+      distanceMeters: 1_200,
+      durationSeconds: 900,
+      seed: "order-preparation:courier-1",
+    });
+
+    expect(plan.dispatchedAt.toISOString()).toBe("2026-09-05T20:00:45.000Z");
+    expect(plan.estimatedArrivalAt.toISOString()).toBe(
+      "2026-09-05T20:15:45.000Z",
+    );
+    vi.useRealTimers();
+  });
+
   it("identifies the persisted simulation without exposing it as a driving route", () => {
     const plan = createSelectedCourierSimulation({
       destination,

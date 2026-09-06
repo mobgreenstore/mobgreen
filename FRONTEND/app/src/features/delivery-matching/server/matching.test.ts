@@ -24,7 +24,7 @@ describe("simulated courier matching", () => {
     for (const candidate of candidates) {
       expect(candidate.distanceMeters).toBeGreaterThanOrEqual(700);
       expect(candidate.distanceMeters).toBeLessThanOrEqual(12_000);
-      expect(candidate.estimatedDurationSeconds).toBeGreaterThanOrEqual(600);
+      expect(candidate.estimatedDurationSeconds).toBeGreaterThanOrEqual(720);
     }
   });
 

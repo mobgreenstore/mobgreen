@@ -22,15 +22,15 @@ export function generateSimulatedCourierCandidates(
     const distanceMeters = 700 + (numberFrom(score, 4) % 11_301);
     const trafficDelaySeconds = numberFrom(score, 12) % 481;
     const travelSeconds = Math.ceil(distanceMeters / 4.6);
+    const realisticDurationSeconds = Math.ceil(
+      (travelSeconds + trafficDelaySeconds + 6 * 60) * 1.2,
+    );
     return {
       candidateId: randomBytes(18).toString("base64url"),
       profileId: profile.id,
       displayName: profile.displayName,
       distanceMeters,
-      estimatedDurationSeconds: Math.max(
-        10 * 60,
-        travelSeconds + trafficDelaySeconds + 6 * 60,
-      ),
+      estimatedDurationSeconds: Math.max(12 * 60, realisticDurationSeconds),
       ranking: numberFrom(score, 0),
     };
   })
@@ -52,7 +52,7 @@ export function generateSimulatedCourierCandidates(
       const previous = matched.at(-1);
       const estimatedDurationSeconds = Math.max(
         candidate.estimatedDurationSeconds,
-        previous ? previous.estimatedDurationSeconds + 20 : 10 * 60,
+        previous ? previous.estimatedDurationSeconds + 20 : 12 * 60,
       );
       matched.push({ ...candidate, estimatedDurationSeconds });
       return matched;

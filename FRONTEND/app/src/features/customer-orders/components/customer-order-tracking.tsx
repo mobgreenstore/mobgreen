@@ -178,6 +178,10 @@ export function CustomerOrderTracking({
   });
   const liveData = { ...data, ...liveProgress };
   const arrived = data.state === "COMPLETED" || liveProgress.progress >= 1;
+  const awaitingDeparture =
+    data.state === "ACTIVE" &&
+    (clockMs || new Date(data.serverTimestamp).getTime()) <
+      new Date(data.dispatchedAt).getTime();
   const progressPercentage = Math.round(liveProgress.progress * 100);
   const estimatedArrival = new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
@@ -211,7 +215,13 @@ export function CustomerOrderTracking({
       <DynamicTrackingMap
         tracking={liveData}
         courierName={tracking.courier.displayName}
-        statusLabel={arrived ? "Arrived" : statusLabel(tracking.status)}
+        statusLabel={
+          arrived
+            ? "Arrived"
+            : awaitingDeparture
+              ? "Courier assigned"
+              : statusLabel(tracking.status)
+        }
         distanceRemainingLabel={distanceLabel(
           liveProgress.distanceRemainingMeters,
         )}
