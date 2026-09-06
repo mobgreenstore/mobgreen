@@ -8,7 +8,10 @@ import type {
   PublicOrderListView,
   PublicTrackingView,
 } from "@/features/customer-orders/types";
-import { publicTrackingFromRecord } from "@/features/tracking/server/service";
+import {
+  ensureRoadFollowingRouteForOrder,
+  publicTrackingFromRecord,
+} from "@/features/tracking/server/service";
 import { prisma } from "@/server/db/client";
 
 const PAGE_SIZE = 8;
@@ -223,9 +226,11 @@ export function getEmailAccessibleOrder(
 }
 
 const trackingSelect = {
+  id: true,
   reference: true,
   status: true,
   fulfillmentType: true,
+  courierNameSnapshot: true,
   deliveryAddress: true,
   deliveryPostalCode: true,
   deliveryLocality: true,
@@ -250,20 +255,28 @@ async function getTracking(
     !order ||
     order.fulfillmentType !== "DELIVERY" ||
     !order.deliveryAddress ||
+    !order.courierNameSnapshot ||
     !order.deliveryTracking
   ) {
     return null;
   }
+  const upgraded = await ensureRoadFollowingRouteForOrder(order.id);
+  const deliveryTracking = upgraded
+    ? await prisma.deliveryTracking.findUnique({ where: { orderId: order.id } })
+    : order.deliveryTracking;
+  if (!deliveryTracking) return null;
+
   return {
     reference: order.reference,
     status: order.status,
     fulfillmentType: "DELIVERY",
+    courier: { displayName: order.courierNameSnapshot },
     deliveryAddress: {
       formattedAddress: order.deliveryAddress,
       postalCode: order.deliveryPostalCode,
       locality: order.deliveryLocality,
     },
-    tracking: publicTrackingFromRecord(order.deliveryTracking),
+    tracking: publicTrackingFromRecord(deliveryTracking),
     events: order.statusEvents.map((event) => ({
       status: event.toStatus,
       createdAt: event.createdAt.toISOString(),

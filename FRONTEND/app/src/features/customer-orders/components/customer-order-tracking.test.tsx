@@ -19,6 +19,7 @@ const tracking: PublicTrackingView = {
   reference: "MG-TRACK-1",
   status: "OUT_FOR_DELIVERY",
   fulfillmentType: "DELIVERY",
+  courier: { displayName: "Courier 24" },
   deliveryAddress: {
     formattedAddress: "Confirmed recipient destination",
     postalCode: "1000",
@@ -76,7 +77,7 @@ describe("customer delivery tracking", () => {
     );
   });
 
-  it("clearly labels the simulated direct fallback and exposes accessible tracking information", async () => {
+  it("labels an estimated route fallback and exposes accessible tracking information", async () => {
     render(
       <CustomerOrderTracking
         reference={tracking.reference}
@@ -86,8 +87,9 @@ describe("customer delivery tracking", () => {
     expect(
       screen.getByRole("img", { name: "Delivery tracking map" }),
     ).toHaveTextContent("DIRECT_FALLBACK");
-    expect(screen.getByText("Direct trajectory fallback")).toBeInTheDocument();
-    expect(screen.getAllByText(/not a road route/i)[0]).toBeInTheDocument();
+    expect(
+      screen.getByText(/road-level routing is temporarily unavailable/i),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Confirmed recipient destination"),
     ).toBeInTheDocument();
@@ -95,10 +97,10 @@ describe("customer delivery tracking", () => {
       screen.getByRole("list", { name: "Order tracking history" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("progressbar", { name: "Courier progress" }),
+      screen.getByRole("progressbar", { name: "Route completed" }),
     ).toHaveAttribute("aria-valuenow", "50");
     expect(
-      screen.getByRole("progressbar", { name: "Courier progress" }),
+      screen.getByRole("progressbar", { name: "Route completed" }),
     ).toHaveAttribute("aria-valuetext", "50% complete. 5.0 km remaining.");
     expect(
       screen.getByRole("link", { name: "View order details" }),

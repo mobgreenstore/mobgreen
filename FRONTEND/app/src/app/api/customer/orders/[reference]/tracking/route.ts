@@ -32,7 +32,7 @@ export async function GET(
     const allowed = await consumePublicRequest(
       "CUSTOMER_ORDERS",
       publicThrottleKey(guest?.tokenHash ?? emailAccess!.tokenHash),
-      { max: 120, windowMs: 60 * 60 * 1000 },
+      { max: 240, windowMs: 60 * 60 * 1000 },
     );
     if (!allowed) {
       return Response.json(

@@ -80,7 +80,7 @@ async function requestDirections(
   for (let attempt = 1; attempt <= MAX_PROVIDER_ATTEMPTS; attempt += 1) {
     try {
       const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${endpoint}?${parameters.toString()}`,
+        `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${endpoint}?${parameters.toString()}`,
         {
           cache: "no-store",
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

@@ -32,7 +32,9 @@ describe("selected courier tracking simulation", () => {
     expect(first.durationSeconds).toBe(1_260);
     expect(first.destination).toEqual(destination);
     expect(first.origin).not.toEqual(destination);
-    expect(first.geometry.coordinates).toEqual([first.origin, destination]);
+    expect(first.geometry.coordinates.length).toBeGreaterThan(2);
+    expect(first.geometry.coordinates[0]).toEqual(first.origin);
+    expect(first.geometry.coordinates.at(-1)).toEqual(destination);
   });
 
   it("identifies the persisted simulation without exposing it as a driving route", () => {

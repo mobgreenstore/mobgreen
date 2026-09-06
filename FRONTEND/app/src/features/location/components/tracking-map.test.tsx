@@ -23,8 +23,11 @@ vi.mock("react-map-gl/mapbox", async () => {
       );
     }),
     Layer: ({ id }: { id: string }) => <div data-testid={`layer-${id}`} />,
+    FullscreenControl: () => null,
+    GeolocateControl: () => null,
     Marker: ({ children }: React.PropsWithChildren) => <>{children}</>,
     NavigationControl: () => null,
+    ScaleControl: () => null,
     Source: ({
       id,
       data,
@@ -112,5 +115,9 @@ describe("delivery tracking map", () => {
     expect(
       screen.getByTestId("layer-delivery-route-remaining"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("layer-delivery-route-casing"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Estimated tracking")).toBeInTheDocument();
   });
 });

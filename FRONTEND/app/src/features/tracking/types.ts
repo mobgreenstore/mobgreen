@@ -54,6 +54,9 @@ export interface PublicTrackingView {
   reference: string;
   status: AdminOrderStatus;
   fulfillmentType: "DELIVERY";
+  courier: {
+    displayName: string;
+  };
   deliveryAddress: {
     formattedAddress: string;
     postalCode: string | null;

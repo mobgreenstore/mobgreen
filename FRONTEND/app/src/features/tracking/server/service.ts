@@ -9,12 +9,16 @@ import {
 import type {
   PublicDeliveryTracking,
   TrackingCoordinate,
+  TrackingGeometry,
   TrackingRoutePlan,
 } from "@/features/tracking/types";
+import { generateDeliveryRoute } from "@/features/tracking/server/mapbox-directions";
+import { logger } from "@/server/core/logger";
 import { prisma } from "@/server/db/client";
 
 const EARTH_RADIUS_METERS = 6_371_000;
 const SIMULATED_COURIER_PROVIDER = "mob-greens-courier-simulation-v1";
+const ROAD_ROUTE_RETRY_MS = 15 * 60 * 1000;
 
 export class DeliveryTrackingError extends Error {
   constructor(
@@ -65,6 +69,46 @@ function simulatedCourierOrigin(input: {
   ];
 }
 
+function estimatedCurveGeometry(
+  origin: TrackingCoordinate,
+  destination: TrackingCoordinate,
+  seed: string,
+): TrackingGeometry {
+  const [originLongitude, originLatitude] = origin;
+  const longitudeDelta = destination[0] - originLongitude;
+  const latitudeDelta = destination[1] - originLatitude;
+  const span = Math.hypot(longitudeDelta, latitudeDelta);
+  const seedByte = createHash("sha256").update(seed).digest().readUInt8(2);
+  const direction = seedByte % 2 === 0 ? 1 : -1;
+  const curveStrength = span * (0.1 + (seedByte / 255) * 0.06) * direction;
+  const normalLongitude = span ? -latitudeDelta / span : 0;
+  const normalLatitude = span ? longitudeDelta / span : 0;
+  const coordinates: TrackingCoordinate[] = [];
+
+  for (let index = 0; index <= 20; index += 1) {
+    const progress = index / 20;
+    const curve = Math.sin(Math.PI * progress) * curveStrength;
+    coordinates.push([
+      Number(
+        (
+          originLongitude +
+          longitudeDelta * progress +
+          normalLongitude * curve
+        ).toFixed(7),
+      ),
+      Number(
+        (
+          originLatitude +
+          latitudeDelta * progress +
+          normalLatitude * curve
+        ).toFixed(7),
+      ),
+    ]);
+  }
+
+  return { type: "LineString", coordinates };
+}
+
 /**
  * Creates the intentionally fictional route used by the delivery experiment.
  * The destination remains the customer's verified Mapbox location; distance
@@ -89,7 +133,7 @@ export function createSelectedCourierSimulation(input: {
   return {
     origin,
     destination,
-    geometry: { type: "LineString", coordinates: [origin, destination] },
+    geometry: estimatedCurveGeometry(origin, destination, input.seed),
     distanceMeters,
     durationSeconds,
     dispatchedAt,
@@ -100,6 +144,77 @@ export function createSelectedCourierSimulation(input: {
     routeKind: "DIRECT_FALLBACK",
     providerError: null,
   };
+}
+
+/**
+ * Replaces the local estimated curve with a route snapped to Mapbox roads.
+ * The selected courier's saved distance and ETA remain authoritative for the
+ * experiment; Mapbox supplies only the road-following geometry.
+ */
+export async function ensureRoadFollowingRouteForOrder(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      reference: true,
+      courierProfileIdSnapshot: true,
+      deliveryTracking: true,
+    },
+  });
+  const tracking = order?.deliveryTracking;
+  if (!order || !tracking || tracking.routeKind === "DRIVING") return false;
+  if (
+    tracking.lastProviderError &&
+    Date.now() - tracking.updatedAt.getTime() < ROAD_ROUTE_RETRY_MS
+  ) {
+    return false;
+  }
+
+  const origin: TrackingCoordinate = [
+    Number(tracking.originLongitude),
+    Number(tracking.originLatitude),
+  ];
+  const destination: TrackingCoordinate = [
+    Number(tracking.destinationLongitude),
+    Number(tracking.destinationLatitude),
+  ];
+  const route = await generateDeliveryRoute({
+    origin,
+    destination,
+    dispatchedAt: tracking.dispatchedAt,
+  });
+
+  if (route.routeKind !== "DRIVING") {
+    await prisma.deliveryTracking.updateMany({
+      where: { orderId, routeKind: "DIRECT_FALLBACK" },
+      data: {
+        routeGeometry: estimatedCurveGeometry(
+          origin,
+          destination,
+          `${order.reference}:${order.courierProfileIdSnapshot ?? "courier"}`,
+        ) as unknown as Prisma.InputJsonValue,
+        lastProviderError: route.providerError ?? "NO_DRIVING_ROUTE",
+      },
+    });
+    return false;
+  }
+
+  const updated = await prisma.deliveryTracking.updateMany({
+    where: { orderId, routeKind: "DIRECT_FALLBACK" },
+    data: {
+      routeGeometry: route.geometry as unknown as Prisma.InputJsonValue,
+      routeProviderId:
+        `${SIMULATED_COURIER_PROVIDER}:${route.providerId}`.slice(0, 255),
+      routeKind: "DRIVING",
+      lastProviderError: null,
+    },
+  });
+  if (updated.count > 0) {
+    logger.info("delivery_tracking.road_route_ready", {
+      orderReference: order.reference,
+      courierProfileId: order.courierProfileIdSnapshot,
+    });
+  }
+  return updated.count > 0;
 }
 
 export async function prepareDeliveryTracking(orderId: string) {
@@ -217,13 +332,14 @@ export function publicTrackingFromRecord(record: {
   return {
     state: record.state,
     routeKind: record.routeKind,
-    isSimulated: record.routeProviderId === SIMULATED_COURIER_PROVIDER,
-    routeDisclosure:
-      record.routeProviderId === SIMULATED_COURIER_PROVIDER
-        ? "Simulated progress based on the selected delivery profile's distance and estimated time."
-        : record.routeKind === "DRIVING"
-          ? "Simulated courier progress along a provider-generated driving route."
-          : "Simulated direct trajectory. This is not a road route.",
+    isSimulated: record.routeProviderId.startsWith(SIMULATED_COURIER_PROVIDER),
+    routeDisclosure: record.routeProviderId.startsWith(
+      SIMULATED_COURIER_PROVIDER,
+    )
+      ? "Estimated movement based on the selected delivery profile's route and time."
+      : record.routeKind === "DRIVING"
+        ? "Simulated courier progress along a provider-generated driving route."
+        : "Simulated direct trajectory. This is not a road route.",
     geometry,
     origin: [Number(record.originLongitude), Number(record.originLatitude)],
     destination: [

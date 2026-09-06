@@ -42,6 +42,10 @@ describe("Mapbox delivery directions", () => {
       ),
     );
     const route = await generateDeliveryRoute(input);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/directions/v5/mapbox/driving-traffic/"),
+      expect.any(Object),
+    );
     expect(route.routeKind).toBe("DRIVING");
     expect(route.distanceMeters).toBe(20_000);
     expect(route.durationSeconds).toBe(2_000);
