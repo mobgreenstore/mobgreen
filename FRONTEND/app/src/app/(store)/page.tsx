@@ -21,6 +21,13 @@ import { PublicOfferCard } from "@/features/special-offers/components/public-off
 import { getPublicSpecialOffers } from "@/features/special-offers/server/public-queries";
 import { cn } from "@/lib/utils";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
+import {
+  DEFAULT_STOREFRONT_CURRENCY,
+  isSupportedCurrency,
+  STOREFRONT_CURRENCY_COOKIE,
+} from "@/features/catalog/currency-preference";
+import { StoreCurrencyControl } from "@/features/catalog/components/store-currency-control";
 
 export const metadata: Metadata = {
   title: "Fresh goods",
@@ -38,6 +45,13 @@ export default async function CatalogPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const currencyCookie = (await cookies()).get(
+    STOREFRONT_CURRENCY_COOKIE,
+  )?.value;
+  const hasCurrencyPreference = isSupportedCurrency(currencyCookie);
+  const currency = hasCurrencyPreference
+    ? currencyCookie
+    : DEFAULT_STOREFRONT_CURRENCY;
   const search = normalizeCatalogSearch(first(params.q));
   const sort = parseCatalogSort(first(params.sort));
   const view = parseCatalogView(first(params.view));
@@ -49,10 +63,12 @@ export default async function CatalogPage({
       search,
       sort,
       page: view === "products" ? requestedPage : 1,
+      currency,
     }),
     getPublicSpecialOffers({
       categorySlug: requestedCategory,
       page: view === "offers" ? requestedPage : 1,
+      currency,
     }),
   ]);
   const activeCategory = catalog.categories.find(
@@ -75,7 +91,10 @@ export default async function CatalogPage({
         <Suspense fallback={<CatalogLoading />}>
           <section aria-labelledby="catalog-results" className="bg-surface">
             <div className="mx-auto max-w-[var(--content-max)] px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
-              <div id="catalog-results" className="scroll-mt-40 sm:scroll-mt-36">
+              <div
+                id="catalog-results"
+                className="scroll-mt-40 sm:scroll-mt-36"
+              >
                 <CatalogViewTabs
                   activeView={view}
                   categorySlug={categorySlug}
@@ -92,13 +111,19 @@ export default async function CatalogPage({
                         : catalog.totalCount
                     }
                     toolbar={
-                      view === "products" ? (
-                        <CatalogToolbar
-                          categorySlug={categorySlug}
-                          search={search}
-                          sort={sort}
+                      <div className="flex items-center gap-2">
+                        <StoreCurrencyControl
+                          currency={currency}
+                          hasPreference={hasCurrencyPreference}
                         />
-                      ) : undefined
+                        {view === "products" ? (
+                          <CatalogToolbar
+                            categorySlug={categorySlug}
+                            search={search}
+                            sort={sort}
+                          />
+                        ) : null}
+                      </div>
                     }
                   />
                 </div>
@@ -222,7 +247,7 @@ export default async function CatalogPage({
         <div className="mx-auto max-w-[var(--content-max)] px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-6">
             <div className="text-center sm:text-left">
-              <h3 className="text-sm font-semibold text-foreground mb-1">
+              <h3 className="mb-1 text-sm font-semibold text-foreground">
                 MOB GREENS
               </h3>
               <p className="text-xs text-foreground-muted">

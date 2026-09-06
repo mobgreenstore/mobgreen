@@ -15,8 +15,8 @@ function distanceLabel(meters: number) {
   return `${(meters / 1000).toFixed(meters < 10_000 ? 1 : 0)} km`;
 }
 
-function durationLabel(seconds: number) {
-  if (seconds <= 0) return "Arriving now";
+function durationLabel(seconds: number, arrived = false) {
+  if (arrived || seconds <= 0) return "Arrived";
   if (seconds <= 60) return "Less than 1 min";
   const minutes = Math.ceil(seconds / 60);
   if (minutes < 60) return `${minutes} min`;
@@ -177,6 +177,7 @@ export function CustomerOrderTracking({
     now: new Date(clockMs || new Date(data.serverTimestamp).getTime()),
   });
   const liveData = { ...data, ...liveProgress };
+  const arrived = data.state === "COMPLETED" || liveProgress.progress >= 1;
   const progressPercentage = Math.round(liveProgress.progress * 100);
   const estimatedArrival = new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
@@ -210,12 +211,15 @@ export function CustomerOrderTracking({
       <DynamicTrackingMap
         tracking={liveData}
         courierName={tracking.courier.displayName}
-        statusLabel={statusLabel(tracking.status)}
+        statusLabel={arrived ? "Arrived" : statusLabel(tracking.status)}
         distanceRemainingLabel={distanceLabel(
           liveProgress.distanceRemainingMeters,
         )}
-        timeRemainingLabel={durationLabel(liveProgress.timeRemainingSeconds)}
-        arrivalLabel={arrivalTime}
+        timeRemainingLabel={durationLabel(
+          liveProgress.timeRemainingSeconds,
+          arrived,
+        )}
+        arrivalLabel={arrived ? "Arrived" : arrivalTime}
       />
 
       <div className="grid border-b border-border lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)] lg:divide-x lg:divide-border">
@@ -287,7 +291,7 @@ export function CustomerOrderTracking({
                 <Clock3 aria-hidden="true" className="size-4" /> Time left
               </dt>
               <dd className="mt-1.5 font-semibold">
-                {durationLabel(liveProgress.timeRemainingSeconds)}
+                {durationLabel(liveProgress.timeRemainingSeconds, arrived)}
               </dd>
             </div>
             <div className="col-span-2 border-t border-border py-4 sm:col-span-1 sm:border-t-0 sm:border-l sm:pl-4">

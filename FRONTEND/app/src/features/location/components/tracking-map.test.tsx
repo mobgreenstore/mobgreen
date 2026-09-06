@@ -2,6 +2,7 @@
 
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("react-map-gl/mapbox", async () => {
@@ -86,8 +87,16 @@ describe("delivery tracking map", () => {
     delete process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
   });
 
-  it("renders distinct completed and courier-to-recipient route segments", () => {
-    render(<TrackingMap tracking={tracking} />);
+  it("renders route segments with compact delivery details that expand on demand", async () => {
+    const user = userEvent.setup();
+    render(
+      <TrackingMap
+        tracking={tracking}
+        distanceRemainingLabel="222 km"
+        timeRemainingLabel="10 min"
+        arrivalLabel="10:20 AM"
+      />,
+    );
 
     const completed = JSON.parse(
       screen
@@ -118,6 +127,14 @@ describe("delivery tracking map", () => {
     expect(
       screen.getByTestId("layer-delivery-route-casing"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Estimated tracking")).toBeInTheDocument();
+    expect(screen.queryByText("Arrival")).not.toBeInTheDocument();
+    const details = screen.getByRole("button", {
+      name: /show delivery details/i,
+    });
+    expect(details).toHaveAttribute("aria-expanded", "false");
+    await user.click(details);
+    expect(details).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Arrival")).toBeInTheDocument();
+    expect(screen.getByText("10:20 AM")).toBeInTheDocument();
   });
 });

@@ -8,6 +8,7 @@ import type {
   CatalogProductDetailViewModel,
   CatalogSort,
 } from "@/features/catalog/types";
+import type { SupportedCurrency } from "@/config/commerce";
 import { prisma } from "@/server/db/client";
 
 const CATALOG_PAGE_SIZE = 12;
@@ -101,6 +102,7 @@ export const getCatalogPage = unstable_cache(
     search: string;
     sort: CatalogSort;
     page: number;
+    currency: SupportedCurrency;
   }): Promise<CatalogPageViewModel> => {
     const now = new Date();
     const categoryRecords = await prisma.category.findMany({
@@ -122,6 +124,7 @@ export const getCatalogPage = unstable_cache(
             startsAt: { lte: now },
             endsAt: { gt: now },
             archivedAt: null,
+            currency: input.currency,
             product: { status: "ACTIVE", archivedAt: null },
             priceOption: { isActive: true, archivedAt: null },
           },
@@ -144,7 +147,11 @@ export const getCatalogPage = unstable_cache(
                 status: "ACTIVE",
                 archivedAt: null,
                 priceOptions: {
-                  some: { isActive: true, archivedAt: null },
+                  some: {
+                    isActive: true,
+                    archivedAt: null,
+                    currency: input.currency,
+                  },
                 },
               },
             },
@@ -195,6 +202,13 @@ export const getCatalogPage = unstable_cache(
       ...activeProductWhere,
       ...searchWhere(input.search),
       ...(validCategory ? { categoryId: validCategory.id } : {}),
+      priceOptions: {
+        some: {
+          isActive: true,
+          archivedAt: null,
+          currency: input.currency,
+        },
+      },
     };
     const totalCount = await prisma.product.count({ where });
     const totalPages = Math.max(1, Math.ceil(totalCount / CATALOG_PAGE_SIZE));
@@ -218,7 +232,7 @@ export const getCatalogPage = unstable_cache(
           orderBy: { position: "asc" },
         },
         priceOptions: {
-          where: activePriceWhere,
+          where: { ...activePriceWhere, currency: input.currency },
           select: {
             id: true,
             weightValue: true,

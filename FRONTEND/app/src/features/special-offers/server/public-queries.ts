@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import type { PublicSpecialOfferPage } from "@/features/special-offers/public-types";
 import { prisma } from "@/server/db/client";
+import type { SupportedCurrency } from "@/config/commerce";
 
 const OFFER_PAGE_SIZE = 12;
 const OFFER_CACHE_SECONDS = 60;
@@ -12,6 +13,7 @@ export const getPublicSpecialOffers = unstable_cache(
   async (input: {
     categorySlug: string;
     page: number;
+    currency: SupportedCurrency;
   }): Promise<PublicSpecialOfferPage> => {
     if (!input.categorySlug) {
       return {
@@ -28,6 +30,7 @@ export const getPublicSpecialOffers = unstable_cache(
       startsAt: { lte: now },
       endsAt: { gt: now },
       archivedAt: null,
+      currency: input.currency,
       category: {
         slug: input.categorySlug,
         isActive: true,

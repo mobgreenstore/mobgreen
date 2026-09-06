@@ -15,6 +15,7 @@ import type {
 import { generateDeliveryRoute } from "@/features/tracking/server/mapbox-directions";
 import { logger } from "@/server/core/logger";
 import { prisma } from "@/server/db/client";
+import { withTransaction } from "@/server/db/transaction";
 
 const EARTH_RADIUS_METERS = 6_371_000;
 const SIMULATED_COURIER_PROVIDER = "mob-greens-courier-simulation-v1";
@@ -33,6 +34,29 @@ export class DeliveryTrackingError extends Error {
     super(message);
     this.name = "DeliveryTrackingError";
   }
+}
+
+export async function completeElapsedDeliveryTracking(orderId: string) {
+  return withTransaction(async (transaction) => {
+    const completed = await transaction.order.updateMany({
+      where: { id: orderId, status: "OUT_FOR_DELIVERY" },
+      data: { status: "COMPLETED" },
+    });
+    if (completed.count !== 1) return false;
+    await transaction.deliveryTracking.updateMany({
+      where: { orderId, state: "ACTIVE" },
+      data: { state: "COMPLETED" },
+    });
+    await transaction.orderStatusEvent.create({
+      data: {
+        orderId,
+        fromStatus: "OUT_FOR_DELIVERY",
+        toStatus: "COMPLETED",
+        note: "Delivery reached its estimated arrival time.",
+      },
+    });
+    return true;
+  });
 }
 
 function simulatedCourierOrigin(input: {

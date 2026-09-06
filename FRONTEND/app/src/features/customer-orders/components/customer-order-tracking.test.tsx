@@ -127,4 +127,25 @@ describe("customer delivery tracking", () => {
       screen.getByRole("button", { name: "Try again" }),
     ).toBeInTheDocument();
   });
+
+  it("shows arrived instead of arriving now when the route is complete", () => {
+    render(
+      <CustomerOrderTracking
+        reference={tracking.reference}
+        initialTracking={{
+          ...tracking,
+          status: "COMPLETED",
+          tracking: {
+            ...tracking.tracking,
+            state: "COMPLETED",
+            progress: 1,
+            distanceRemainingMeters: 0,
+            timeRemainingSeconds: 0,
+          },
+        }}
+      />,
+    );
+    expect(screen.getAllByText("Arrived").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Arriving now")).not.toBeInTheDocument();
+  });
 });

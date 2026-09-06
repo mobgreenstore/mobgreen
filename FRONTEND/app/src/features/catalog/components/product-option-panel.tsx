@@ -8,26 +8,46 @@ import { WeightPriceSelector } from "@/components/commerce/weight-price-selector
 import { Badge, Button, Card } from "@/components/ui";
 import { useCart } from "@/features/cart/cart-provider";
 import type { CatalogProductDetailViewModel } from "@/features/catalog/types";
+import type { SupportedCurrency } from "@/config/commerce";
+import { StoreCurrencyControl } from "@/features/catalog/components/store-currency-control";
 
 export function ProductOptionPanel({
   productId,
   options,
+  preferredCurrency,
+  hasCurrencyPreference,
 }: {
   productId: string;
   options: CatalogProductDetailViewModel["priceOptions"];
+  preferredCurrency: SupportedCurrency;
+  hasCurrencyPreference: boolean;
 }) {
   const { addItem } = useCart();
   const router = useRouter();
-  const [selectedId, setSelectedId] = useState(options[0]?.id);
+  const visibleOptions = options.filter(
+    (option) => option.currency === preferredCurrency,
+  );
+  const [selectedId, setSelectedId] = useState(visibleOptions[0]?.id);
   const [pending, setPending] = useState(false);
   const selected =
-    options.find((option) => option.id === selectedId) ?? options[0];
+    visibleOptions.find((option) => option.id === selectedId) ??
+    visibleOptions[0];
 
   if (!selected) {
     return (
-      <Card className="p-5">
+      <Card className="grid gap-4 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-semibold">
+            Price unavailable in {preferredCurrency}
+          </p>
+          <StoreCurrencyControl
+            currency={preferredCurrency}
+            hasPreference={hasCurrencyPreference}
+          />
+        </div>
         <p className="text-sm text-foreground-muted">
-          This product is currently unavailable.
+          Choose another display currency to see the prices configured for this
+          product.
         </p>
       </Card>
     );
@@ -56,10 +76,16 @@ export function ProductOptionPanel({
             className="mt-1 block font-mono text-2xl font-semibold tracking-[-0.03em]"
           />
         </div>
-        <Badge tone="success">Available</Badge>
+        <div className="flex items-center gap-2">
+          <StoreCurrencyControl
+            currency={preferredCurrency}
+            hasPreference={hasCurrencyPreference}
+          />
+          <Badge tone="success">Available</Badge>
+        </div>
       </div>
       <WeightPriceSelector
-        options={options}
+        options={visibleOptions}
         selectedId={selected.id}
         onSelectionChange={setSelectedId}
       />

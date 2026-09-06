@@ -2,6 +2,8 @@
 
 import {
   Bike,
+  ChevronDown,
+  ChevronUp,
   Clock3,
   Crosshair,
   MapPin,
@@ -193,9 +195,9 @@ export function TrackingMap({
   compact = false,
   courierName = "Courier",
   statusLabel = "Out for delivery",
-  distanceRemainingLabel,
-  timeRemainingLabel,
-  arrivalLabel,
+  distanceRemainingLabel = "—",
+  timeRemainingLabel = "—",
+  arrivalLabel = "—",
 }: {
   tracking: PublicDeliveryTracking;
   compact?: boolean;
@@ -210,6 +212,7 @@ export function TrackingMap({
   const [dark, setDark] = useState(false);
   const [following, setFollowing] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const bounds = routeBounds(tracking);
 
   const fitRoute = useCallback(
@@ -221,13 +224,20 @@ export function TrackingMap({
           [bounds.maxLongitude, bounds.maxLatitude],
         ],
         {
-          padding: compact ? 34 : { top: 86, right: 54, bottom: 220, left: 54 },
+          padding: compact
+            ? 34
+            : {
+                top: 82,
+                right: 48,
+                bottom: detailsOpen ? 220 : 116,
+                left: 48,
+              },
           maxZoom: 15.5,
           duration,
         },
       );
     },
-    [bounds, compact],
+    [bounds, compact, detailsOpen],
   );
 
   useEffect(() => {
@@ -306,7 +316,7 @@ export function TrackingMap({
         "relative isolate overflow-hidden bg-surface-subtle shadow-sm",
         compact
           ? "h-[260px] rounded-2xl border border-border"
-          : "-mx-3 h-[calc(100svh-7.5rem)] max-h-[54rem] min-h-[34rem] sm:mx-0 sm:rounded-[1.75rem] sm:border sm:border-border",
+          : "-mx-3 h-[min(68svh,40rem)] min-h-[28rem] sm:mx-0 sm:h-[min(72svh,46rem)] sm:rounded-[1.75rem] sm:border sm:border-border",
       )}
     >
       <h2 id="delivery-map-title" className="sr-only">
@@ -437,33 +447,49 @@ export function TrackingMap({
                 </span>
                 {statusLabel}
               </span>
-              <span className="rounded-full bg-[#101211]/82 px-3 py-2 text-[0.6875rem] font-medium text-white/78 shadow-lg backdrop-blur-md">
-                Estimated tracking
-              </span>
             </div>
 
-            <div className="pointer-events-none absolute inset-x-3 bottom-7 z-10 sm:inset-x-4 sm:bottom-4">
-              <div className="mx-auto max-w-3xl overflow-hidden rounded-[1.35rem] bg-[#101211]/92 text-white shadow-[0_18px_60px_rgb(0_0_0/38%)] ring-1 ring-white/15 backdrop-blur-xl">
-                <div className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-5">
+            <div className="pointer-events-none absolute inset-x-3 bottom-5 z-10 sm:inset-x-4 sm:bottom-4">
+              <div className="pointer-events-auto mx-auto max-w-2xl overflow-hidden rounded-[1.2rem] bg-[#101211]/92 text-white shadow-[0_14px_42px_rgb(0_0_0/34%)] ring-1 ring-white/15 backdrop-blur-xl">
+                <button
+                  type="button"
+                  aria-expanded={detailsOpen}
+                  onClick={() => setDetailsOpen((current) => !current)}
+                  className="flex min-h-[4.25rem] w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left focus-visible:outline-2 focus-visible:outline-white sm:px-4"
+                >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/12">
-                      <Bike aria-hidden="true" className="size-5" />
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white/12">
+                      <Bike aria-hidden="true" className="size-4" />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-semibold">{courierName}</p>
-                      <p className="text-xs text-white/62">
+                      <p className="truncate text-sm font-semibold">
+                        {courierName}
+                      </p>
+                      <p className="truncate text-xs text-white/62">
                         {tracking.progress >= 1
-                          ? "Route complete"
-                          : "On the way to you"}
+                          ? "Arrived"
+                          : `${distanceRemainingLabel} away · ${timeRemainingLabel}`}
                       </p>
                     </div>
                   </div>
-                  <span className="font-mono text-sm font-semibold">
-                    {Math.round(tracking.progress * 100)}%
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="font-mono text-xs font-semibold">
+                      {Math.round(tracking.progress * 100)}%
+                    </span>
+                    {detailsOpen ? (
+                      <ChevronDown aria-hidden="true" className="size-4" />
+                    ) : (
+                      <ChevronUp aria-hidden="true" className="size-4" />
+                    )}
+                    <span className="sr-only">
+                      {detailsOpen
+                        ? "Hide delivery details"
+                        : "Show delivery details"}
+                    </span>
                   </span>
-                </div>
+                </button>
 
-                <div className="mx-4 mt-3 h-1.5 overflow-hidden rounded-full bg-white/15 sm:mx-5">
+                <div className="mx-3.5 h-1 overflow-hidden rounded-full bg-white/15 sm:mx-4">
                   <span
                     aria-hidden="true"
                     className="block h-full rounded-full bg-emerald-400 transition-[width] duration-700 motion-reduce:transition-none"
@@ -471,57 +497,63 @@ export function TrackingMap({
                   />
                 </div>
 
-                <dl className="mt-3 grid grid-cols-3 divide-x divide-white/12 border-t border-white/10">
-                  <div className="min-w-0 px-3 py-3 sm:px-5">
-                    <dt className="flex items-center gap-1.5 text-[0.6875rem] text-white/58">
-                      <Route aria-hidden="true" className="size-3.5" />
-                      Remaining
-                    </dt>
-                    <dd className="mt-1 truncate text-sm font-semibold">
-                      {distanceRemainingLabel}
-                    </dd>
-                  </div>
-                  <div className="min-w-0 px-3 py-3 sm:px-5">
-                    <dt className="flex items-center gap-1.5 text-[0.6875rem] text-white/58">
-                      <Clock3 aria-hidden="true" className="size-3.5" />
-                      Time left
-                    </dt>
-                    <dd className="mt-1 truncate text-sm font-semibold">
-                      {timeRemainingLabel}
-                    </dd>
-                  </div>
-                  <div className="min-w-0 px-3 py-3 sm:px-5">
-                    <dt className="text-[0.6875rem] text-white/58">Arrival</dt>
-                    <dd className="mt-1 truncate text-sm font-semibold">
-                      {arrivalLabel}
-                    </dd>
-                  </div>
-                </dl>
+                {detailsOpen && (
+                  <>
+                    <dl className="mt-2.5 grid grid-cols-3 divide-x divide-white/12 border-t border-white/10">
+                      <div className="min-w-0 px-3 py-3 sm:px-5">
+                        <dt className="flex items-center gap-1.5 text-[0.6875rem] text-white/58">
+                          <Route aria-hidden="true" className="size-3.5" />
+                          Remaining
+                        </dt>
+                        <dd className="mt-1 truncate text-sm font-semibold">
+                          {distanceRemainingLabel}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 px-3 py-3 sm:px-5">
+                        <dt className="flex items-center gap-1.5 text-[0.6875rem] text-white/58">
+                          <Clock3 aria-hidden="true" className="size-3.5" />
+                          Time left
+                        </dt>
+                        <dd className="mt-1 truncate text-sm font-semibold">
+                          {timeRemainingLabel}
+                        </dd>
+                      </div>
+                      <div className="min-w-0 px-3 py-3 sm:px-5">
+                        <dt className="text-[0.6875rem] text-white/58">
+                          Arrival
+                        </dt>
+                        <dd className="mt-1 truncate text-sm font-semibold">
+                          {arrivalLabel}
+                        </dd>
+                      </div>
+                    </dl>
 
-                <div className="pointer-events-auto flex gap-2 border-t border-white/10 p-2.5">
-                  <button
-                    type="button"
-                    onClick={() => fitRoute()}
-                    className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-white/10 px-3 text-xs font-semibold transition-colors hover:bg-white/16 focus-visible:outline-white"
-                  >
-                    <Route aria-hidden="true" className="size-4" />
-                    Entire route
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={following}
-                    onClick={() => setFollowing((current) => !current)}
-                    className={cn(
-                      "inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-xs font-semibold transition-colors focus-visible:outline-white",
-                      following
-                        ? "bg-blue-500 text-white hover:bg-blue-400"
-                        : "bg-white/10 hover:bg-white/16",
-                    )}
-                  >
-                    <Crosshair aria-hidden="true" className="size-4" />
-                    {following ? "Following" : "Follow courier"}
-                  </button>
-                </div>
+                    <div className="flex gap-2 border-t border-white/10 p-2.5">
+                      <button
+                        type="button"
+                        onClick={() => fitRoute()}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-white/10 px-3 text-xs font-semibold transition-colors hover:bg-white/16 focus-visible:outline-white"
+                      >
+                        <Route aria-hidden="true" className="size-4" />
+                        Entire route
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={following}
+                        onClick={() => setFollowing((current) => !current)}
+                        className={cn(
+                          "inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-xs font-semibold transition-colors focus-visible:outline-white",
+                          following
+                            ? "bg-blue-500 text-white hover:bg-blue-400"
+                            : "bg-white/10 hover:bg-white/16",
+                        )}
+                      >
+                        <Crosshair aria-hidden="true" className="size-4" />
+                        {following ? "Following" : "Follow courier"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </>

@@ -9,6 +9,7 @@ import type {
   PublicTrackingView,
 } from "@/features/customer-orders/types";
 import {
+  completeElapsedDeliveryTracking,
   ensureRoadFollowingRouteForOrder,
   publicTrackingFromRecord,
 } from "@/features/tracking/server/service";
@@ -244,7 +245,7 @@ const trackingSelect = {
 async function getTracking(
   where: Prisma.OrderWhereInput,
 ): Promise<PublicTrackingView | null> {
-  const order = await prisma.order.findFirst({
+  let order = await prisma.order.findFirst({
     where: {
       ...where,
       fulfillmentType: "DELIVERY",
@@ -260,6 +261,20 @@ async function getTracking(
   ) {
     return null;
   }
+  if (
+    order.status === "OUT_FOR_DELIVERY" &&
+    order.deliveryTracking.state === "ACTIVE" &&
+    order.deliveryTracking.estimatedArrivalAt.getTime() <= Date.now()
+  ) {
+    const completed = await completeElapsedDeliveryTracking(order.id);
+    if (completed) {
+      order =
+        (await prisma.order.findUnique({
+          where: { id: order.id },
+          select: trackingSelect,
+        })) ?? order;
+    }
+  }
   const upgraded = await ensureRoadFollowingRouteForOrder(order.id);
   const deliveryTracking = upgraded
     ? await prisma.deliveryTracking.findUnique({ where: { orderId: order.id } })
@@ -270,9 +285,9 @@ async function getTracking(
     reference: order.reference,
     status: order.status,
     fulfillmentType: "DELIVERY",
-    courier: { displayName: order.courierNameSnapshot },
+    courier: { displayName: order.courierNameSnapshot! },
     deliveryAddress: {
-      formattedAddress: order.deliveryAddress,
+      formattedAddress: order.deliveryAddress!,
       postalCode: order.deliveryPostalCode,
       locality: order.deliveryLocality,
     },

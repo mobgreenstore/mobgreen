@@ -14,7 +14,7 @@ const LazyTrackingMap = dynamic(
       <div
         role="status"
         aria-label="Loading delivery map"
-        className="-mx-3 h-[calc(100svh-7.5rem)] min-h-[34rem] max-h-[54rem] animate-pulse bg-surface-subtle motion-reduce:animate-none sm:mx-0 sm:rounded-[1.75rem]"
+        className="-mx-3 h-[min(68svh,40rem)] min-h-[28rem] animate-pulse bg-surface-subtle motion-reduce:animate-none sm:mx-0 sm:h-[min(72svh,46rem)] sm:rounded-[1.75rem]"
       />
     ),
   },

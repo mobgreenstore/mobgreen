@@ -8,6 +8,12 @@ import { Badge } from "@/components/ui";
 import { ProductOptionPanel } from "@/features/catalog/components/product-option-panel";
 import { catalogHref } from "@/features/catalog/params";
 import { getPublicProductBySlug } from "@/features/catalog/server/queries";
+import { cookies } from "next/headers";
+import {
+  DEFAULT_STOREFRONT_CURRENCY,
+  isSupportedCurrency,
+  STOREFRONT_CURRENCY_COOKIE,
+} from "@/features/catalog/currency-preference";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -51,6 +57,13 @@ export async function generateMetadata({
 export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getPublicProductBySlug((await params).slug);
   if (!product) notFound();
+  const currencyCookie = (await cookies()).get(
+    STOREFRONT_CURRENCY_COOKIE,
+  )?.value;
+  const hasCurrencyPreference = isSupportedCurrency(currencyCookie);
+  const preferredCurrency = hasCurrencyPreference
+    ? currencyCookie
+    : DEFAULT_STOREFRONT_CURRENCY;
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -100,6 +113,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <ProductOptionPanel
                 productId={product.id}
                 options={product.priceOptions}
+                preferredCurrency={preferredCurrency}
+                hasCurrencyPreference={hasCurrencyPreference}
               />
             </div>
 

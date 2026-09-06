@@ -79,6 +79,7 @@ describe("public catalog queries", () => {
       search: "fresh kale",
       sort: "name-asc",
       page: 2,
+      currency: "GBP",
     });
 
     expect(database.category.findMany).toHaveBeenCalledWith(
@@ -138,6 +139,7 @@ describe("public catalog queries", () => {
       search: "",
       sort: "newest",
       page: 1,
+      currency: "USD",
     });
     const detail = await getPublicProductBySlug("inactive-product");
 
@@ -183,6 +185,7 @@ describe("public catalog queries", () => {
     const result = await getPublicSpecialOffers({
       categorySlug: "leafy-greens",
       page: 1,
+      currency: "EUR",
     });
 
     expect(database.specialOffer.count).toHaveBeenCalledWith({

@@ -29,6 +29,8 @@ describe("product cart action", () => {
     render(
       <ProductOptionPanel
         productId="a06af44a-68ca-4aef-95db-321fe6fd9e11"
+        preferredCurrency="GBP"
+        hasCurrencyPreference
         options={[
           {
             id: "a70d9361-91cd-4d47-873f-7e5780fa23cc",
