@@ -6,7 +6,6 @@ import {
   FolderTree,
   PackagePlus,
   ShoppingCart,
-  ShieldCheck,
 } from "lucide-react";
 import { MetricCard, PageHeader } from "@/components/admin";
 import { Money } from "@/components/commerce";
@@ -38,21 +37,15 @@ export async function AdminOverviewPage() {
             className={cn(buttonVariants({ variant: "primary" }))}
           >
             <PackagePlus aria-hidden="true" className="size-4" />
-            Add products
+            Add product
           </Link>
         }
       />
 
       <section
         aria-label="Overview metrics"
-        className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-6"
+        className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5"
       >
-        <MetricCard
-          label="Pending verification"
-          value={overview.metrics.pendingVerification}
-          note="Recharge codes awaiting review"
-          icon={<ShieldCheck aria-hidden="true" className="size-5" />}
-        />
         <MetricCard
           label="Orders today"
           value={overview.metrics.ordersToday}

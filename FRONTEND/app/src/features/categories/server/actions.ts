@@ -3,7 +3,6 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminPermission } from "@/server/auth/authorization";
-import { categoryOfferPolicySchema } from "@/features/special-offers/schema";
 import type { CategoryActionState } from "@/features/categories/server/action-state";
 import { CategoryWriteService } from "@/server/services/category-write-service";
 
@@ -26,22 +25,6 @@ function formInput(formData: FormData) {
   };
 }
 
-function offerPolicyInput(formData: FormData) {
-  if (formData.get("offerPolicyPresent") !== "true") return null;
-  return categoryOfferPolicySchema.safeParse({
-    enabled: formData.get("offerEnabled") === "on",
-    minimumWeightGrams: Number(formData.get("offerMinimumWeightGrams")),
-    maximumWeightGrams: Number(formData.get("offerMaximumWeightGrams")),
-    minimumDiscountBps: Number(formData.get("offerMinimumDiscountBps")),
-    maximumDiscountBps: Number(formData.get("offerMaximumDiscountBps")),
-    minimumMarginBps: Number(formData.get("offerMinimumMarginBps")),
-    durationMinutes: Number(formData.get("offerDurationMinutes")),
-    maxOffersPerPriceOption: Number(
-      formData.get("offerMaxOffersPerPriceOption"),
-    ),
-  });
-}
-
 function failureState(result: {
   ok: false;
   error: { message: string; fieldErrors?: Record<string, string[]> };
@@ -60,24 +43,8 @@ export async function createCategoryAction(
   formData: FormData,
 ): Promise<CategoryActionState> {
   await requireAdminPermission("catalog.write");
-  const policy = offerPolicyInput(formData);
-  if (policy && !policy.success) {
-    return {
-      status: "error",
-      message: "Review the special-offer policy.",
-      fieldErrors: policy.error.flatten().fieldErrors,
-    };
-  }
   const result = await new CategoryWriteService().create(formInput(formData));
   if (!result.ok) return failureState(result);
-  if (policy?.success) {
-    await new (
-      await import("@/features/special-offers/server/campaign-service")
-    ).SpecialOfferCampaignService().savePolicy({
-      categoryId: result.value.id,
-      policy: policy.data,
-    });
-  }
   revalidatePath("/admin/categories");
   revalidateTag("catalog", "max");
   redirect("/admin/categories?created=1");
@@ -119,6 +86,17 @@ export async function activateCategoryAction(
   revalidatePath("/admin/categories");
   revalidateTag("catalog", "max");
   return { status: "success", message: "Category activated." };
+}
+
+export async function deleteCategoryAction(
+  id: string,
+): Promise<CategoryActionState> {
+  await requireAdminPermission("catalog.write");
+  const result = await new CategoryWriteService().delete({ id });
+  if (!result.ok) return failureState(result);
+  revalidatePath("/admin/categories");
+  revalidateTag("catalog", "max");
+  return { status: "success", message: "Category deleted." };
 }
 
 export async function reorderCategoriesAction(

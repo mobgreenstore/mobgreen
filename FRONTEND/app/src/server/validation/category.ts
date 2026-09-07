@@ -50,6 +50,7 @@ export const updateCategorySchema = createCategorySchema
 export const categoryIdSchema = z.object({ id: idSchema });
 export const archiveCategorySchema = categoryIdSchema;
 export const activateCategorySchema = categoryIdSchema;
+export const deleteCategorySchema = categoryIdSchema;
 export const reorderCategoriesSchema = z.object({
   categories: z
     .array(z.object({ id: idSchema, position: z.number().int().nonnegative() }))

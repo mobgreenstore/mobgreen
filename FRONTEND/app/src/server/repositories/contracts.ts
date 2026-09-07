@@ -58,6 +58,7 @@ export interface CategoryRepository {
   update(input: UpdateCategoryInput): Promise<Category>;
   activate(id: string): Promise<Category>;
   archive(id: string): Promise<Category>;
+  delete(id: string): Promise<Category>;
   reorder(items: readonly { id: string; position: number }[]): Promise<void>;
 }
 

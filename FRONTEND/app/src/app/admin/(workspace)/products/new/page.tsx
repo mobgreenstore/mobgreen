@@ -3,7 +3,7 @@ import { FolderTree } from "lucide-react";
 import { PageHeader } from "@/components/admin";
 import { EmptyState, buttonVariants } from "@/components/ui";
 import { CategoryQueryService } from "@/features/categories/server/queries";
-import { BulkProductForm } from "@/features/products/components/bulk-product-form";
+import { ProductForm } from "@/features/products/components/product-form";
 import { cn } from "@/lib/utils";
 import { requireAdminPermission } from "@/server/auth/authorization";
 
@@ -17,11 +17,12 @@ export default async function NewProductPage() {
     <div className="mx-auto max-w-7xl">
       <PageHeader
         eyebrow="Catalog"
-        title="Add products"
-        description="Create up to 10 real products for one category with independent images, prices, validation, and upload progress."
+        title="Add product"
+        description="Enter the product details, add media and set its selling price."
       />
       {categories.length ? (
-        <BulkProductForm
+        <ProductForm
+          mode="create"
           categories={categories.map((category) => ({
             id: category.id,
             name: category.name,

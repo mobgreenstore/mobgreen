@@ -107,11 +107,11 @@ export default async function ProductsPage({
     <div className="mx-auto max-w-7xl">
       <PageHeader
         title="Products"
-        description="Manage real catalog products, Cloudinary images, weights, currencies, and exact prices."
+        description="Create products, manage their media and set selling prices."
         actions={
           <Link href="/admin/products/new" className={cn(buttonVariants())}>
             <Plus aria-hidden="true" className="size-4" />
-            Add products
+            Add product
           </Link>
         }
       />
@@ -211,7 +211,7 @@ export default async function ProductsPage({
                   className={cn(buttonVariants())}
                 >
                   <Plus aria-hidden="true" className="size-4" />
-                  Add products
+                  Add product
                 </Link>
               ) : (
                 <Link

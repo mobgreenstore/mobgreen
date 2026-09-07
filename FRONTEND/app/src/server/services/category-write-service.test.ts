@@ -36,6 +36,7 @@ function repository(): CategoryRepository {
     update: vi.fn(),
     activate: vi.fn(),
     archive: vi.fn(),
+    delete: vi.fn(),
     reorder: vi.fn(),
   };
 }
@@ -98,5 +99,29 @@ describe("CategoryWriteService", () => {
       cleanupAfterReplacement.mock.invocationCallOrder[0] ?? Infinity,
     );
     expect(cleanupAfterReplacement).toHaveBeenCalledWith(oldPublicId);
+  });
+
+  it("deletes an empty category and then cleans up its image", async () => {
+    const storage = repository();
+    const current = {
+      ...category,
+      imagePublicId:
+        "mob-greens/categories/124bf462-6765-451c-8db8-d47976ec9595",
+    };
+    vi.mocked(storage.findById).mockResolvedValue(current);
+    vi.mocked(storage.delete).mockResolvedValue(current);
+    const cleanupAfterReplacement = vi.fn().mockResolvedValue(undefined);
+    const service = new CategoryWriteService(storage, {
+      cleanupAfterReplacement,
+    });
+
+    const result = await service.delete({ id: category.id });
+
+    expect(result.ok).toBe(true);
+    expect(storage.delete).toHaveBeenCalledWith(category.id);
+    expect(vi.mocked(storage.delete).mock.invocationCallOrder[0]).toBeLessThan(
+      cleanupAfterReplacement.mock.invocationCallOrder[0] ?? Infinity,
+    );
+    expect(cleanupAfterReplacement).toHaveBeenCalledWith(current.imagePublicId);
   });
 });

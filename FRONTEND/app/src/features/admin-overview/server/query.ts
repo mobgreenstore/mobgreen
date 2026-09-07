@@ -11,7 +11,6 @@ export async function getAdminOverview() {
   startOfDay.setHours(0, 0, 0, 0);
 
   const [
-    pendingVerification,
     ordersToday,
     activeProducts,
     activeCategories,
@@ -19,9 +18,6 @@ export async function getAdminOverview() {
     openDeliveries,
     recentOrders,
   ] = await Promise.all([
-    prisma.order.count({
-      where: { status: "PENDING", paymentStatus: "PENDING" },
-    }),
     prisma.order.count({ where: { createdAt: { gte: startOfDay } } }),
     prisma.product.count({ where: { status: "ACTIVE", archivedAt: null } }),
     prisma.category.count({ where: { isActive: true, archivedAt: null } }),
@@ -64,7 +60,6 @@ export async function getAdminOverview() {
 
   return {
     metrics: {
-      pendingVerification,
       ordersToday,
       activeProducts,
       activeCategories,

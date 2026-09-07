@@ -6,6 +6,7 @@ import {
   activateCategorySchema,
   archiveCategorySchema,
   categoryFormSchema,
+  deleteCategorySchema,
   reorderCategoriesSchema,
 } from "@/server/validation";
 
@@ -85,6 +86,23 @@ export class CategoryWriteService {
       archiveCategorySchema,
       input,
       ({ id }) => this.repository.archive(id),
+    );
+  }
+
+  delete(input: unknown) {
+    return executeWrite(
+      "category.delete",
+      deleteCategorySchema,
+      input,
+      async ({ id }) => {
+        const current = await this.repository.findById(id);
+        if (!current) throw new Error("CATEGORY_NOT_FOUND");
+        const deleted = await this.repository.delete(id);
+        if (current.imagePublicId) {
+          await this.cleanupReplacedImage(current.imagePublicId);
+        }
+        return deleted;
+      },
     );
   }
 

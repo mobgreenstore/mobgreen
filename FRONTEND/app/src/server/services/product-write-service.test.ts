@@ -92,6 +92,7 @@ function categoryRepository(): CategoryRepository {
     update: vi.fn(),
     activate: vi.fn(),
     archive: vi.fn(),
+    delete: vi.fn(),
     reorder: vi.fn(),
   };
 }

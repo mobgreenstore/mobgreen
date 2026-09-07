@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const permission = vi.hoisted(() => vi.fn(async () => ({ id: "admin-id" })));
 const archive = vi.hoisted(() => vi.fn());
+const deleteCategory = vi.hoisted(() => vi.fn());
 
 vi.mock("@/server/auth/authorization", () => ({
   requireAdminPermission: permission,
@@ -9,6 +10,7 @@ vi.mock("@/server/auth/authorization", () => ({
 vi.mock("@/server/services/category-write-service", () => ({
   CategoryWriteService: class {
     archive = archive;
+    delete = deleteCategory;
   },
 }));
 vi.mock("next/cache", () => ({
@@ -16,7 +18,7 @@ vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
 }));
 
-const { archiveCategoryAction } =
+const { archiveCategoryAction, deleteCategoryAction } =
   await import("@/features/categories/server/actions");
 
 describe("category admin actions", () => {
@@ -39,6 +41,20 @@ describe("category admin actions", () => {
     ).resolves.toEqual({
       status: "error",
       message: "Move products before archiving.",
+    });
+  });
+
+  it("authorizes permanent deletion before invoking the service", async () => {
+    deleteCategory.mockResolvedValue({
+      ok: true,
+      value: { id: "124bf462-6765-451c-8db8-d47976ec9595" },
+    });
+
+    await deleteCategoryAction("124bf462-6765-451c-8db8-d47976ec9595");
+
+    expect(permission).toHaveBeenCalledWith("catalog.write");
+    expect(deleteCategory).toHaveBeenCalledWith({
+      id: "124bf462-6765-451c-8db8-d47976ec9595",
     });
   });
 });

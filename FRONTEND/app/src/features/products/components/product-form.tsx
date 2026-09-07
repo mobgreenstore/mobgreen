@@ -45,16 +45,25 @@ function minorToMajor(minor: string) {
 }
 
 function initialPrices(product?: ProductViewModel): WeightPriceDraft[] {
-  return (
-    product?.priceOptions.map((option) => ({
-      id: option.id,
-      weightValue: option.weightValue,
-      weightUnit: option.weightUnit,
-      currency: option.currency,
-      priceMajor: minorToMajor(option.priceMinor),
-      costMajor: option.costMinor ? minorToMajor(option.costMinor) : "",
-    })) ?? []
-  );
+  return product
+    ? product.priceOptions.map((option) => ({
+        id: option.id,
+        weightValue: option.weightValue,
+        weightUnit: option.weightUnit,
+        currency: option.currency,
+        priceMajor: minorToMajor(option.priceMinor),
+        costMajor: option.costMinor ? minorToMajor(option.costMinor) : "",
+      }))
+    : [
+        {
+          id: crypto.randomUUID(),
+          weightValue: "",
+          weightUnit: "G",
+          currency: "EUR",
+          priceMajor: "",
+          costMajor: "",
+        },
+      ];
 }
 
 function imagePayload(images: readonly ManagedImage[]) {
@@ -121,7 +130,7 @@ export function ProductForm({
       : (categories[0]?.id ?? ""),
   );
   const [status, setStatus] = useState<"DRAFT" | "ACTIVE">(
-    product?.status === "ACTIVE" ? "ACTIVE" : "DRAFT",
+    product ? (product.status === "ACTIVE" ? "ACTIVE" : "DRAFT") : "ACTIVE",
   );
   const [images, setImages] = useState<ManagedImage[]>(product?.images ?? []);
   const [video, setVideo] = useState<ManagedVideo | null>(
@@ -333,8 +342,8 @@ export function ProductForm({
                 Weight and pricing
               </h2>
               <p className="mt-1 text-sm leading-6 text-foreground-muted">
-                Prices are stored independently in their selected currency. MOB
-                GREENS never converts values automatically.
+                Enter the base selling price and its currency. The storefront
+                converts it when a customer chooses another currency.
               </p>
             </div>
             <WeightPriceEditor

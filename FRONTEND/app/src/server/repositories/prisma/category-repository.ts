@@ -102,16 +102,24 @@ export class PrismaCategoryRepository implements CategoryRepository {
       data: { isActive: true, archivedAt: null },
     });
   }
-  async archive(id: string) {
+  archive(id: string) {
+    return this.database.category.update({
+      where: { id },
+      data: { isActive: false, archivedAt: new Date() },
+    });
+  }
+  async delete(id: string) {
     return withTransaction(async (transaction) => {
-      const productCount = await transaction.product.count({
+      const [productCount, offerCount] = await Promise.all([
+        transaction.product.count({ where: { categoryId: id } }),
+        transaction.specialOffer.count({ where: { categoryId: id } }),
+      ]);
+      if (productCount > 0) throw new Error("CATEGORY_DELETE_HAS_PRODUCTS");
+      if (offerCount > 0) throw new Error("CATEGORY_DELETE_HAS_OFFERS");
+      await transaction.categoryOfferPolicy.deleteMany({
         where: { categoryId: id },
       });
-      if (productCount > 0) throw new Error("CATEGORY_HAS_PRODUCTS");
-      return transaction.category.update({
-        where: { id },
-        data: { isActive: false, archivedAt: new Date() },
-      });
+      return transaction.category.delete({ where: { id } });
     });
   }
   async reorder(items: readonly { id: string; position: number }[]) {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Archive, Pencil, RotateCcw } from "lucide-react";
+import { Archive, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ArchiveDialog, ConfirmationDialog } from "@/components/admin";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   activateCategoryAction,
   archiveCategoryAction,
+  deleteCategoryAction,
 } from "@/features/categories/server/actions";
 import type { CategoryViewModel } from "@/features/categories/server/queries";
 
@@ -69,6 +70,23 @@ export function CategoryRowActions({
             onArchive={() => run(archiveCategoryAction)}
           />
         )}
+        <ConfirmationDialog
+          trigger={
+            <Button size="small" variant="destructive">
+              <Trash2 aria-hidden="true" className="size-3.5" /> Delete
+            </Button>
+          }
+          title={`Delete ${category.name}?`}
+          description={
+            category.productCount > 0
+              ? `This category still contains ${category.productCount} ${category.productCount === 1 ? "product" : "products"}. Move them to another category before deleting it.`
+              : "This permanently deletes the category. This action cannot be undone."
+          }
+          confirmLabel="Delete category"
+          destructive
+          pending={pending}
+          onConfirm={() => run(deleteCategoryAction)}
+        />
       </div>
       {error && (
         <InlineAlert

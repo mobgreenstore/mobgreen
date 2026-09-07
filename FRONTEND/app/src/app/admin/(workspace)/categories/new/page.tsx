@@ -12,7 +12,7 @@ export default async function NewCategoryPage() {
       <PageHeader
         eyebrow={<Badge tone="neutral">Catalog</Badge>}
         title="Create category"
-        description="Add a real category to MOB GREENS. Its unique URL slug is generated automatically."
+        description="Name the category, add its storefront image and publish it when ready."
       />
       <CategoryForm mode="create" />
     </div>

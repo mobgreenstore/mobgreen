@@ -58,7 +58,7 @@ export default async function CategoriesPage({
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Categories"
-        description="Organize the real MOB GREENS catalog. Every record on this page comes from Railway PostgreSQL."
+        description="Create and organize the sections customers browse in the store."
         actions={
           <Link href="/admin/categories/new" className={cn(buttonVariants())}>
             <Plus aria-hidden="true" className="size-4" /> New category

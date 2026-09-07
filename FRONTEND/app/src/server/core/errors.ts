@@ -9,6 +9,27 @@ export function mapPersistenceError(error: unknown): ServiceError {
       cause: error,
     };
   }
+  if (
+    error instanceof Error &&
+    error.message === "CATEGORY_DELETE_HAS_PRODUCTS"
+  ) {
+    return {
+      code: "CONFLICT",
+      message:
+        "Move this category’s products to another category before deleting it.",
+      cause: error,
+    };
+  }
+  if (
+    error instanceof Error &&
+    error.message === "CATEGORY_DELETE_HAS_OFFERS"
+  ) {
+    return {
+      code: "CONFLICT",
+      message: "Remove this category’s offer history before deleting it.",
+      cause: error,
+    };
+  }
   if (error instanceof Error && error.message === "CATEGORY_NOT_FOUND") {
     return {
       code: "NOT_FOUND",
