@@ -30,6 +30,13 @@ export function mapPersistenceError(error: unknown): ServiceError {
       cause: error,
     };
   }
+  if (error instanceof Error && error.message === "PRODUCT_DELETE_HAS_OFFERS") {
+    return {
+      code: "CONFLICT",
+      message: "Remove this product’s offer history before deleting it.",
+      cause: error,
+    };
+  }
   if (error instanceof Error && error.message === "CATEGORY_NOT_FOUND") {
     return {
       code: "NOT_FOUND",

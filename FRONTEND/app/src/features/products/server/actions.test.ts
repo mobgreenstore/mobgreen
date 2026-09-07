@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const permission = vi.hoisted(() => vi.fn(async () => ({ id: "admin-id" })));
 const archive = vi.hoisted(() => vi.fn());
+const deleteProduct = vi.hoisted(() => vi.fn());
 const createMany = vi.hoisted(() => vi.fn());
 const redirect = vi.hoisted(() => vi.fn());
 
@@ -11,6 +12,7 @@ vi.mock("@/server/auth/authorization", () => ({
 vi.mock("@/server/services/product-write-service", () => ({
   ProductWriteService: class {
     archive = archive;
+    delete = deleteProduct;
     createMany = createMany;
   },
 }));
@@ -20,7 +22,7 @@ vi.mock("next/cache", () => ({
 }));
 vi.mock("next/navigation", () => ({ redirect }));
 
-const { archiveProductAction, createProductsAction } =
+const { archiveProductAction, createProductsAction, deleteProductAction } =
   await import("@/features/products/server/actions");
 const { majorToMinor } = await import("@/features/products/server/pricing");
 
@@ -94,5 +96,16 @@ describe("product actions", () => {
     expect(permission.mock.invocationCallOrder[0]).toBeLessThan(
       archive.mock.invocationCallOrder[0] ?? Infinity,
     );
+  });
+
+  it("authorizes permanent product deletion", async () => {
+    deleteProduct.mockResolvedValue({ ok: true, value: { id: "product-id" } });
+
+    await deleteProductAction("124bf462-6765-451c-8db8-d47976ec9595");
+
+    expect(permission).toHaveBeenCalledWith("catalog.write");
+    expect(deleteProduct).toHaveBeenCalledWith({
+      id: "124bf462-6765-451c-8db8-d47976ec9595",
+    });
   });
 });

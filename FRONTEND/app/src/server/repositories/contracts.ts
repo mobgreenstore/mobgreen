@@ -90,6 +90,7 @@ export interface ProductRepository {
     status: "DRAFT" | "ACTIVE",
   ): Promise<ProductWithRelations>;
   archive(id: string): Promise<ProductWithRelations>;
+  delete(id: string): Promise<ProductWithRelations>;
 }
 
 export interface OrderRepository {

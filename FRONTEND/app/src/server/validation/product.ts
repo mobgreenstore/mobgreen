@@ -202,3 +202,4 @@ export const productIdSchema = z.object({ id: idSchema });
 export const activateProductSchema = productIdSchema;
 export const draftProductSchema = productIdSchema;
 export const archiveProductSchema = productIdSchema;
+export const deleteProductSchema = productIdSchema;

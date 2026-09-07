@@ -228,4 +228,17 @@ export class PrismaProductRepository implements ProductRepository {
       }),
     );
   }
+
+  delete(id: string) {
+    return this.write(async (database) => {
+      const offerCount = await database.specialOffer.count({
+        where: { productId: id },
+      });
+      if (offerCount > 0) throw new Error("PRODUCT_DELETE_HAS_OFFERS");
+      return database.product.delete({
+        where: { id },
+        include: productRelations,
+      });
+    });
+  }
 }

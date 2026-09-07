@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Archive, Pencil, Play, RotateCcw } from "lucide-react";
+import { Archive, Pencil, Play, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ArchiveDialog, ConfirmationDialog } from "@/components/admin";
@@ -9,6 +9,7 @@ import { Button, InlineAlert, buttonVariants } from "@/components/ui";
 import {
   activateProductAction,
   archiveProductAction,
+  deleteProductAction,
   draftProductAction,
 } from "@/features/products/server/actions";
 import type { ProductViewModel } from "@/features/products/server/queries";
@@ -100,6 +101,21 @@ export function ProductRowActions({ product }: { product: ProductViewModel }) {
             onArchive={() => run(archiveProductAction)}
           />
         )}
+
+        <ConfirmationDialog
+          trigger={
+            <Button size="small" variant="destructive">
+              <Trash2 aria-hidden="true" className="size-3.5" />
+              Delete
+            </Button>
+          }
+          title={`Delete ${product.name}?`}
+          description="This permanently deletes the product and its uploaded media. Existing orders keep their saved product details. This action cannot be undone."
+          confirmLabel="Delete product"
+          destructive
+          pending={pending}
+          onConfirm={() => run(deleteProductAction)}
+        />
       </div>
 
       {error && (

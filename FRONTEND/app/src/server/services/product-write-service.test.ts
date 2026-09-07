@@ -79,6 +79,7 @@ function productRepository(): ProductRepository {
     update: vi.fn().mockResolvedValue(product),
     setStatus: vi.fn().mockResolvedValue(product),
     archive: vi.fn().mockResolvedValue(product),
+    delete: vi.fn().mockResolvedValue(product),
   };
 }
 
@@ -361,6 +362,43 @@ describe("ProductWriteService", () => {
     );
     expect(cleanupAfterReplacement).toHaveBeenCalledWith(
       oldVideo.cloudinaryPublicId,
+    );
+  });
+
+  it("deletes a product before cleaning up its uploaded media", async () => {
+    const image = {
+      id: "424bf462-6765-451c-8db8-d47976ec9595",
+      productId: product.id,
+      cloudinaryPublicId:
+        "mob-greens/products/524bf462-6765-451c-8db8-d47976ec9595",
+      url: "https://res.cloudinary.com/demo/image/upload/spinach.webp",
+      altText: "Fresh spinach",
+      width: 800,
+      height: 600,
+      position: 0,
+      isCover: true,
+      createdAt: now,
+      updatedAt: now,
+    } satisfies ProductImage;
+    const products = productRepository();
+    vi.mocked(products.findById).mockResolvedValue({
+      ...product,
+      images: [image],
+    });
+    const cleanupAfterReplacement = vi.fn().mockResolvedValue(undefined);
+    const service = new ProductWriteService(products, categoryRepository(), {
+      cleanupAfterReplacement,
+    });
+
+    const result = await service.delete({ id: product.id });
+
+    expect(result.ok).toBe(true);
+    expect(products.delete).toHaveBeenCalledWith(product.id);
+    expect(vi.mocked(products.delete).mock.invocationCallOrder[0]).toBeLessThan(
+      cleanupAfterReplacement.mock.invocationCallOrder[0] ?? Infinity,
+    );
+    expect(cleanupAfterReplacement).toHaveBeenCalledWith(
+      image.cloudinaryPublicId,
     );
   });
 });

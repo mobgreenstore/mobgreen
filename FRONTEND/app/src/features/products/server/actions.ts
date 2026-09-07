@@ -160,3 +160,12 @@ export async function archiveProductAction(id: string) {
   revalidateTag("catalog", "max");
   return { status: "success" as const, message: "Product archived." };
 }
+
+export async function deleteProductAction(id: string) {
+  await requireAdminPermission("catalog.write");
+  const result = await new ProductWriteService().delete({ id });
+  if (!result.ok) return failureState(result);
+  revalidatePath("/admin/products");
+  revalidateTag("catalog", "max");
+  return { status: "success" as const, message: "Product deleted." };
+}

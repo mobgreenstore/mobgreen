@@ -13,6 +13,7 @@ import {
   activateProductSchema,
   archiveProductSchema,
   bulkProductFormSchema,
+  deleteProductSchema,
   draftProductSchema,
   productFormSchema,
 } from "@/server/validation";
@@ -190,6 +191,26 @@ export class ProductWriteService {
         const current = await this.repository.findById(id);
         if (!current) throw new Error("PRODUCT_NOT_FOUND");
         return this.repository.archive(id);
+      },
+    );
+  }
+
+  delete(input: unknown) {
+    return executeWrite(
+      "product.delete",
+      deleteProductSchema,
+      input,
+      async ({ id }) => {
+        const current = await this.repository.findById(id);
+        if (!current) throw new Error("PRODUCT_NOT_FOUND");
+        const deleted = await this.repository.delete(id);
+        await this.cleanupReplacedImages(
+          current.images.map((image) => image.cloudinaryPublicId),
+        );
+        await this.cleanupReplacedVideo(
+          current.video?.cloudinaryPublicId ?? null,
+        );
+        return deleted;
       },
     );
   }
