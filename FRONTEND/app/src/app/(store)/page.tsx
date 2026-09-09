@@ -73,8 +73,7 @@ function first(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, search, sort, view, requestedPage, currency, hasCurrencyPreference }: any) {
-  const t = useTranslations("Catalog");
+function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, search, sort, view, requestedPage, currency, hasCurrencyPreference, t }: any) {
   const hasFilters = Boolean(categorySlug || search);
 
   return (
@@ -284,6 +283,24 @@ export default async function CatalogPage({
     (category) => category.slug === requestedCategory,
   );
   const categorySlug = activeCategory?.slug ?? "";
+  const t = (key: string) => {
+    const translations: Record<string, string> = {
+      allGoods: "All goods",
+      noOffers: "No live offers in this category",
+      noOffersDescription: "There are no active, non-expired special offers right now. Products remain available at their normal prices.",
+      chooseCategory: "Choose a category to see offers",
+      noSearchResults: "No products match your search",
+      noSearchResultsDescription: "Try a shorter search or browse all goods.",
+      noProducts: "No products available yet",
+      noProductsCategory: "No products in this category",
+      noProductsCategoryDescription: "This category has no active products with active prices.",
+      noProductsDescription: "The store administrator has not activated any products yet.",
+      browseAll: "Browse all goods",
+      offerPages: "Offer pages",
+      catalogPages: "Catalog pages",
+    };
+    return translations[key] || key;
+  };
 
   return (
     <div className="min-h-dvh bg-background">
@@ -298,6 +315,7 @@ export default async function CatalogPage({
         requestedPage={requestedPage}
         currency={currency}
         hasCurrencyPreference={hasCurrencyPreference}
+        t={t}
       />
     </div>
   );
