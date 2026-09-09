@@ -13,7 +13,7 @@ import { prisma } from "@/server/db/client";
 import { convertPrice } from "@/features/catalog/server/currency-conversion";
 
 const CATALOG_PAGE_SIZE = 12;
-const CATALOG_CACHE_SECONDS = 300;
+const CATALOG_CACHE_SECONDS = 60;
 
 const activeCategoryWhere: Prisma.CategoryWhereInput = {
   isActive: true,

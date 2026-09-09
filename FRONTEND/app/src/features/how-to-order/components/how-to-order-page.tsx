@@ -74,7 +74,7 @@ export function HowToOrderPage() {
         <section className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-inverse text-inverse-foreground shadow-[0_24px_80px_rgb(0_0_0/0.09)]">
           <div className="relative min-h-[29rem] px-5 py-8 sm:min-h-[31rem] sm:px-8 sm:py-10 lg:min-h-[34rem] lg:px-12 lg:py-14">
             <Image
-              src="/images/how-to-order/order-guide-hero-v1.png"
+              src="/images/verification/payment-hero-v1.png"
               alt="A neatly packed delivery parcel on a kitchen counter"
               fill
               priority
