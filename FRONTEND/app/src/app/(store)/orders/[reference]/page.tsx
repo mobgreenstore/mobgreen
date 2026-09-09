@@ -11,20 +11,8 @@ import { getServerGuestSession } from "@/server/guest-session";
 
 export const dynamic = "force-dynamic";
 
-export default async function OrderPage({
-  params,
-}: {
-  params: Promise<{ reference: string }>;
-}) {
+function OrderContent({ reference, order }: { reference: string; order: any }) {
   const t = useTranslations("Orders");
-  const { reference } = await params;
-  const guest = await getServerGuestSession();
-  const emailAccess = await getServerOrderEmailAccess(reference);
-  let order = guest ? await getGuestOrder(guest.id, reference) : null;
-  if (!order && emailAccess) {
-    order = await getEmailAccessibleOrder(reference);
-  }
-  if (!order) notFound();
   return (
     <main className="mx-auto min-h-dvh max-w-3xl px-4 py-8 sm:px-6">
       <Link
@@ -44,4 +32,20 @@ export default async function OrderPage({
       </div>
     </main>
   );
+}
+
+export default async function OrderPage({
+  params,
+}: {
+  params: Promise<{ reference: string }>;
+}) {
+  const { reference } = await params;
+  const guest = await getServerGuestSession();
+  const emailAccess = await getServerOrderEmailAccess(reference);
+  let order = guest ? await getGuestOrder(guest.id, reference) : null;
+  if (!order && emailAccess) {
+    order = await getEmailAccessibleOrder(reference);
+  }
+  if (!order) notFound();
+  return <OrderContent reference={reference} order={order} />;
 }

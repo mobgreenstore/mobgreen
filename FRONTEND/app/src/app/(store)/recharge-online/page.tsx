@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     "Choose an approved external recharge partner, purchase a code, and return to MOB GREENS checkout.",
 };
 
-export default function RechargeOnlinePage() {
+function RechargeContent() {
   const t = useTranslations("Recharge");
   return (
     <div className="min-h-dvh bg-background">
@@ -109,4 +109,8 @@ export default function RechargeOnlinePage() {
       </main>
     </div>
   );
+}
+
+export default function RechargeOnlinePage() {
+  return <RechargeContent />;
 }

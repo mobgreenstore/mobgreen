@@ -27,17 +27,8 @@ function durationLabel(durationSeconds: number, t: (key: string, params?: any) =
   return t("aboutMin", { minutes });
 }
 
-export default async function OrderSuccessPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ reference?: string }>;
-}) {
+function OrderSuccessContent({ order, reference }: { order: any; reference: string }) {
   const t = useTranslations("OrderSuccess");
-  const reference = (await searchParams).reference?.trim() || "";
-  const guest = await getServerGuestSession();
-  const order =
-    guest && reference ? await getGuestOrder(guest.id, reference) : null;
-
   return (
     <div className="min-h-dvh bg-background">
       <StoreHeader />
@@ -180,4 +171,17 @@ export default async function OrderSuccessPage({
       </main>
     </div>
   );
+}
+
+export default async function OrderSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reference?: string }>;
+}) {
+  const reference = (await searchParams).reference?.trim() || "";
+  const guest = await getServerGuestSession();
+  const order =
+    guest && reference ? await getGuestOrder(guest.id, reference) : null;
+
+  return <OrderSuccessContent order={order} reference={reference} />;
 }

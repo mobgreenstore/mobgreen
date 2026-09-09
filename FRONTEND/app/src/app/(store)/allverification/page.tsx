@@ -16,17 +16,8 @@ export const metadata: Metadata = {
   title: "Verification · MOB GREENS",
 };
 
-export default async function AllVerificationPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ intent?: string }>;
-}) {
+function VerificationContent() {
   const t = useTranslations("Verification");
-  const params = await searchParams;
-  if (params.intent) {
-    return <CheckoutConfirmationRoute searchParams={Promise.resolve(params)} />;
-  }
-
   return (
     <CheckoutPageShell label={t("paymentVerification")}>
       <PaymentConfirmationShell
@@ -38,4 +29,17 @@ export default async function AllVerificationPage({
       </PaymentConfirmationShell>
     </CheckoutPageShell>
   );
+}
+
+export default async function AllVerificationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ intent?: string }>;
+}) {
+  const params = await searchParams;
+  if (params.intent) {
+    return <CheckoutConfirmationRoute searchParams={Promise.resolve(params)} />;
+  }
+
+  return <VerificationContent />;
 }

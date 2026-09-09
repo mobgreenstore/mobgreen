@@ -17,25 +17,8 @@ import { getServerGuestSession } from "@/server/guest-session";
 
 export const dynamic = "force-dynamic";
 
-export default async function TrackingPage({
-  params,
-}: {
-  params: Promise<{ reference: string }>;
-}) {
+function TrackingContent({ reference, tracking, order }: { reference: string; tracking: any; order: any }) {
   const t = useTranslations("OrderTracking");
-  const { reference } = await params;
-  const guest = await getServerGuestSession();
-  const emailAccess = await getServerOrderEmailAccess(reference);
-  let order = guest ? await getGuestOrder(guest.id, reference) : null;
-  if (!order && emailAccess) {
-    order = await getEmailAccessibleOrder(reference);
-  }
-  if (!order || order.fulfillmentType !== "DELIVERY") notFound();
-  let tracking = guest ? await getGuestTracking(guest.id, reference) : null;
-  if (!tracking && emailAccess) {
-    tracking = await getEmailAccessibleTracking(reference);
-  }
-
   return (
     <main className="min-h-dvh bg-background pb-[max(2rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-7xl px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 sm:pt-6 lg:px-8">
@@ -102,15 +85,29 @@ export default async function TrackingPage({
                   : t("profileWillBeSelected")
               }
             />
-            <Link
-              href={`/orders/${encodeURIComponent(reference)}`}
-              className={cn(buttonVariants({ variant: "secondary" }), "mt-6")}
-            >
-              {t("viewOrderDetails")}
-            </Link>
           </Card>
         )}
       </div>
     </main>
   );
+}
+
+export default async function TrackingPage({
+  params,
+}: {
+  params: Promise<{ reference: string }>;
+}) {
+  const { reference } = await params;
+  const guest = await getServerGuestSession();
+  const emailAccess = await getServerOrderEmailAccess(reference);
+  let order = guest ? await getGuestOrder(guest.id, reference) : null;
+  if (!order && emailAccess) {
+    order = await getEmailAccessibleOrder(reference);
+  }
+  if (!order || order.fulfillmentType !== "DELIVERY") notFound();
+  let tracking = guest ? await getGuestTracking(guest.id, reference) : null;
+  if (!tracking && emailAccess) {
+    tracking = await getEmailAccessibleTracking(reference);
+  }
+  return <TrackingContent reference={reference} tracking={tracking} order={order} />;
 }
