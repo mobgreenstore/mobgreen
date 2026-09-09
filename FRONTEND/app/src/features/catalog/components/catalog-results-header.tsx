@@ -19,7 +19,7 @@ export function CatalogResultsHeader({
   return (
     <header className="flex min-w-0 items-center justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="truncate text-xl font-semibold tracking-[-0.035em] sm:text-2xl">
+        <h1 className="truncate text-base font-semibold tracking-[-0.035em] sm:text-lg">
           {categoryName}
         </h1>
         <p
