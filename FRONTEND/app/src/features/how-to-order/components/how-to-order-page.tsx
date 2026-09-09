@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   WalletCards,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { StoreHeader } from "@/components/shared/store-header";
 import { buttonVariants } from "@/components/ui";
 import { RechargePartnerRail } from "@/features/payments/components/recharge-partner-rail";
@@ -17,55 +18,54 @@ const steps = [
   {
     icon: ShoppingBag,
     number: "01",
-    title: "Choose your products",
-    description:
-      "Browse the catalogue, select an available option, then review every item in your card before continuing.",
+    titleKey: "step1Title",
+    descriptionKey: "step1Description",
   },
   {
     icon: MapPin,
     number: "02",
-    title: "Confirm the order details",
-    description:
-      "Add your name and email, then choose pickup or confirm a real delivery location. No customer account is required.",
+    titleKey: "step2Title",
+    descriptionKey: "step2Description",
   },
   {
     icon: WalletCards,
     number: "03",
-    title: "Choose how to pay",
-    description:
-      "Select recharge from store, recharge online, or Bitcoin deposit. The server locks the current card, total, currency, and selected payment method together.",
+    titleKey: "step3Title",
+    descriptionKey: "step3Description",
   },
   {
     icon: CheckCircle2,
     number: "04",
-    title: "Verify and follow the order",
-    description:
-      "All Verification opens with your real order already loaded. Submit the recharge codes or complete the Bitcoin invoice; delivery matching starts only after payment is confirmed.",
+    titleKey: "step4Title",
+    descriptionKey: "step4Description",
   },
 ] as const;
 
 const paymentMethods = [
   {
-    title: "Recharge from store",
-    description: "Use a code bought in person.",
+    titleKey: "rechargeFromStore",
+    descriptionKey: "rechargeFromStoreDescription",
   },
   {
-    title: "Recharge online",
-    description: "Buy a code from a listed partner.",
+    titleKey: "rechargeOnline",
+    descriptionKey: "rechargeOnlineDescription",
   },
   {
-    title: "Bitcoin deposit",
-    description: "Pay 50% now, rest at delivery.",
+    titleKey: "bitcoin",
+    descriptionKey: "bitcoinDescription",
   },
 ] as const;
 
 const carriedForward = [
-  "Item images and quantities",
-  "Locked total and currency",
-  "Selected payment and location",
+  "carriedForward1",
+  "carriedForward2",
+  "carriedForward3",
 ] as const;
 
 export function HowToOrderPage() {
+  const t = useTranslations("HowToOrder");
+  const tNav = useTranslations("Navigation");
+  const tCommon = useTranslations("Common");
   return (
     <div className="min-h-dvh bg-background">
       <StoreHeader />
@@ -87,14 +87,13 @@ export function HowToOrderPage() {
             />
             <div className="relative z-10 flex min-h-[calc(29rem-4rem)] max-w-xl flex-col justify-end sm:min-h-[calc(31rem-5rem)] lg:min-h-[calc(34rem-7rem)]">
               <p className="text-xs font-bold tracking-[0.14em] text-white/80 uppercase">
-                How to order
+                {t("title")}
               </p>
               <h1 className="mt-4 text-4xl leading-[0.96] font-black tracking-[-0.055em] text-balance sm:text-5xl lg:text-6xl">
-                From card to confirmed, without losing your place.
+                {t("subtitle")}
               </h1>
               <p className="mt-5 max-w-lg text-sm leading-6 text-white/85 sm:text-base sm:leading-7">
-                Your card, chosen payment method, and confirmed delivery details
-                are kept together when you continue to verification.
+                {t("description")}
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link
@@ -104,7 +103,7 @@ export function HowToOrderPage() {
                     "bg-white text-neutral-950 hover:bg-white/90",
                   )}
                 >
-                  Start shopping
+                  {t("startShopping")}
                   <ArrowRight aria-hidden="true" className="size-4" />
                 </Link>
                 <Link
@@ -114,7 +113,7 @@ export function HowToOrderPage() {
                     "border-white/35 bg-white/8 text-white hover:bg-white/14",
                   )}
                 >
-                  Track an order
+                  {t("trackOrder")}
                 </Link>
               </div>
             </div>
@@ -132,13 +131,13 @@ export function HowToOrderPage() {
         >
           <div className="max-w-2xl">
             <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
-              The order journey
+              {t("journeyTitle")}
             </p>
             <h2
               id="order-journey-title"
               className="mt-2 text-3xl leading-[1.02] font-black tracking-[-0.05em] text-balance sm:text-4xl"
             >
-              Four steps. One connected checkout.
+              {t("journeySubtitle")}
             </h2>
           </div>
 
@@ -161,10 +160,10 @@ export function HowToOrderPage() {
                     />
                   </div>
                   <h3 className="text-2xl leading-tight font-black tracking-[-0.04em] sm:pt-0.5">
-                    {step.title}
+                    {t(step.titleKey)}
                   </h3>
                   <p className="max-w-xl text-sm leading-6 text-foreground-muted sm:text-base sm:leading-7">
-                    {step.description}
+                    {t(step.descriptionKey)}
                   </p>
                 </li>
               );
@@ -179,29 +178,26 @@ export function HowToOrderPage() {
           <div className="grid gap-7 px-5 sm:px-8 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-end lg:gap-12">
             <div>
               <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
-                All Verification
+                {t("verificationTitle")}
               </p>
               <h2
                 id="verification-handoff-title"
                 className="mt-2 text-3xl leading-[1.02] font-black tracking-[-0.05em] text-balance"
               >
-                The page already knows your order.
+                {t("verificationSubtitle")}
               </h2>
             </div>
             <div>
               <p className="max-w-2xl text-sm leading-6 text-foreground-muted sm:text-base sm:leading-7">
-                When checkout creates your secure order intent, All Verification
-                receives the real items, total, currency, customer details,
-                payment choice, partner, and confirmed location. Recharge codes
-                remain empty by design.
+                {t("verificationDescription")}
               </p>
               <ul className="mt-5 grid gap-3 sm:grid-cols-3">
-                {carriedForward.map((item) => (
+                {carriedForward.map((key) => (
                   <li
-                    key={item}
+                    key={key}
                     className="border-l-2 border-info pl-3 text-sm leading-5 font-semibold"
                   >
-                    {item}
+                    {t(key)}
                   </li>
                 ))}
               </ul>
@@ -216,29 +212,28 @@ export function HowToOrderPage() {
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
-                Payment choices
+                {t("paymentTitle")}
               </p>
               <h2
                 id="payment-methods-title"
                 className="mt-2 text-3xl leading-[1.02] font-black tracking-[-0.05em]"
               >
-                Pick the method that fits.
+                {t("paymentSubtitle")}
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-foreground-muted">
-              Recharge codes are securely attached to the order. Bitcoin
-              progresses only after provider and blockchain confirmation.
+              {t("paymentDescription")}
             </p>
           </div>
           <div className="mt-8 grid border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-border">
             {paymentMethods.map((method) => (
               <article
-                key={method.title}
+                key={method.titleKey}
                 className="border-b border-border py-6 last:border-b-0 sm:border-b-0 sm:px-6 sm:py-2 first:sm:pl-0 last:sm:pr-0"
               >
-                <h3 className="font-bold tracking-[-0.02em]">{method.title}</h3>
+                <h3 className="font-bold tracking-[-0.02em]">{tNav(method.titleKey)}</h3>
                 <p className="mt-2 text-sm leading-6 text-foreground-muted">
-                  {method.description}
+                  {t(method.descriptionKey)}
                 </p>
               </article>
             ))}
@@ -249,12 +244,10 @@ export function HowToOrderPage() {
           <div className="max-w-xl">
             <div className="flex items-center gap-2">
               <PackageCheck aria-hidden="true" className="size-5 text-info" />
-              <p className="font-bold">After payment is confirmed</p>
+              <p className="font-bold">{t("afterPaymentTitle")}</p>
             </div>
             <p className="mt-2 text-sm leading-6 text-foreground-muted">
-              Delivery orders can be matched with a nearby delivery profile and
-              tracked as they move from processing to out for delivery and
-              completed.
+              {t("afterPaymentDescription")}
             </p>
           </div>
           <Link
@@ -264,7 +257,7 @@ export function HowToOrderPage() {
               "mt-6 shrink-0 sm:mt-0",
             )}
           >
-            Browse the catalogue
+            {t("browseCatalogue")}
             <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         </section>

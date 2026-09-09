@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronDown, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useId, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Drawer,
   DrawerClose,
@@ -23,6 +24,7 @@ export function StorefrontMenu({
 }: {
   triggerClassName?: string;
 }) {
+  const t = useTranslations("Navigation");
   const pathname = usePathname();
   const rechargeRegionId = useId();
   const rechargeRouteActive = pathname === "/recharge-online";
@@ -37,8 +39,8 @@ export function StorefrontMenu({
     <Drawer>
       <DrawerTrigger asChild>
         <IconButton
-          aria-label="Open menu"
-          title="Open menu"
+          aria-label={t("menu")}
+          title={t("menu")}
           className={triggerClassName}
         >
           <Menu aria-hidden="true" className="size-5" strokeWidth={2} />
@@ -53,13 +55,13 @@ export function StorefrontMenu({
         <div className="safe-top">
           <div className="px-5 pt-5 pr-14 pb-4 sm:px-6 sm:pt-6">
             <DrawerTitle className="text-xl font-semibold tracking-[-0.035em]">
-              Menu
+              {t("menu")}
             </DrawerTitle>
             <DrawerDescription
               id="storefront-menu-description"
               className="sr-only"
             >
-              Storefront navigation and recharge options.
+              {t("menuDescription")}
             </DrawerDescription>
           </div>
         </div>
@@ -77,7 +79,7 @@ export function StorefrontMenu({
                 homeRouteActive && "bg-surface-subtle",
               )}
             >
-              Home
+              {t("home")}
             </Link>
           </DrawerClose>
 
@@ -92,7 +94,7 @@ export function StorefrontMenu({
               rechargeRouteActive && "bg-surface-subtle",
             )}
           >
-            <span>Get Recharge</span>
+            <span>{t("getRecharge")}</span>
             <ChevronDown
               aria-hidden="true"
               className={cn(
@@ -112,8 +114,8 @@ export function StorefrontMenu({
                 aria-disabled="true"
                 className="flex min-h-11 cursor-not-allowed items-center rounded-md px-4 text-sm font-medium text-foreground-subtle opacity-55"
               >
-                <span>Recharge from store</span>
-                <span className="sr-only">Unavailable</span>
+                <span>{t("rechargeFromStore")}</span>
+                <span className="sr-only">{t("unavailable")}</span>
               </div>
               <DrawerClose asChild>
                 <Link
@@ -125,7 +127,7 @@ export function StorefrontMenu({
                     rechargeRouteActive && "bg-surface-subtle",
                   )}
                 >
-                  Recharge online
+                  {t("rechargeOnline")}
                 </Link>
               </DrawerClose>
             </div>
@@ -141,7 +143,7 @@ export function StorefrontMenu({
                 ordersRouteActive && "bg-surface-subtle",
               )}
             >
-              Track orders
+              {t("trackOrders")}
             </Link>
           </DrawerClose>
 
@@ -155,7 +157,7 @@ export function StorefrontMenu({
                 verificationRouteActive && "bg-surface-subtle",
               )}
             >
-              Verification
+              {t("verification")}
             </Link>
           </DrawerClose>
 
@@ -169,7 +171,7 @@ export function StorefrontMenu({
                 howToOrderRouteActive && "bg-surface-subtle",
               )}
             >
-              How to order
+              {t("howToOrder")}
             </Link>
           </DrawerClose>
         </nav>
