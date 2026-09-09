@@ -59,7 +59,7 @@ export interface OfferAdminModel {
     priceOptions: Array<{
       id: string;
       weightValue: string;
-      weightUnit: "G" | "KG";
+      weightUnit: "MG" | "G" | "KG";
       currency: Currency;
       priceMinor: string;
       costMinor: string | null;

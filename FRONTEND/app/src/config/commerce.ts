@@ -7,6 +7,7 @@ export const SUPPORTED_CURRENCIES = [
 ] as const;
 
 export const WEIGHT_UNITS = [
+  { value: "MG", shortLabel: "mg", label: "Milligrams" },
   { value: "G", shortLabel: "g", label: "Grams" },
   { value: "KG", shortLabel: "kg", label: "Kilograms" },
 ] as const;

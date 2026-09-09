@@ -36,7 +36,7 @@ export interface CheckoutConfirmationLineView {
   productName: string;
   image: CommerceImage | null;
   weightValue: number;
-  weightUnit: "G" | "KG";
+  weightUnit: "MG" | "G" | "KG";
   quantity: number;
   unitPriceMinor: number;
   lineTotalMinor: number;

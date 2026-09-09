@@ -44,7 +44,7 @@ export interface PublicOrderDetail extends PublicOrderListItem {
   items: Array<{
     name: string;
     weightValue: string;
-    weightUnit: "G" | "KG";
+    weightUnit: "MG" | "G" | "KG";
     unitPriceMinor: number;
     quantity: number;
     lineTotalMinor: number;

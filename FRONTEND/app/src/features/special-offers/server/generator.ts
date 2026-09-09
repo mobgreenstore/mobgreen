@@ -37,12 +37,12 @@ function decimalThousandths(value: string | number) {
   return whole * 1_000n + fraction;
 }
 
-export function weightToMilligrams(value: string | number, unit: "G" | "KG") {
+export function weightToMilligrams(value: string | number, unit: "MG" | "G" | "KG") {
   const thousandths = decimalThousandths(value);
   if (thousandths === null || thousandths <= 0n) return null;
-  return unit === "G"
-    ? thousandths
-    : thousandths * (MILLIGRAMS_PER_KILOGRAM / MILLIGRAMS_PER_GRAM);
+  if (unit === "MG") return thousandths;
+  if (unit === "G") return thousandths;
+  return thousandths * (MILLIGRAMS_PER_KILOGRAM / MILLIGRAMS_PER_GRAM);
 }
 
 function ceilDivide(value: bigint, divisor: bigint) {

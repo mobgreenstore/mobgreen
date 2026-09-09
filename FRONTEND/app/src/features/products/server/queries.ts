@@ -10,7 +10,7 @@ import type { ManagedImage, ManagedVideo } from "@/types/media";
 export interface ProductPriceViewModel {
   id: string;
   weightValue: string;
-  weightUnit: "G" | "KG";
+  weightUnit: "MG" | "G" | "KG";
   currency: "GBP" | "EUR" | "USD";
   priceMinor: string;
   compareAtPriceMinor: string | null;

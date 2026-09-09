@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum WeightUnit {
+  MG
   G
   KG
 }
