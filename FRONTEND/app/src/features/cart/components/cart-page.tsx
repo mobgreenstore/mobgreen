@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { CartItem } from "@/components/commerce/cart-item";
 import { Money } from "@/components/commerce/money";
 import { OrderSummary } from "@/components/commerce/order-summary";
@@ -36,8 +37,9 @@ import type { ValidatedCartLine } from "@/features/cart/types";
 import { cn } from "@/lib/utils";
 
 function CartLoading() {
+  const t = useTranslations("Cart");
   return (
-    <SkeletonGroup label="Loading your card" className="grid gap-4">
+    <SkeletonGroup label={t("loading")} className="grid gap-4">
       <Skeleton className="h-28 w-full rounded-lg" />
       <Skeleton className="h-28 w-full rounded-lg" />
       <Skeleton className="h-52 w-full rounded-lg" />
@@ -46,6 +48,7 @@ function CartLoading() {
 }
 
 export function CartPage() {
+  const t = useTranslations("Cart");
   const {
     cart,
     status,
@@ -66,7 +69,7 @@ export function CartPage() {
   if (status === "error" && cart.lines.length === 0) {
     return (
       <ErrorState
-        title="Your card could not be confirmed"
+        title={t("error")}
         description={error}
         onRetry={refresh}
       />
@@ -76,12 +79,12 @@ export function CartPage() {
   if (cart.lines.length === 0) {
     return (
       <EmptyState
-        title="Your card is empty"
-        description="Choose a real product and weight option from the catalog."
+        title={t("empty")}
+        description={t("emptyDescription")}
         icon={<ShoppingBag aria-hidden="true" className="size-5" />}
         action={
           <Link href="/" className={cn(buttonVariants())}>
-            Browse goods
+            {t("continueShopping")}
           </Link>
         }
       />
@@ -104,11 +107,10 @@ export function CartPage() {
                 id="cart-items-heading"
                 className="text-lg font-semibold tracking-[-0.025em]"
               >
-                Card items
+                {t("yourSelections")}
               </h2>
               <p className="mt-1 text-sm text-foreground-muted">
-                {itemCount === 1 ? "1 item" : `${itemCount} items`} · prices
-                confirmed by the store
+                {itemCount === 1 ? "1 item" : `${itemCount} items`} · {t("quantitiesSaved")}
               </p>
             </div>
             <div className="flex items-center gap-1">
@@ -126,7 +128,7 @@ export function CartPage() {
                 ) : (
                   <RefreshCw aria-hidden="true" className="size-4" />
                 )}
-                Refresh
+                {t("retry")}
               </Button>
               <Button
                 variant="ghost"
@@ -134,7 +136,7 @@ export function CartPage() {
                 className="text-danger"
                 onClick={() => setClearOpen(true)}
               >
-                Clear
+                {t("delete")}
               </Button>
             </div>
           </div>
@@ -143,7 +145,7 @@ export function CartPage() {
             {error && (
               <InlineAlert
                 tone="danger"
-                title="Prices are not currently confirmed"
+                title={t("error")}
                 description={
                   <span>
                     {error}{" "}
@@ -151,7 +153,7 @@ export function CartPage() {
                       className="font-semibold underline"
                       onClick={refresh}
                     >
-                      Try again
+                      {t("retry")}
                     </button>
                   </span>
                 }
@@ -160,8 +162,8 @@ export function CartPage() {
             {cart.hasCurrencyConflict && (
               <InlineAlert
                 tone="danger"
-                title="This card contains multiple currencies"
-                description="Refresh the card to display every item in your selected currency."
+                title={t("error")}
+                description={t("quantitiesSaved")}
               />
             )}
             {availableLines.map((line) => {
@@ -253,8 +255,8 @@ export function CartPage() {
             />
           ) : (
             <InlineAlert
-              title="Total unavailable"
-              description="A total appears after every available item uses the same currency."
+              title={t("error")}
+              description={t("quantitiesSaved")}
             />
           )}
           <Link
@@ -266,18 +268,17 @@ export function CartPage() {
               !cart.checkoutEligible && "pointer-events-none opacity-45",
             )}
           >
-            Continue to checkout
+            {t("checkout")}
           </Link>
           <p className="text-xs leading-5 text-foreground-muted">
-            Every item is confirmed again when the order is placed. The entire
-            order must use one currency.
+            {t("quantitiesSaved")}
           </p>
           <Link
             href="/"
             className={cn(buttonVariants({ variant: "secondary" }), "w-full")}
           >
             <ArrowLeft aria-hidden="true" className="size-4" />
-            Continue shopping
+            {t("backToCatalog")}
           </Link>
         </aside>
       </div>
@@ -290,16 +291,16 @@ export function CartPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove this item?</DialogTitle>
+            <DialogTitle>{t("remove")}</DialogTitle>
             <DialogDescription>
               {removeTarget
-                ? `${removeTarget.productName} will be removed from your card.`
-                : "This item will be removed from your card."}
+                ? `${removeTarget.productName} ${t("quantitiesSaved")}`
+                : t("quantitiesSaved")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="secondary">Keep item</Button>
+              <Button variant="secondary">{t("cancel")}</Button>
             </DialogClose>
             <Button
               variant="destructive"
@@ -308,7 +309,7 @@ export function CartPage() {
                 setRemoveTarget(null);
               }}
             >
-              Remove item
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -317,14 +318,14 @@ export function CartPage() {
       <Dialog open={clearOpen} onOpenChange={setClearOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Clear your card?</DialogTitle>
+            <DialogTitle>{t("delete")}</DialogTitle>
             <DialogDescription>
-              Every saved selection will be removed from this browser.
+              {t("quantitiesSaved")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="secondary">Keep card</Button>
+              <Button variant="secondary">{t("cancel")}</Button>
             </DialogClose>
             <Button
               variant="destructive"
@@ -333,7 +334,7 @@ export function CartPage() {
                 setClearOpen(false);
               }}
             >
-              Clear card
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
