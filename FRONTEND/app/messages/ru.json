@@ -1,0 +1,6 @@
+{
+  "LanguageControl": {
+    "label": "Изменить язык. Текущий язык: {language}.",
+    "choose": "Выберите язык"
+  }
+}

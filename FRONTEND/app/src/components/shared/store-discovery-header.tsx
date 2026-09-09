@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { StoreSearchBar } from "@/components/shared/store-search-bar";
 import { StorefrontMenu } from "@/components/shared/storefront-menu";
+import { StoreLocaleControl } from "@/components/shared/store-locale-control";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   getCategoryDisplayTone,
@@ -55,6 +56,7 @@ export function StoreDiscoveryHeader({
               className={cn("text-inherit", discoveryControlClassName)}
             />
             <div className="flex items-center gap-1">
+              <StoreLocaleControl className={discoveryControlClassName} />
               <ThemeToggle className={discoveryControlClassName} />
               <CartButton className={discoveryControlClassName} />
             </div>
@@ -86,6 +88,7 @@ export function StoreDiscoveryHeader({
               )}
             />
             <div className="hidden shrink-0 items-center gap-1 md:flex">
+              <StoreLocaleControl className={discoveryControlClassName} />
               <ThemeToggle className={discoveryControlClassName} />
               <CartButton className={discoveryControlClassName} />
             </div>

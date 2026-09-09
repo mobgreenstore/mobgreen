@@ -1,0 +1,6 @@
+{
+  "LanguageControl": {
+    "label": "Sprache ändern. Aktuelle Sprache: {language}.",
+    "choose": "Sprache auswählen"
+  }
+}

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { InteractionProvider } from "@/components/shared/interaction-provider";
@@ -35,18 +37,22 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <head />
       <body>
-        <InteractionProvider>{children}</InteractionProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <InteractionProvider>{children}</InteractionProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -1,6 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import {
+  localeFromAcceptLanguage,
+  localeFromValue,
+  STOREFRONT_LOCALE_COOKIE,
+  STOREFRONT_LOCALE_HEADER,
+} from "@/i18n/config";
+import {
   ADMIN_SESSION_COOKIE_NAME,
   ADMIN_SESSION_TTL_SECONDS,
   getAdminSessionCookieOptions,
@@ -29,7 +35,15 @@ export function proxy(request: NextRequest) {
   if (surface === "store" && isAdminPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  if (surface === "store" && !pathname.startsWith("/api/")) {
+    const savedLocale = request.cookies.get(STOREFRONT_LOCALE_COOKIE)?.value;
+    const locale = savedLocale
+      ? localeFromValue(savedLocale)
+      : localeFromAcceptLanguage(request.headers.get("accept-language"));
+    requestHeaders.set(STOREFRONT_LOCALE_HEADER, locale);
+  }
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   if (surface === "admin" && isAdminPage && request.method === "GET") {
     const existingSession = request.cookies.get(ADMIN_SESSION_COOKIE_NAME);
     if (existingSession) {
