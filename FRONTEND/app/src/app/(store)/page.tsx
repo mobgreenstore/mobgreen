@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PackageSearch, SearchX, Mail } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ProductCard } from "@/components/commerce/product-card";
 import { ProductGrid } from "@/components/commerce/product-grid";
 import { EmptyState, Pagination, buttonVariants } from "@/components/ui";
@@ -34,6 +35,39 @@ export const metadata: Metadata = {
   description:
     "Browse real MOB GREENS products by category, weight, and currency.",
 };
+
+function CatalogFooter() {
+  const t = useTranslations("Catalog");
+  const currentYear = new Date().getFullYear();
+  return (
+    <footer className="border-t border-border bg-surface">
+      <div className="mx-auto max-w-[var(--content-max)] px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-6">
+          <div className="text-center sm:text-left">
+            <h3 className="mb-1 text-sm font-semibold text-foreground">
+              {t("footerTitle")}
+            </h3>
+            <p className="text-xs text-foreground-muted">
+              {t("footerDescription")}
+            </p>
+          </div>
+
+          <Link
+            href="mailto:contact@mobgreens.com"
+            className="flex items-center gap-2 text-xs text-foreground-muted transition-colors hover:text-foreground"
+          >
+            <Mail aria-hidden="true" className="size-3" />
+            {t("footerContact")}
+          </Link>
+
+          <p className="text-xs text-foreground-muted">
+            {t("copyright", { year: currentYear })}
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
 
 function first(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -243,32 +277,7 @@ export default async function CatalogPage({
         </Suspense>
       </main>
 
-      <footer className="border-t border-border bg-surface">
-        <div className="mx-auto max-w-[var(--content-max)] px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:gap-6">
-            <div className="text-center sm:text-left">
-              <h3 className="mb-1 text-sm font-semibold text-foreground">
-                MOB GREENS
-              </h3>
-              <p className="text-xs text-foreground-muted">
-                Fresh goods delivered to your door.
-              </p>
-            </div>
-
-            <Link
-              href="mailto:contact@mobgreens.com"
-              className="flex items-center gap-2 text-xs text-foreground-muted transition-colors hover:text-foreground"
-            >
-              <Mail aria-hidden="true" className="size-3" />
-              contact@mobgreens.com
-            </Link>
-
-            <p className="text-xs text-foreground-muted">
-              © {new Date().getFullYear()} MOB GREENS
-            </p>
-          </div>
-        </div>
-      </footer>
+      <CatalogFooter />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { StoreHeader } from "@/components/shared/store-header";
 import { isBitcoinCheckoutConfigured } from "@/features/bitcoin/server/environment";
 import { CheckoutForm } from "@/features/checkout/components/checkout-form";
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default function CheckoutPage() {
+  const t = useTranslations("Checkout");
   return (
     <div className="min-h-dvh bg-background">
       <StoreHeader />
@@ -21,16 +23,15 @@ export default function CheckoutPage() {
           className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-foreground-muted hover:text-foreground"
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
-          Back to card
+          {t("backToCard")}
         </Link>
         <div className="mt-3 mb-6 max-w-3xl sm:mt-4 sm:mb-8">
           <p className="text-sm font-semibold text-foreground-muted">
-            Checkout
+            {t("title")}
           </p>
-          <h1 className="heading-display mt-2 text-balance">Order details</h1>
+          <h1 className="heading-display mt-2 text-balance">{t("orderDetails")}</h1>
           <p className="mt-3 text-sm leading-6 text-foreground-muted sm:text-base">
-            Confirm your details and recharge method. No customer account is
-            created.
+            {t("confirmDetails")}
           </p>
         </div>
         <CheckoutForm

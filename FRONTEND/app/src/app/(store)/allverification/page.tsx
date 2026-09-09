@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { useTranslations } from "next-intl";
 import {
   CheckoutConfirmationRoute,
   confirmationMetadata,
@@ -20,16 +21,17 @@ export default async function AllVerificationPage({
 }: {
   searchParams: Promise<{ intent?: string }>;
 }) {
+  const t = useTranslations("Verification");
   const params = await searchParams;
   if (params.intent) {
     return <CheckoutConfirmationRoute searchParams={Promise.resolve(params)} />;
   }
 
   return (
-    <CheckoutPageShell label="Payment verification">
+    <CheckoutPageShell label={t("paymentVerification")}>
       <PaymentConfirmationShell
-        title="Verify an order, when you are ready."
-        description="Enter your payment details, confirm the delivery location, then choose a nearby delivery profile."
+        title={t("verifyOrder")}
+        description={t("verifyDescription")}
         belowHero={<PartnerMarquee />}
       >
         <DirectVerificationFlow />

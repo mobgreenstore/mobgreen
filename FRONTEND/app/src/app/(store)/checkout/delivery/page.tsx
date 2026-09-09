@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { StoreHeader } from "@/components/shared/store-header";
 import { DeliveryMatchingFlow } from "@/features/delivery-matching/components/delivery-matching-flow";
 import { checkoutIntentIdSchema } from "@/features/delivery-matching/schema";
@@ -42,6 +43,7 @@ export default async function DeliveryMatchingPage({
     );
   }
 
+  const t = useTranslations("Checkout");
   return (
     <div className="min-h-dvh bg-background">
       <StoreHeader />
@@ -51,18 +53,17 @@ export default async function DeliveryMatchingPage({
           className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-foreground-muted hover:text-foreground"
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
-          Back to order details
+          {t("backToOrderDetails")}
         </Link>
         <div className="mt-4 mb-7">
           <p className="text-sm font-semibold text-foreground-muted">
-            Delivery · Step 2 of 3
+            {t("deliveryStep2")}
           </p>
           <h1 className="heading-display mt-2 text-balance">
-            Choose a delivery profile
+            {t("chooseDeliveryProfile")}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-foreground-muted sm:text-base">
-            Review simulated nearby options generated from your confirmed
-            location. Real route tracking begins only after dispatch.
+            {t("deliveryDescription")}
           </p>
         </div>
         <DeliveryMatchingFlow initialIntent={intent} />

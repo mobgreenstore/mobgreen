@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { buttonVariants } from "@/components/ui";
 import { RECHARGE_PARTNERS } from "@/config/recharge";
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default function RechargeOnlinePage() {
+  const t = useTranslations("Recharge");
   return (
     <div className="min-h-dvh bg-background">
       <header className="safe-top border-b border-border bg-surface">
@@ -23,7 +25,7 @@ export default function RechargeOnlinePage() {
             className={buttonVariants({ variant: "ghost", size: "small" })}
           >
             <ArrowLeft aria-hidden="true" className="size-4" />
-            Catalog
+            {t("catalog")}
           </Link>
         </div>
       </header>
@@ -32,18 +34,17 @@ export default function RechargeOnlinePage() {
         <div className="mx-auto max-w-2xl">
           <div className="rounded-2xl bg-surface-subtle px-5 py-6 sm:px-7 sm:py-8">
             <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-              Recharge online
+              {t("title")}
             </p>
             <h1 className="mt-2 max-w-xl text-3xl leading-[1.05] font-semibold tracking-[-0.05em] text-balance sm:text-4xl">
-              Choose a trusted recharge partner.
+              {t("choosePartner")}
             </h1>
             <p className="mt-3 max-w-xl text-sm leading-6 text-foreground-muted sm:text-base">
-              Purchase on the partner website, then return to checkout with the
-              verification code you receive.
+              {t("partnerDescription")}
             </p>
             <div className="mt-5 flex items-center gap-2 text-xs font-medium text-foreground-muted">
               <ShieldCheck aria-hidden="true" className="size-4" />
-              MOB GREENS never receives your card details
+              {t("cardDetailsSafe")}
             </div>
           </div>
 
@@ -52,7 +53,7 @@ export default function RechargeOnlinePage() {
               id="recharge-partners"
               className="text-lg font-semibold tracking-[-0.025em]"
             >
-              Approved recharge partners
+              {t("approvedPartners")}
             </h2>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:gap-4">
               {RECHARGE_PARTNERS.map((partner) => (
@@ -74,17 +75,14 @@ export default function RechargeOnlinePage() {
               id="before-you-continue"
               className="text-base font-semibold tracking-[-0.02em]"
             >
-              Before you continue
+              {t("beforeContinue")}
             </h2>
             <div className="mt-3 grid gap-3 text-sm leading-6 text-foreground-muted">
               <p>
-                Recharge purchases happen entirely on the selected partner
-                website. MOB GREENS does not receive or store your card details.
+                {t("partnerNotice")}
               </p>
               <p>
-                Keep the numeric verification code provided after purchase. You
-                must return to All Verification and submit that code securely
-                with your order.
+                {t("keepCode")}
               </p>
             </div>
           </section>
@@ -94,7 +92,7 @@ export default function RechargeOnlinePage() {
               href="/checkout"
               className={buttonVariants({ size: "large" })}
             >
-              Return to checkout
+              {t("returnToCheckout")}
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
             <Link
@@ -104,7 +102,7 @@ export default function RechargeOnlinePage() {
                 size: "large",
               })}
             >
-              Continue shopping
+              {t("continueShopping")}
             </Link>
           </div>
         </div>

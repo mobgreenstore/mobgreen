@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CircleCheck, MapPin, Navigation } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { BrandLogo } from "@/components/shared/brand-mark";
 import { StoreHeader } from "@/components/shared/store-header";
 import { Card, InlineAlert, buttonVariants } from "@/components/ui";
@@ -13,14 +14,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-function distanceLabel(distanceMeters: number) {
-  return distanceMeters < 1_000
-    ? `${distanceMeters} m away`
-    : `${(distanceMeters / 1_000).toFixed(1)} km away`;
+function distanceLabel(distanceMeters: number, t: (key: string, params?: any) => string) {
+  const distance = distanceMeters < 1_000
+    ? distanceMeters
+    : (distanceMeters / 1_000).toFixed(1);
+  const key = distanceMeters < 1_000 ? "mAway" : "kmAway";
+  return t(key, { distance });
 }
 
-function durationLabel(durationSeconds: number) {
-  return `about ${Math.max(1, Math.ceil(durationSeconds / 60))} min`;
+function durationLabel(durationSeconds: number, t: (key: string, params?: any) => string) {
+  const minutes = Math.max(1, Math.ceil(durationSeconds / 60));
+  return t("aboutMin", { minutes });
 }
 
 export default async function OrderSuccessPage({
@@ -28,6 +32,7 @@ export default async function OrderSuccessPage({
 }: {
   searchParams: Promise<{ reference?: string }>;
 }) {
+  const t = useTranslations("OrderSuccess");
   const reference = (await searchParams).reference?.trim() || "";
   const guest = await getServerGuestSession();
   const order =
@@ -48,7 +53,7 @@ export default async function OrderSuccessPage({
               />
               {order ? (
                 <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-2.5 text-xs font-semibold text-foreground-muted">
-                  Order received
+                  {t("orderReceived")}
                 </span>
               ) : null}
             </div>
@@ -58,12 +63,12 @@ export default async function OrderSuccessPage({
               </span>
               <div>
                 <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                  {order ? "Order received" : "Order status"}
+                  {order ? t("orderReceived") : t("orderStatus")}
                 </p>
                 <h1 className="mt-1 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">
                   {order
-                    ? "Your order has been received."
-                    : "We could not load that order."}
+                    ? t("yourOrderReceived")
+                    : t("couldNotLoadOrder")}
                 </h1>
               </div>
             </div>
@@ -73,15 +78,13 @@ export default async function OrderSuccessPage({
             {order ? (
               <>
                 <p className="max-w-xl text-sm leading-6 text-foreground-muted">
-                  Your order was submitted successfully. We will send delivery
-                  updates to your email, and your selected delivery profile is
-                  already saved with this order.
+                  {t("orderSubmitted")}
                 </p>
 
                 <div className="flex flex-wrap items-end justify-between gap-4 border-y border-border py-5">
                   <div>
                     <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                      Order reference
+                      {t("orderReference")}
                     </p>
                     <p className="mt-2 font-mono text-lg font-semibold">
                       {order.reference}
@@ -89,14 +92,14 @@ export default async function OrderSuccessPage({
                   </div>
                   <div className="text-left sm:text-right">
                     <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                      Payment code
+                      {t("paymentCode")}
                     </p>
                     <p className="mt-2 flex items-center gap-1.5 font-semibold">
                       <CircleCheck
                         aria-hidden="true"
                         className="size-4 text-success"
                       />
-                      Received securely
+                      {t("receivedSecurely")}
                     </p>
                   </div>
                 </div>
@@ -109,19 +112,18 @@ export default async function OrderSuccessPage({
                         className="mt-0.5 size-5 shrink-0 text-info"
                       />
                       <div>
-                        <h2 className="font-semibold">Delivery and tracking</h2>
+                        <h2 className="font-semibold">{t("deliveryAndTracking")}</h2>
                         <p className="mt-1 text-sm leading-6 text-foreground-muted">
                           {order.deliveryLocation?.formattedAddress ??
-                            "Confirmed delivery location"}
+                            t("confirmedLocation")}
                         </p>
                       </div>
                     </div>
                     {order.courier && (
                       <p className="ml-8 text-sm text-foreground-muted">
-                        {order.courier.displayName} is your selected nearby
-                        delivery profile ·{" "}
-                        {distanceLabel(order.courier.distanceMeters)} ·{" "}
-                        {durationLabel(order.courier.estimatedDurationSeconds)}.
+                        {order.courier.displayName} {t("selectedProfile")} ·{" "}
+                        {distanceLabel(order.courier.distanceMeters, t)} ·{" "}
+                        {durationLabel(order.courier.estimatedDurationSeconds, t)}.
                       </p>
                     )}
                   </section>
@@ -132,7 +134,7 @@ export default async function OrderSuccessPage({
                     href={`/orders/${encodeURIComponent(order.reference)}`}
                     className={cn(buttonVariants({ size: "large" }), "w-full")}
                   >
-                    View order
+                    {t("viewOrder")}
                   </Link>
                   {order.fulfillmentType === "DELIVERY" ? (
                     <Link
@@ -143,7 +145,7 @@ export default async function OrderSuccessPage({
                       )}
                     >
                       <Navigation aria-hidden="true" className="size-4" />
-                      View tracking
+                      {t("viewTracking")}
                     </Link>
                   ) : (
                     <Link
@@ -153,7 +155,7 @@ export default async function OrderSuccessPage({
                         "w-full",
                       )}
                     >
-                      Continue shopping
+                      {t("continueShopping")}
                     </Link>
                   )}
                 </div>
@@ -162,14 +164,14 @@ export default async function OrderSuccessPage({
               <>
                 <InlineAlert
                   tone="info"
-                  title="Open orders are private to this browser"
-                  description="Use the same browser/device that placed the order, or start a new secure checkout from the store."
+                  title={t("openOrdersPrivate")}
+                  description={t("privateOrdersDescription")}
                 />
                 <Link
                   href="/"
                   className={cn(buttonVariants({ size: "large" }), "w-full")}
                 >
-                  Shop the store
+                  {t("shopStore")}
                 </Link>
               </>
             )}

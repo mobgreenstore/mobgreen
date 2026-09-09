@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { notFound } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ImageGallery } from "@/components/commerce/image-gallery";
 import { StoreHeader } from "@/components/shared/store-header";
 import { Badge } from "@/components/ui";
@@ -56,6 +57,7 @@ export async function generateMetadata({
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
+  const t = useTranslations("Product");
   const product = await getPublicProductBySlug((await params).slug);
   if (!product) notFound();
   const currencyCookie = (await cookies()).get(
@@ -96,14 +98,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
           className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-foreground-muted hover:text-foreground"
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
-          Back to {product.categoryName}
+          {t("backToCategory", { category: product.categoryName })}
         </Link>
 
         <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(20rem,0.95fr)] lg:gap-12">
           <ImageGallery
             images={product.images}
             video={product.video}
-            label={`${product.name} images`}
+            label={t("imagesLabel", { name: product.name })}
           />
 
           <div className="min-w-0">
@@ -133,7 +135,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   id="product-description"
                   className="text-base font-semibold tracking-[-0.02em]"
                 >
-                  Product details
+                  {t("productDetails")}
                 </h2>
                 <p className="mt-3 text-sm leading-7 whitespace-pre-line text-foreground-muted">
                   {product.description}

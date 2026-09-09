@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { StoreHeader } from "@/components/shared/store-header";
 import { CartPage } from "@/features/cart/components/cart-page";
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default function CartRoute() {
+  const t = useTranslations("Cart");
   return (
     <div className="min-h-dvh bg-background">
       <StoreHeader />
@@ -20,16 +22,15 @@ export default function CartRoute() {
           className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-foreground-muted hover:text-foreground"
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
-          Back to catalog
+          {t("backToCatalog")}
         </Link>
         <div className="mt-4 mb-8 max-w-2xl">
           <p className="text-sm font-semibold text-foreground-muted">
-            Your selections
+            {t("yourSelections")}
           </p>
-          <h1 className="heading-display mt-2 text-balance">Shopping card</h1>
+          <h1 className="heading-display mt-2 text-balance">{t("shoppingCard")}</h1>
           <p className="mt-3 text-sm leading-6 text-foreground-muted sm:text-base">
-            Quantities are saved on this device. Prices and availability always
-            come from the store.
+            {t("quantitiesSaved")}
           </p>
         </div>
         <CartPage />

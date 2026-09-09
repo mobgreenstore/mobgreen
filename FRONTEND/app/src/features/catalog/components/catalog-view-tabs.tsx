@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BadgePercent, Grid2X2, LoaderCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { catalogHref } from "@/features/catalog/params";
 import { useState } from "react";
 import type { CatalogSort, CatalogView } from "@/features/catalog/types";
@@ -20,12 +21,13 @@ export function CatalogViewTabs({
   sort: CatalogSort;
   offerCount: number;
 }) {
+  const t = useTranslations("Catalog");
   const [pendingView, setPendingView] = useState<CatalogView | null>(null);
   const tabs = [
-    { value: "products" as const, label: "Products", icon: Grid2X2 },
+    { value: "products" as const, labelKey: "productsTab", icon: Grid2X2 },
     {
       value: "offers" as const,
-      label: `Get offers${offerCount ? ` (${offerCount})` : ""}`,
+      labelKey: "getOffers",
       icon: BadgePercent,
     },
   ];
@@ -36,6 +38,9 @@ export function CatalogViewTabs({
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
+        const label = tab.value === "offers" && offerCount > 0
+          ? `${t(tab.labelKey)} (${offerCount})`
+          : t(tab.labelKey);
         return (
           <Link
             key={tab.value}
@@ -77,9 +82,9 @@ export function CatalogViewTabs({
             )}
             {pendingView === tab.value
               ? tab.value === "offers"
-                ? "Loading offers…"
-                : "Loading products…"
-              : tab.label}
+                ? t("loadingOffers")
+                : t("loadingProducts")
+              : label}
           </Link>
         );
       })}

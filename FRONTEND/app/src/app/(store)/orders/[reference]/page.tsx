@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CustomerOrderDetailView } from "@/features/customer-orders/components/customer-order-detail";
 import { getServerOrderEmailAccess } from "@/features/customer-orders/server/order-email-access";
 import {
@@ -15,6 +16,7 @@ export default async function OrderPage({
 }: {
   params: Promise<{ reference: string }>;
 }) {
+  const t = useTranslations("Orders");
   const { reference } = await params;
   const guest = await getServerGuestSession();
   const emailAccess = await getServerOrderEmailAccess(reference);
@@ -29,10 +31,10 @@ export default async function OrderPage({
         href="/orders"
         className="text-sm font-semibold underline underline-offset-4"
       >
-        Back to orders
+        {t("backToOrders")}
       </Link>
       <p className="mt-6 text-sm font-semibold text-foreground-muted">
-        Order reference
+        {t("orderReference")}
       </p>
       <h1 className="mt-1 text-3xl font-semibold tracking-[-0.05em]">
         {reference}

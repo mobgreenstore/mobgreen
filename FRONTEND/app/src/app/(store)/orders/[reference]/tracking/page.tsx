@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Clock3, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, InlineAlert, buttonVariants } from "@/components/ui";
 import { CustomerOrderTracking } from "@/features/customer-orders/components/customer-order-tracking";
 import { CustomerOrderStatusBadge } from "@/features/orders/components/status-badges";
@@ -21,6 +22,7 @@ export default async function TrackingPage({
 }: {
   params: Promise<{ reference: string }>;
 }) {
+  const t = useTranslations("OrderTracking");
   const { reference } = await params;
   const guest = await getServerGuestSession();
   const emailAccess = await getServerOrderEmailAccess(reference);
@@ -44,13 +46,13 @@ export default async function TrackingPage({
               className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-foreground-muted hover:text-foreground"
             >
               <ChevronLeft aria-hidden="true" className="size-4" />
-              Back to order
+              {t("backToOrder")}
             </Link>
             <p className="mt-1 text-xs font-semibold tracking-[0.08em] text-foreground-subtle uppercase">
-              MOB GREENS delivery
+              {t("mobGreensDelivery")}
             </p>
             <h1 className="mt-0.5 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">
-              Track your order
+              {t("trackOrder")}
             </h1>
           </div>
         </div>
@@ -69,20 +71,17 @@ export default async function TrackingPage({
                 </span>
                 <div>
                   <p className="text-xs font-semibold tracking-[0.08em] text-foreground-subtle uppercase">
-                    Tracking preparing
+                    {t("trackingPreparing")}
                   </p>
                   <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">
-                    Your delivery route is not live yet.
+                    {t("routeNotLive")}
                   </h2>
                 </div>
               </div>
               <CustomerOrderStatusBadge status={order.status} />
             </div>
             <p className="mt-5 max-w-xl text-sm leading-6 text-foreground-muted">
-              Your order is being prepared for dispatch. The Mapbox route starts
-              when dispatch begins. This private tracking link stays available
-              from this device and becomes the live tracking page automatically
-              once the route is available.
+              {t("orderPreparing")}
             </p>
             {order.deliveryLocation && (
               <div className="mt-5 flex items-start gap-3 border-t border-border pt-5 text-sm">
@@ -96,18 +95,18 @@ export default async function TrackingPage({
             <InlineAlert
               className="mt-5"
               tone="info"
-              title="Selected delivery profile retained"
+              title={t("selectedProfileRetained")}
               description={
                 order.courier
-                  ? `${order.courier.displayName} remains selected for this order. We will notify you when dispatch begins.`
-                  : "A nearby delivery profile will be selected when dispatch is being prepared."
+                  ? `${order.courier.displayName} ${t("profileRetained")}`
+                  : t("profileWillBeSelected")
               }
             />
             <Link
               href={`/orders/${encodeURIComponent(reference)}`}
               className={cn(buttonVariants({ variant: "secondary" }), "mt-6")}
             >
-              View order details
+              {t("viewOrderDetails")}
             </Link>
           </Card>
         )}

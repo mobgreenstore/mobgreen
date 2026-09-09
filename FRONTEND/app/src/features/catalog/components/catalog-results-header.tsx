@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 export function CatalogResultsHeader({
   categoryName,
@@ -9,8 +10,11 @@ export function CatalogResultsHeader({
   resultCount: number;
   toolbar: ReactNode;
 }) {
+  const t = useTranslations("Catalog");
   const countLabel =
-    resultCount === 1 ? "1 product" : `${resultCount} products`;
+    resultCount === 1
+      ? t("oneProduct")
+      : t("multipleProducts", { count: resultCount });
 
   return (
     <header className="flex min-w-0 items-center justify-between gap-3">
