@@ -73,7 +73,7 @@ function first(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, search, sort, view, requestedPage, currency, hasCurrencyPreference, t }: any) {
+function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, search, sort, view, requestedPage, currency, hasCurrencyPreference, translations }: any) {
   const hasFilters = Boolean(categorySlug || search);
 
   return (
@@ -103,7 +103,7 @@ function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, sear
                 />
                 <div className="mt-5">
                   <CatalogResultsHeader
-                    categoryName={activeCategory?.name ?? t("allGoods")}
+                    categoryName={activeCategory?.name ?? translations.allGoods}
                     resultCount={
                       view === "offers"
                         ? offerPage.totalCount
@@ -145,7 +145,7 @@ function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, sear
                         currentPage={offerPage.page}
                         totalPages={offerPage.totalPages}
                         className="mt-8 sm:mt-10"
-                        label={t("offerPages")}
+                        label={translations.offerPages}
                         getHref={(page: number) =>
                           catalogHref({
                             category: categorySlug,
@@ -161,13 +161,13 @@ function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, sear
                     <EmptyState
                       title={
                         activeCategory
-                          ? t("noOffers")
-                          : t("chooseCategory")
+                          ? translations.noOffers
+                          : translations.chooseCategory
                       }
                       description={
                         activeCategory
-                          ? t("noOffersDescription")
-                          : t("chooseCategory")
+                          ? translations.noOffersDescription
+                          : translations.chooseCategory
                       }
                       icon={
                         <PackageSearch aria-hidden="true" className="size-5" />
@@ -191,7 +191,7 @@ function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, sear
                       currentPage={catalog.page}
                       totalPages={catalog.totalPages}
                       className="mt-8 sm:mt-10"
-                      label={t("catalogPages")}
+                      label={translations.catalogPages}
                       getHref={(page: number) =>
                         catalogHref({
                           category: categorySlug,
@@ -206,17 +206,17 @@ function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, sear
                   <EmptyState
                     title={
                       search
-                        ? t("noSearchResults")
+                        ? translations.noSearchResults
                         : activeCategory
-                          ? t("noProductsCategory")
-                          : t("noProducts")
+                          ? translations.noProductsCategory
+                          : translations.noProducts
                     }
                     description={
                       search
-                        ? t("noSearchResultsDescription")
+                        ? translations.noSearchResultsDescription
                         : activeCategory
-                          ? t("noProductsCategoryDescription")
-                          : t("noProductsDescription")
+                          ? translations.noProductsCategoryDescription
+                          : translations.noProductsDescription
                     }
                     icon={
                       search ? (
@@ -230,7 +230,7 @@ function CatalogContent({ catalog, offerPage, activeCategory, categorySlug, sear
                     action={
                       hasFilters ? (
                         <Link href="/" className={cn(buttonVariants())}>
-                          {t("browseAll")}
+                          {translations.browseAll}
                         </Link>
                       ) : undefined
                     }
@@ -283,23 +283,21 @@ export default async function CatalogPage({
     (category) => category.slug === requestedCategory,
   );
   const categorySlug = activeCategory?.slug ?? "";
-  const t = (key: string) => {
-    const translations: Record<string, string> = {
-      allGoods: "All goods",
-      noOffers: "No live offers in this category",
-      noOffersDescription: "There are no active, non-expired special offers right now. Products remain available at their normal prices.",
-      chooseCategory: "Choose a category to see offers",
-      noSearchResults: "No products match your search",
-      noSearchResultsDescription: "Try a shorter search or browse all goods.",
-      noProducts: "No products available yet",
-      noProductsCategory: "No products in this category",
-      noProductsCategoryDescription: "This category has no active products with active prices.",
-      noProductsDescription: "The store administrator has not activated any products yet.",
-      browseAll: "Browse all goods",
-      offerPages: "Offer pages",
-      catalogPages: "Catalog pages",
-    };
-    return translations[key] || key;
+  
+  const translations = {
+    allGoods: "All goods",
+    noOffers: "No live offers in this category",
+    noOffersDescription: "There are no active, non-expired special offers right now. Products remain available at their normal prices.",
+    chooseCategory: "Choose a category to see offers",
+    noSearchResults: "No products match your search",
+    noSearchResultsDescription: "Try a shorter search or browse all goods.",
+    noProducts: "No products available yet",
+    noProductsCategory: "No products in this category",
+    noProductsCategoryDescription: "This category has no active products with active prices.",
+    noProductsDescription: "The store administrator has not activated any products yet.",
+    browseAll: "Browse all goods",
+    offerPages: "Offer pages",
+    catalogPages: "Catalog pages",
   };
 
   return (
@@ -315,7 +313,7 @@ export default async function CatalogPage({
         requestedPage={requestedPage}
         currency={currency}
         hasCurrencyPreference={hasCurrencyPreference}
-        t={t}
+        translations={translations}
       />
     </div>
   );

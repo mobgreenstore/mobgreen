@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Layers3 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { IconButton } from "@/components/ui/icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -33,6 +34,7 @@ export function CategoryShowcaseRail({
   onFocusedCategoryChange: (slug: string) => void;
   onFocusedCategoryCommit: (slug: string) => void;
 }) {
+  const t = useTranslations("Catalog");
   const tone = getCategoryDisplayTone(displayTone);
   const viewportRef = useRef<HTMLDivElement>(null);
   const interactionRef = useRef(false);
@@ -160,8 +162,8 @@ export function CategoryShowcaseRail({
         <div className="mx-auto max-w-[var(--content-max)]">
           <EmptyState
             icon={<Layers3 aria-hidden="true" className="size-5" />}
-            title="No categories available yet"
-            description="The store administrator has not activated any categories."
+            title={t("noCategories")}
+            description={t("noCategoriesDescription")}
             compact
             className="border-0 bg-black/5"
           />

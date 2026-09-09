@@ -33,6 +33,8 @@
     "noOffers": "No live offers in this category",
     "noOffersDescription": "There are no active, non-expired special offers right now. Products remain available at their normal prices.",
     "chooseCategory": "Choose a category to see offers",
+    "noCategories": "No categories available yet",
+    "noCategoriesDescription": "The store administrator has not activated any categories.",
     "sort": "Sort",
     "sortLabel": "Sort products, currently {sort}",
     "sortAria": "Sort products",
