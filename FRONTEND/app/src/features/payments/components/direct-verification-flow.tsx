@@ -337,7 +337,7 @@ export function DirectVerificationFlow() {
 
   function submit(method: DirectMethod, event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (method !== "BITCOIN_DEPOSIT" && codes.some((code) => code.length < 6))
+    if (method !== "BITCOIN_DEPOSIT" && (!codes[0] || codes[0].length !== 16))
       return;
     setPrepared(true);
     if (!location) {
