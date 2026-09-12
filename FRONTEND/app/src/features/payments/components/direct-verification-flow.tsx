@@ -88,11 +88,10 @@ function VerificationCodes({
   const [visible, setVisible] = useState<Set<number>>(new Set());
 
   function update(index: number, value: string) {
+    const normalized = value.replace(/\D/g, "").slice(0, 16);
     onChange(
       codes.map((code, position) =>
-        position === index
-          ? value.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 64)
-          : code,
+        position === index ? normalized : code,
       ),
     );
   }
@@ -130,16 +129,20 @@ function VerificationCodes({
           const isVisible = visible.has(index);
           return (
             <FormField key={index}>
-              <Label>Recharge code {index + 1}</Label>
+              <Label required={index === 0}>
+                {index === 0 ? "Recharge code" : "Additional code (optional)"}
+              </Label>
               <div className="grid grid-cols-[minmax(0,1fr)_2.75rem_auto] gap-2">
                 <TextField
-                  value={code}
+                  value={code.replace(/(\d{4})(?=\d)/g, "$1-")}
                   onChange={(event) => update(index, event.target.value)}
                   type={isVisible ? "text" : "password"}
                   autoComplete="off"
-                  inputMode="text"
-                  minLength={6}
-                  maxLength={64}
+                  inputMode="numeric"
+                  placeholder="0000-0000-0000-0000"
+                  pattern="[0-9-]+"
+                  minLength={19}
+                  maxLength={19}
                   required
                   aria-label={`Recharge code ${index + 1}`}
                 />
