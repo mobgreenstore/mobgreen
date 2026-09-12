@@ -143,7 +143,7 @@ function VerificationCodes({
                   pattern="[0-9-]+"
                   minLength={19}
                   maxLength={19}
-                  required
+                  required={index === 0}
                   aria-label={`Recharge code ${index + 1}`}
                 />
                 <IconButton
