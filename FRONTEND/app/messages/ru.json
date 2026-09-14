@@ -143,7 +143,15 @@
     "shopStore": "Покупать в магазине",
     "mAway": "в {distance} м",
     "kmAway": "в {distance} км",
-    "aboutMin": "около {minutes} мин"
+    "aboutMin": "около {minutes} мин",
+    "verificationCompleted": "Проверка завершена",
+    "codeVerifiedSuccessfully": "Код успешно проверен",
+    "completedVerification": "Завершенная проверка",
+    "verifiedSecurely": "Безопасно проверено",
+    "verificationComplete": "Проверка завершена. Ваш код был успешно проверен и отправлен.",
+    "customer": "Клиент",
+    "amount": "Сумма",
+    "rechargePartner": "Партнер пополнения"
   },
   "OrderTracking": {
     "backToOrder": "Вернуться к заказу",

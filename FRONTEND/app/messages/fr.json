@@ -150,7 +150,15 @@
     "shopStore": "Acheter dans le magasin",
     "mAway": "à {distance} m",
     "kmAway": "à {distance} km",
-    "aboutMin": "environ {minutes} min"
+    "aboutMin": "environ {minutes} min",
+    "verificationCompleted": "Vérification terminée",
+    "codeVerifiedSuccessfully": "Code vérifié avec succès",
+    "completedVerification": "Vérification terminée",
+    "verifiedSecurely": "Vérifié en toute sécurité",
+    "verificationComplete": "Vérification terminée. Votre code a été vérifié et soumis avec succès.",
+    "customer": "Client",
+    "amount": "Montant",
+    "rechargePartner": "Partenaire de recharge"
   },
   "OrderTracking": {
     "backToOrder": "Retour à la commande",

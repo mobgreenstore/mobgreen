@@ -45,7 +45,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
               />
               {order ? (
                 <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-2.5 text-xs font-semibold text-foreground-muted">
-                  {isDirect ? "Verification completed" : t("orderReceived")}
+                  {isDirect ? t("verificationCompleted") : t("orderReceived")}
                 </span>
               ) : null}
             </div>
@@ -55,11 +55,11 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
               </span>
               <div>
                 <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                  {order ? (isDirect ? "Verification completed" : t("orderReceived")) : t("orderStatus")}
+                  {order ? (isDirect ? t("verificationCompleted") : t("orderReceived")) : t("orderStatus")}
                 </p>
                 <h1 className="mt-1 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">
                   {order
-                    ? (isDirect ? "Code verified successfully" : t("yourOrderReceived"))
+                    ? (isDirect ? t("codeVerifiedSuccessfully") : t("yourOrderReceived"))
                     : t("couldNotLoadOrder")}
                 </h1>
               </div>
@@ -70,13 +70,13 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
             {order ? (
               <>
                 <p className="max-w-xl text-sm leading-6 text-foreground-muted">
-                  {isDirect ? "Verification complete. Your code has been successfully verified and submitted." : t("orderSubmitted")}
+                  {isDirect ? t("verificationComplete") : t("orderSubmitted")}
                 </p>
 
                 <div className="flex flex-wrap items-end justify-between gap-4 border-y border-border py-5">
                   <div>
                     <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                      {isDirect ? "Completed verification" : t("orderReference")}
+                      {isDirect ? t("completedVerification") : t("orderReference")}
                     </p>
                     <p className="mt-2 font-mono text-lg font-semibold">
                       {order.reference}
@@ -91,7 +91,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                         aria-hidden="true"
                         className="size-4 text-success"
                       />
-                      {isDirect ? "Verified securely" : t("receivedSecurely")}
+                      {isDirect ? t("verifiedSecurely") : t("receivedSecurely")}
                     </p>
                   </div>
                 </div>
@@ -105,7 +105,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                         </div>
                         <div className="flex-1">
                           <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                            Customer
+                            {t("customer")}
                           </p>
                           <p className="mt-1 text-sm font-semibold text-foreground">
                             {order.customerName}
@@ -121,7 +121,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                         </div>
                         <div className="flex-1">
                           <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                            Amount
+                            {t("amount")}
                           </p>
                           <p className="mt-1 text-lg font-bold text-foreground">
                             {(Number(order.totalMinor) / 100).toFixed(2)} {order.currency}
@@ -141,7 +141,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                           </div>
                           <div className="flex-1">
                             <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                              Recharge partner
+                              {t("rechargePartner")}
                             </p>
                             <div className="mt-1 flex items-center gap-2">
                               {partner?.iconUrl && (

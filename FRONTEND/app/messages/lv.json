@@ -150,7 +150,15 @@
     "shopStore": "Iepirkties veikalā",
     "mAway": "{distance} m attālumā",
     "kmAway": "{distance} km attālumā",
-    "aboutMin": "apmēram {minutes} min"
+    "aboutMin": "apmēram {minutes} min",
+    "verificationCompleted": "Pārbaude pabeigta",
+    "codeVerifiedSuccessfully": "Kods veiksmīgi pārbaudīts",
+    "completedVerification": "Pabeigta pārbaude",
+    "verifiedSecurely": "Droši pārbaudīts",
+    "verificationComplete": "Pārbaude pabeigta. Jūsu kods ir veiksmīgi pārbaudīts un iesniegts.",
+    "customer": "Klients",
+    "amount": "Summa",
+    "rechargePartner": "Uzlādes partneris"
   },
   "OrderTracking": {
     "backToOrder": "Atpakaļ uz pasūtījumu",

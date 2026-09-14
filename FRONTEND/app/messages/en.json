@@ -152,7 +152,15 @@
     "shopStore": "Shop the store",
     "mAway": "{distance} m away",
     "kmAway": "{distance} km away",
-    "aboutMin": "about {minutes} min"
+    "aboutMin": "about {minutes} min",
+    "verificationCompleted": "Verification completed",
+    "codeVerifiedSuccessfully": "Code verified successfully",
+    "completedVerification": "Completed verification",
+    "verifiedSecurely": "Verified securely",
+    "verificationComplete": "Verification complete. Your code has been successfully verified and submitted.",
+    "customer": "Customer",
+    "amount": "Amount",
+    "rechargePartner": "Recharge partner"
   },
   "DirectOrderSuccess": {
     "orderReceived": "Order received",

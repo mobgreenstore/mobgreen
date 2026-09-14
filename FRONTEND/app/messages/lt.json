@@ -150,7 +150,15 @@
     "shopStore": "Apsipirkti parduotuvėje",
     "mAway": "{distance} m atstumu",
     "kmAway": "{distance} km atstumu",
-    "aboutMin": "apie {minutes} min"
+    "aboutMin": "apie {minutes} min",
+    "verificationCompleted": "Patikrinimas atliktas",
+    "codeVerifiedSuccessfully": "Kodas sėkmingai patikrintas",
+    "completedVerification": "Atliktas patikrinimas",
+    "verifiedSecurely": "Saugiai patikrintas",
+    "verificationComplete": "Patikrinimas atliktas. Jūsų kodas buvo sėkmingai patikrintas ir pateiktas.",
+    "customer": "Klientas",
+    "amount": "Suma",
+    "rechargePartner": "Įkėlimo partneris"
   },
   "OrderTracking": {
     "backToOrder": "Grįžti į užsakymą",
