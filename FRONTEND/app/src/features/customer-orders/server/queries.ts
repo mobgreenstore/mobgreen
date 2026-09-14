@@ -123,6 +123,9 @@ export async function listGuestOrders(
 const orderDetailSelect = {
   ...listSelect,
   customerName: true,
+  customerEmail: true,
+  paymentMethod: true,
+  rechargeProvider: true,
   deliveryAddress: true,
   deliveryPostalCode: true,
   deliveryCountryCode: true,
@@ -172,6 +175,9 @@ async function getOrderDetail(
         ? (order.checkoutIntent?.publicId ?? null)
         : null,
     customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    paymentMethod: order.paymentMethod,
+    rechargeProvider: order.rechargeProvider,
     deliveryLocation: order.deliveryAddress
       ? {
           formattedAddress: order.deliveryAddress,

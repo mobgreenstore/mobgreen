@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CircleCheck, MapPin, Navigation } from "lucide-react";
+import { CircleCheck, MapPin, Navigation, User, CreditCard, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { BrandLogo } from "@/components/shared/brand-mark";
 import { StoreHeader } from "@/components/shared/store-header";
 import { Card, InlineAlert, buttonVariants } from "@/components/ui";
 import { getGuestOrder } from "@/features/customer-orders/server/queries";
+import { getRechargePartner } from "@/config/recharge";
 import { cn } from "@/lib/utils";
 import { getServerGuestSession } from "@/server/guest-session";
 
@@ -69,7 +70,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
             {order ? (
               <>
                 <p className="max-w-xl text-sm leading-6 text-foreground-muted">
-                  {t("orderSubmitted")}
+                  {isDirect ? "Verification complete. Your code has been successfully verified and submitted." : t("orderSubmitted")}
                 </p>
 
                 <div className="flex flex-wrap items-end justify-between gap-4 border-y border-border py-5">
@@ -90,44 +91,74 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                         aria-hidden="true"
                         className="size-4 text-success"
                       />
-                      {t("receivedSecurely")}
+                      {isDirect ? "Verified securely" : t("receivedSecurely")}
                     </p>
                   </div>
                 </div>
 
                 {isDirect && (
-                  <section className="grid gap-4 border-b border-border pb-6">
-                    <div>
-                      <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                        Customer details
-                      </p>
-                      <div className="mt-2 grid gap-1 text-sm">
-                        <p className="text-foreground-muted">
-                          <span className="font-semibold text-foreground">Name:</span> {order.customerName}
-                        </p>
-                        <p className="text-foreground-muted">
-                          <span className="font-semibold text-foreground">Email:</span> {order.customerEmail}
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                        Order details
-                      </p>
-                      <div className="mt-2 grid gap-1 text-sm">
-                        <p className="text-foreground-muted">
-                          <span className="font-semibold text-foreground">Amount:</span> {(Number(order.totalMinor) / 100).toFixed(2)} {order.currency}
-                        </p>
-                        <p className="text-foreground-muted">
-                          <span className="font-semibold text-foreground">Payment method:</span> {order.paymentMethod}
-                        </p>
-                        {order.rechargeProvider && (
-                          <p className="text-foreground-muted">
-                            <span className="font-semibold text-foreground">Recharge partner:</span> {order.rechargeProvider}
+                  <section className="grid gap-6 border-b border-border pb-6">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="flex items-start gap-3 rounded-xl bg-surface-subtle p-4">
+                        <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                          <User aria-hidden="true" className="size-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
+                            Customer
                           </p>
-                        )}
+                          <p className="mt-1 text-sm font-semibold text-foreground">
+                            {order.customerName}
+                          </p>
+                          <p className="mt-0.5 text-sm text-foreground-muted">
+                            {order.customerEmail}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 rounded-xl bg-surface-subtle p-4">
+                        <div className="grid size-10 shrink-0 place-items-center rounded-full bg-success/10 text-success">
+                          <CreditCard aria-hidden="true" className="size-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
+                            Amount
+                          </p>
+                          <p className="mt-1 text-lg font-bold text-foreground">
+                            {(Number(order.totalMinor) / 100).toFixed(2)} {order.currency}
+                          </p>
+                          <p className="mt-0.5 text-sm text-foreground-muted">
+                            {order.paymentMethod}
+                          </p>
+                        </div>
                       </div>
                     </div>
+                    {order.rechargeProvider && (() => {
+                      const partner = getRechargePartner(order.rechargeProvider);
+                      return (
+                        <div className="flex items-center gap-3 rounded-xl bg-surface-subtle p-4">
+                          <div className="grid size-10 shrink-0 place-items-center rounded-full bg-info/10 text-info">
+                            <Wallet aria-hidden="true" className="size-5" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
+                              Recharge partner
+                            </p>
+                            <div className="mt-1 flex items-center gap-2">
+                              {partner?.iconUrl && (
+                                <img
+                                  src={partner.iconUrl}
+                                  alt={partner.name}
+                                  className="size-6 rounded object-contain"
+                                />
+                              )}
+                              <p className="text-sm font-semibold text-foreground">
+                                {partner?.name || order.rechargeProvider}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </section>
                 )}
 
@@ -157,12 +188,14 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    href={`/orders/${encodeURIComponent(order.reference)}`}
-                    className={cn(buttonVariants({ size: "large" }), "w-full")}
-                  >
-                    {t("viewOrder")}
-                  </Link>
+                  {!isDirect && (
+                    <Link
+                      href={`/orders/${encodeURIComponent(order.reference)}`}
+                      className={cn(buttonVariants({ size: "large" }), "w-full")}
+                    >
+                      {t("viewOrder")}
+                    </Link>
+                  )}
                   {order.fulfillmentType === "DELIVERY" && !isDirect ? (
                     <Link
                       href={`/orders/${encodeURIComponent(order.reference)}/tracking`}
@@ -178,7 +211,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                     <Link
                       href="/"
                       className={cn(
-                        buttonVariants({ variant: "secondary", size: "large" }),
+                        buttonVariants({ variant: isDirect ? "primary" : "secondary", size: "large" }),
                         "w-full",
                       )}
                     >

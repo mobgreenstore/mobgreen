@@ -11,7 +11,7 @@ export const slugSchema = z
     "Use lowercase letters, numbers, and hyphens only.",
   );
 export const currencySchema = z.enum(["GBP", "EUR", "USD"]);
-export const weightUnitSchema = z.enum(["G", "KG"]);
+export const weightUnitSchema = z.enum(["MG", "G", "KG"]);
 export const moneyMinorSchema = z.coerce
   .bigint()
   .nonnegative()

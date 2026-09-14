@@ -30,6 +30,9 @@ export interface PublicOrderListView {
 export interface PublicOrderDetail extends PublicOrderListItem {
   deliveryMatchingIntentId: string | null;
   customerName: string;
+  customerEmail: string | null;
+  paymentMethod: string | null;
+  rechargeProvider: string | null;
   deliveryLocation: {
     formattedAddress: string;
     postalCode: string | null;

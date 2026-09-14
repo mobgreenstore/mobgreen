@@ -325,7 +325,7 @@ export function DirectVerificationFlow() {
       }
 
       router.push(
-        `/direct-order-success?reference=${encodeURIComponent(result.order.reference)}`,
+        `/order-success?reference=${encodeURIComponent(result.order.reference)}&direct=true`,
       );
     } catch {
       alert("Could not connect to server. Please try again.");
