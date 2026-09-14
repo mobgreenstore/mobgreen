@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
@@ -203,11 +204,13 @@ function VerificationForm({
   codes,
   onCodesChange,
   onSubmit,
+  pending,
 }: {
   method: DirectMethod;
   codes: string[];
   onCodesChange: (codes: string[]) => void;
-  onSubmit: (method: DirectMethod, event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (method: DirectMethod, event: FormEvent<HTMLFormElement>) => Promise<void>;
+  pending: boolean;
 }) {
   const detail = methodDetails[method];
   return (
@@ -284,17 +287,19 @@ function VerificationForm({
           Continue to location to prepare a secure checkout. An order is only
           created from a server-owned checkout.
         </p>
-        <Button type="submit" size="large" className="shrink-0">
-          Continue to location
+        <Button type="submit" size="large" className="shrink-0" disabled={pending}>
+          {pending ? "Submitting..." : "Continue to location"}
         </Button>
       </div>
     </form>
   );
 }
 
-export function DirectVerificationFlow() {
+export function DirectVerificationFlow({ isDirect = false }: { isDirect?: boolean }) {
+  const router = useRouter();
   const [method, setMethod] = useState<DirectMethod>("RECHARGE_ONLINE");
-  const [codes, setCodes] = useState(["", "", ""]);
+  const [codes, setCodes] = useState([""]);
+  const [pending, setPending] = useState(false);
   const [prepared, setPrepared] = useState(false);
   const [location, setLocation] = useState<DeliveryLocation | null>(() =>
     typeof window === "undefined" ? null : loadDeliveryLocation(),
@@ -335,10 +340,48 @@ export function DirectVerificationFlow() {
     if (next && prepared) beginMatching();
   }
 
-  function submit(method: DirectMethod, event: FormEvent<HTMLFormElement>) {
+  async function submit(method: DirectMethod, event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (method !== "BITCOIN_DEPOSIT" && (!codes[0] || codes[0].length !== 16))
       return;
+    
+    if (isDirect) {
+      const form = event.currentTarget;
+      const formData = new FormData(form);
+      const customerName = formData.get("name") as string;
+      const customerEmail = formData.get("email") as string;
+      const orderAmount = formData.get("amount") as string;
+      const partner = formData.get("partner") as string;
+      
+      setPending(true);
+      try {
+        const response = await fetch("/api/direct-verification", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            customerName,
+            customerEmail,
+            orderAmount,
+            paymentMethod: method,
+            rechargePartner: partner || null,
+            verificationCodes: codes.filter(Boolean),
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.order) {
+          alert(result.error || "Could not submit order. Please try again.");
+          setPending(false);
+          return;
+        }
+        
+        router.push(`/order-success?reference=${encodeURIComponent(result.order.reference)}&direct=true`);
+      } catch {
+        alert("Could not connect to server. Please try again.");
+        setPending(false);
+      }
+      return;
+    }
+    
     setPrepared(true);
     if (!location) {
       setLocationSheetOpen(true);
@@ -378,10 +421,11 @@ export function DirectVerificationFlow() {
             codes={codes}
             onCodesChange={setCodes}
             onSubmit={submit}
+            pending={pending}
           />
         </TabsContent>
       ))}
-      {prepared && (
+      {prepared && !isDirect && (
         <section
           aria-labelledby="delivery-preference-title"
           className="grid gap-5 border-t border-border pt-7"

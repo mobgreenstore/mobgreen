@@ -27,7 +27,7 @@ function durationLabel(durationSeconds: number, t: (key: string, params?: any) =
   return t("aboutMin", { minutes });
 }
 
-function OrderSuccessContent({ order, reference }: { order: any; reference: string }) {
+function OrderSuccessContent({ order, reference, isDirect }: { order: any; reference: string; isDirect: boolean }) {
   const t = useTranslations("OrderSuccess");
   return (
     <div className="min-h-dvh bg-background">
@@ -95,7 +95,7 @@ function OrderSuccessContent({ order, reference }: { order: any; reference: stri
                   </div>
                 </div>
 
-                {order.fulfillmentType === "DELIVERY" && (
+                {order.fulfillmentType === "DELIVERY" && !isDirect && (
                   <section className="grid gap-3 border-b border-border pb-6">
                     <div className="flex items-start gap-3">
                       <MapPin
@@ -127,7 +127,7 @@ function OrderSuccessContent({ order, reference }: { order: any; reference: stri
                   >
                     {t("viewOrder")}
                   </Link>
-                  {order.fulfillmentType === "DELIVERY" ? (
+                  {order.fulfillmentType === "DELIVERY" && !isDirect ? (
                     <Link
                       href={`/orders/${encodeURIComponent(order.reference)}/tracking`}
                       className={cn(
@@ -176,12 +176,14 @@ function OrderSuccessContent({ order, reference }: { order: any; reference: stri
 export default async function OrderSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reference?: string }>;
+  searchParams: Promise<{ reference?: string; direct?: string }>;
 }) {
-  const reference = (await searchParams).reference?.trim() || "";
+  const params = await searchParams;
+  const reference = params.reference?.trim() || "";
+  const isDirect = params.direct === "true";
   const guest = await getServerGuestSession();
   const order =
     guest && reference ? await getGuestOrder(guest.id, reference) : null;
 
-  return <OrderSuccessContent order={order} reference={reference} />;
+  return <OrderSuccessContent order={order} reference={reference} isDirect={isDirect} />;
 }

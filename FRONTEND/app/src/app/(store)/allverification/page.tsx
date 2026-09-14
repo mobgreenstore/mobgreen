@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Verification · MOB GREENS",
 };
 
-function VerificationContent() {
+function VerificationContent({ isDirect }: { isDirect: boolean }) {
   const t = useTranslations("Verification");
   return (
     <CheckoutPageShell label={t("paymentVerification")}>
@@ -25,7 +25,7 @@ function VerificationContent() {
         description={t("verifyDescription")}
         belowHero={<PartnerMarquee />}
       >
-        <DirectVerificationFlow />
+        <DirectVerificationFlow isDirect={isDirect} />
       </PaymentConfirmationShell>
     </CheckoutPageShell>
   );
@@ -34,12 +34,12 @@ function VerificationContent() {
 export default async function AllVerificationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ intent?: string }>;
+  searchParams: Promise<{ intent?: string; direct?: string }>;
 }) {
   const params = await searchParams;
   if (params.intent) {
     return <CheckoutConfirmationRoute searchParams={Promise.resolve(params)} />;
   }
 
-  return <VerificationContent />;
+  return <VerificationContent isDirect={params.direct === "true"} />;
 }
