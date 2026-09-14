@@ -1,15 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { SUPPORTED_CURRENCIES } from "@/config/commerce";
 import {
   Button,
   FieldDescription,
   FormField,
   IconButton,
-  InlineAlert,
   Label,
   Select,
   Tabs,
@@ -19,12 +25,6 @@ import {
   TextField,
 } from "@/components/ui";
 import { RECHARGE_PARTNERS } from "@/config/recharge";
-import { CourierCandidateGrid } from "@/features/delivery-matching/components/courier-candidate-grid";
-import { CourierMatchLoading } from "@/features/delivery-matching/components/courier-match-loading";
-import type { SimulatedCourierCandidate } from "@/features/delivery-matching/types";
-import { StoreLocationControl } from "@/features/location/components/store-location-control";
-import type { DeliveryLocation } from "@/features/location/schema";
-import { loadDeliveryLocation } from "@/features/location/storage";
 import { RechargePartnerRail } from "@/features/payments/components/recharge-partner-rail";
 
 const methodDetails = {
@@ -44,41 +44,6 @@ const methodDetails = {
 
 type DirectMethod = keyof typeof methodDetails;
 
-const profileNames = [
-  "Maxime L.",
-  "Sofia M.",
-  "Lucas P.",
-  "Elena R.",
-  "Matteo B.",
-  "Amélie K.",
-] as const;
-
-function candidateSet(location: DeliveryLocation): SimulatedCourierCandidate[] {
-  const seed = Math.abs(
-    Math.round(location.latitude * 1000) +
-      Math.round(location.longitude * 1000),
-  );
-  return profileNames
-    .map((displayName, index) => {
-      const distanceMeters = 700 + ((seed + index * 619) % 4300);
-      const trafficSeconds = (seed + index * 71) % 121;
-      return {
-        candidateId: `direct-${index}-${(seed + index * 37).toString(36)}`,
-        displayName,
-        distanceMeters,
-        estimatedDurationSeconds: Math.max(
-          9 * 60,
-          Math.round(distanceMeters / 4.8) + 7 * 60 + trafficSeconds,
-        ),
-      };
-    })
-    .sort(
-      (left, right) =>
-        left.distanceMeters - right.distanceMeters ||
-        left.estimatedDurationSeconds - right.estimatedDurationSeconds,
-    );
-}
-
 function VerificationCodes({
   codes,
   onChange,
@@ -86,15 +51,29 @@ function VerificationCodes({
   codes: string[];
   onChange: (next: string[]) => void;
 }) {
-  const [visible, setVisible] = useState<Set<number>>(new Set());
+  const [visible, setVisible] = useState<Set<number>>(new Set([0]));
+  const [checkingCode, setCheckingCode] = useState<number | null>(null);
+  const [readyCodes, setReadyCodes] = useState<Set<number>>(new Set());
 
   function update(index: number, value: string) {
     const normalized = value.replace(/\D/g, "").slice(0, 16);
     onChange(
-      codes.map((code, position) =>
-        position === index ? normalized : code,
-      ),
+      codes.map((code, position) => (position === index ? normalized : code)),
     );
+    setReadyCodes((current) => {
+      const next = new Set(current);
+      next.delete(index);
+      return next;
+    });
+    if (normalized.length >= 16) {
+      setCheckingCode(index);
+      window.setTimeout(() => {
+        setCheckingCode((current) => (current === index ? null : current));
+        setReadyCodes((current) => new Set(current).add(index));
+      }, 5000);
+    } else if (checkingCode === index) {
+      setCheckingCode(null);
+    }
   }
 
   function remove(index: number) {
@@ -110,21 +89,7 @@ function VerificationCodes({
   }
 
   return (
-    <section
-      aria-labelledby="recharge-codes-title"
-      className="border-y border-border py-6"
-    >
-      <div>
-        <p className="text-xs font-bold tracking-[0.12em] text-foreground-subtle uppercase">
-          Recharge codes
-        </p>
-        <h2
-          id="recharge-codes-title"
-          className="mt-1 text-xl font-black tracking-tight"
-        >
-          Add your codes
-        </h2>
-      </div>
+    <section aria-labelledby="recharge-codes-title" className="py-6">
       <div className="mt-5 grid gap-4">
         {codes.map((code, index) => {
           const isVisible = visible.has(index);
@@ -165,7 +130,7 @@ function VerificationCodes({
                     <Eye aria-hidden="true" />
                   )}
                 </IconButton>
-                {codes.length > 3 && (
+                {codes.length > 1 && (
                   <IconButton
                     type="button"
                     aria-label={`Remove recharge code ${index + 1}`}
@@ -175,6 +140,21 @@ function VerificationCodes({
                   </IconButton>
                 )}
               </div>
+              {checkingCode === index && (
+                <p className="mt-2 flex items-center gap-2 text-xs font-medium text-info">
+                  <LoaderCircle
+                    aria-hidden="true"
+                    className="size-3.5 animate-spin motion-reduce:animate-none"
+                  />
+                  Verifying code authenticity…
+                </p>
+              )}
+              {readyCodes.has(index) && checkingCode !== index && (
+                <p className="mt-2 flex items-center gap-2 text-xs font-medium text-success">
+                  <CheckCircle2 aria-hidden="true" className="size-3.5" />
+                  Verified code
+                </p>
+              )}
             </FormField>
           );
         })}
@@ -209,24 +189,15 @@ function VerificationForm({
   method: DirectMethod;
   codes: string[];
   onCodesChange: (codes: string[]) => void;
-  onSubmit: (method: DirectMethod, event: FormEvent<HTMLFormElement>) => Promise<void>;
+  onSubmit: (
+    method: DirectMethod,
+    event: FormEvent<HTMLFormElement>,
+  ) => Promise<void>;
   pending: boolean;
 }) {
-  const detail = methodDetails[method];
   return (
     <form onSubmit={(event) => onSubmit(method, event)} className="grid gap-7">
       <section className="grid gap-5">
-        <div>
-          <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
-            Payment verification
-          </p>
-          <h2 className="mt-1 text-2xl font-black tracking-[-0.04em]">
-            {detail.label}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-foreground-muted">
-            {detail.helper}
-          </p>
-        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField>
             <Label required>Full name</Label>
@@ -240,6 +211,19 @@ function VerificationForm({
               autoComplete="email"
               required
             />
+          </FormField>
+          <FormField hasDescription>
+            <Label required>Currency</Label>
+            <Select name="currency" required defaultValue="EUR">
+              {SUPPORTED_CURRENCIES.map((currency) => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.label} ({currency.symbol})
+                </option>
+              ))}
+            </Select>
+            <FieldDescription>
+              Select the currency for your order.
+            </FieldDescription>
           </FormField>
           <FormField hasDescription>
             <Label required>Order amount</Label>
@@ -282,112 +266,71 @@ function VerificationForm({
       {method !== "BITCOIN_DEPOSIT" && (
         <VerificationCodes codes={codes} onChange={onCodesChange} />
       )}
-      <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-xl text-sm leading-6 text-foreground-muted">
-          Continue to location to prepare a secure checkout. An order is only
-          created from a server-owned checkout.
-        </p>
-        <Button type="submit" size="large" className="shrink-0" disabled={pending}>
-          {pending ? "Submitting..." : "Continue to location"}
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          size="large"
+          className="shrink-0 bg-blue-600 text-white hover:bg-blue-700"
+          disabled={pending}
+        >
+          {pending ? "Submitting..." : "Place order"}
         </Button>
       </div>
     </form>
   );
 }
 
-export function DirectVerificationFlow({ isDirect = false }: { isDirect?: boolean }) {
+export function DirectVerificationFlow() {
   const router = useRouter();
   const [method, setMethod] = useState<DirectMethod>("RECHARGE_ONLINE");
   const [codes, setCodes] = useState([""]);
   const [pending, setPending] = useState(false);
-  const [prepared, setPrepared] = useState(false);
-  const [location, setLocation] = useState<DeliveryLocation | null>(() =>
-    typeof window === "undefined" ? null : loadDeliveryLocation(),
-  );
-  const [locationSheetOpen, setLocationSheetOpen] = useState(false);
-  const [matching, setMatching] = useState(false);
-  const [selectedCourier, setSelectedCourier] =
-    useState<SimulatedCourierCandidate | null>(null);
-  const matchingTimer = useRef<number | null>(null);
-  const candidates = useMemo(
-    () => (location ? candidateSet(location) : []),
-    [location],
-  );
 
-  useEffect(() => {
-    return () => {
-      if (matchingTimer.current !== null) {
-        window.clearTimeout(matchingTimer.current);
-      }
-    };
-  }, []);
-
-  function beginMatching() {
-    if (matchingTimer.current !== null) {
-      window.clearTimeout(matchingTimer.current);
-    }
-    setSelectedCourier(null);
-    setMatching(true);
-    matchingTimer.current = window.setTimeout(() => {
-      setMatching(false);
-      matchingTimer.current = null;
-    }, 1_100);
-  }
-
-  function applyLocation(next: DeliveryLocation | null) {
-    setLocation(next);
-    setSelectedCourier(null);
-    if (next && prepared) beginMatching();
-  }
-
-  async function submit(method: DirectMethod, event: FormEvent<HTMLFormElement>) {
+  async function submit(
+    method: DirectMethod,
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
     if (method !== "BITCOIN_DEPOSIT" && (!codes[0] || codes[0].length !== 16))
       return;
-    
-    if (isDirect) {
-      const form = event.currentTarget;
-      const formData = new FormData(form);
-      const customerName = formData.get("name") as string;
-      const customerEmail = formData.get("email") as string;
-      const orderAmount = formData.get("amount") as string;
-      const partner = formData.get("partner") as string;
-      
-      setPending(true);
-      try {
-        const response = await fetch("/api/direct-verification", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            customerName,
-            customerEmail,
-            orderAmount,
-            paymentMethod: method,
-            rechargePartner: partner || null,
-            verificationCodes: codes.filter(Boolean),
-          }),
-        });
-        const result = await response.json();
-        if (!response.ok || !result.order) {
-          alert(result.error || "Could not submit order. Please try again.");
-          setPending(false);
-          return;
-        }
-        
-        router.push(`/order-success?reference=${encodeURIComponent(result.order.reference)}&direct=true`);
-      } catch {
-        alert("Could not connect to server. Please try again.");
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const customerName = formData.get("name") as string;
+    const customerEmail = formData.get("email") as string;
+    const orderAmount = formData.get("amount") as string;
+    const currency = formData.get("currency") as string;
+    const partner = formData.get("partner") as string;
+
+    setPending(true);
+    try {
+      const response = await fetch("/api/direct-verification", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          customerName,
+          customerEmail,
+          orderAmount,
+          currency,
+          paymentMethod: method,
+          rechargeProvider: partner || null,
+          verificationCodes: codes.filter(Boolean),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.order) {
+        alert(result.error || "Could not submit order. Please try again.");
         setPending(false);
+        return;
       }
-      return;
+
+      router.push(
+        `/direct-order-success?reference=${encodeURIComponent(result.order.reference)}`,
+      );
+    } catch {
+      alert("Could not connect to server. Please try again.");
+      setPending(false);
     }
-    
-    setPrepared(true);
-    if (!location) {
-      setLocationSheetOpen(true);
-      return;
-    }
-    beginMatching();
   }
 
   return (
@@ -425,100 +368,6 @@ export function DirectVerificationFlow({ isDirect = false }: { isDirect?: boolea
           />
         </TabsContent>
       ))}
-      {prepared && !isDirect && (
-        <section
-          aria-labelledby="delivery-preference-title"
-          className="grid gap-5 border-t border-border pt-7"
-        >
-          <div>
-            <p className="text-xs font-bold tracking-[0.12em] text-info uppercase">
-              Delivery preference
-            </p>
-            <h2
-              id="delivery-preference-title"
-              className="mt-1 text-2xl font-black tracking-[-0.04em]"
-            >
-              Choose your delivery location
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-foreground-muted">
-              Location is required before a nearby delivery profile can be
-              selected.
-            </p>
-          </div>
-          {!location ? (
-            <StoreLocationControl
-              triggerVariant="text"
-              triggerLabel="Activate location"
-              open={locationSheetOpen}
-              onOpenChange={setLocationSheetOpen}
-              onLocationChange={applyLocation}
-              className="w-fit text-base font-bold text-info"
-            />
-          ) : (
-            <div className="grid gap-5">
-              <div className="flex items-start justify-between gap-3 border-y border-border py-4">
-                <div>
-                  <p className="text-xs font-bold tracking-[0.1em] text-foreground-subtle uppercase">
-                    Confirmed location
-                  </p>
-                  <p className="mt-1 text-sm font-semibold">
-                    {location.formattedAddress}
-                  </p>
-                </div>
-                <StoreLocationControl
-                  triggerVariant="text"
-                  triggerLabel="Change"
-                  open={locationSheetOpen}
-                  onOpenChange={setLocationSheetOpen}
-                  onLocationChange={applyLocation}
-                  className="shrink-0 font-bold text-info"
-                />
-              </div>
-              {matching ? (
-                <CourierMatchLoading
-                  locationLabel={
-                    [location.locality, location.postalCode]
-                      .filter(Boolean)
-                      .join(" · ") || "Confirmed destination"
-                  }
-                />
-              ) : (
-                <>
-                  <div>
-                    <h3 className="text-xl font-black tracking-tight">
-                      Nearby delivery profiles
-                    </h3>
-                    <p className="mt-1 text-sm text-foreground-muted">
-                      Sorted from closest to furthest from your confirmed
-                      destination.
-                    </p>
-                  </div>
-                  <CourierCandidateGrid
-                    candidates={candidates}
-                    selectedCandidateId={selectedCourier?.candidateId}
-                    onSelect={setSelectedCourier}
-                  />
-                </>
-              )}
-              {selectedCourier && !matching && (
-                <div className="grid gap-3 border-t border-border pt-5 sm:grid-cols-[1fr_auto] sm:items-center">
-                  <InlineAlert
-                    tone="info"
-                    title="Delivery profile selected"
-                    description="Start secure checkout to protect the order total, send the order email, and activate private tracking access."
-                  />
-                  <Link
-                    href="/checkout"
-                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-foreground px-4 text-sm font-semibold text-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
-                  >
-                    Start secure checkout
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      )}
     </Tabs>
   );
 }

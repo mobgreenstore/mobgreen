@@ -119,7 +119,7 @@ export class CheckoutFinalizeService {
       if (!intent) {
         throw new CheckoutError(
           "ORDER_FAILED",
-          "The checkout could not be continued. Start checkout again.",
+          "The checkout could not be continued. Place order again.",
           404,
         );
       }

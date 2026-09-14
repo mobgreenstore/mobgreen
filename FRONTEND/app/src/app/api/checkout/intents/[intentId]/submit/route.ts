@@ -49,7 +49,7 @@ export async function POST(
     const guest = await requireGuestSession(request);
     if (!guest) {
       return failure(
-        "The checkout could not be continued. Start checkout again.",
+        "The checkout could not be continued. Place order again.",
         "CHECKOUT_NOT_FOUND",
         404,
       );

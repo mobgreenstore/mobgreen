@@ -95,6 +95,42 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                   </div>
                 </div>
 
+                {isDirect && (
+                  <section className="grid gap-4 border-b border-border pb-6">
+                    <div>
+                      <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
+                        Customer details
+                      </p>
+                      <div className="mt-2 grid gap-1 text-sm">
+                        <p className="text-foreground-muted">
+                          <span className="font-semibold text-foreground">Name:</span> {order.customerName}
+                        </p>
+                        <p className="text-foreground-muted">
+                          <span className="font-semibold text-foreground">Email:</span> {order.customerEmail}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
+                        Order details
+                      </p>
+                      <div className="mt-2 grid gap-1 text-sm">
+                        <p className="text-foreground-muted">
+                          <span className="font-semibold text-foreground">Amount:</span> {(Number(order.totalMinor) / 100).toFixed(2)} {order.currency}
+                        </p>
+                        <p className="text-foreground-muted">
+                          <span className="font-semibold text-foreground">Payment method:</span> {order.paymentMethod}
+                        </p>
+                        {order.rechargeProvider && (
+                          <p className="text-foreground-muted">
+                            <span className="font-semibold text-foreground">Recharge partner:</span> {order.rechargeProvider}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
                 {order.fulfillmentType === "DELIVERY" && !isDirect && (
                   <section className="grid gap-3 border-b border-border pb-6">
                     <div className="flex items-start gap-3">

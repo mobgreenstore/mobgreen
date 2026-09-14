@@ -90,6 +90,7 @@ function plainTextItems(
   }>,
   currency: SupportedCurrency,
 ) {
+  if (items.length === 0) return "- Direct verification amount";
   return items
     .map(
       (item) =>
@@ -108,6 +109,9 @@ function itemRows(
   }>,
   currency: SupportedCurrency,
 ) {
+  if (items.length === 0) {
+    return '<tr><td style="padding:14px 0;border-bottom:1px solid #e8e8e5;font-size:14px;line-height:20px"><strong style="font-weight:600;color:#161817">Direct verification amount</strong><br><span style="color:#686d68;font-size:12px">Submitted without store card items</span></td><td align="right" style="padding:14px 0;border-bottom:1px solid #e8e8e5;font-size:14px;font-weight:600;white-space:nowrap;color:#161817">&nbsp;</td></tr>';
+  }
   return items
     .map(
       (item) =>

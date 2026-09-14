@@ -60,13 +60,13 @@ export function DeliveryMatchingFlow({
 
   useEffect(() => {
     if (requestState !== "matching") return;
-    if (intent.candidates.length === 0) {
-      const slowTimer = window.setTimeout(() => setSlow(true), 6_000);
-      return () => window.clearTimeout(slowTimer);
-    }
-    const revealTimer = window.setTimeout(() => setRequestState("idle"), 3_000);
-    return () => window.clearTimeout(revealTimer);
-  }, [intent.candidates.length, requestState]);
+    const slowTimer = window.setTimeout(() => setSlow(true), 6_000);
+    const revealTimer = window.setTimeout(() => setRequestState("idle"), 9_000);
+    return () => {
+      window.clearTimeout(slowTimer);
+      window.clearTimeout(revealTimer);
+    };
+  }, [requestState]);
 
   async function applyLocation(location: DeliveryLocation | null) {
     if (!location || requestInFlight.current) return;
@@ -159,7 +159,7 @@ export function DeliveryMatchingFlow({
           <span>
             Return to checkout to confirm current products and prices.{" "}
             <Link href="/checkout" className="font-semibold underline">
-              Start checkout again
+              Place order again
             </Link>
           </span>
         }

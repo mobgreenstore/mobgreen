@@ -110,6 +110,12 @@
     "productDetails": "Product details",
     "imagesLabel": "{name} images"
   },
+  "Verification": {
+    "title": "Verification",
+    "verifyOrder": "Verify an order when you are ready.",
+    "verifyDescription": "Enter your payment details, confirm the delivery location, then choose a nearby delivery profile.",
+    "paymentVerification": "Payment verification"
+  },
   "Orders": {
     "title": "Your orders",
     "noOrders": "No orders yet",
@@ -147,6 +153,30 @@
     "mAway": "{distance} m away",
     "kmAway": "{distance} km away",
     "aboutMin": "about {minutes} min"
+  },
+  "DirectOrderSuccess": {
+    "orderReceived": "Order received",
+    "orderStatus": "Order status",
+    "title": "Your verification order is placed.",
+    "couldNotLoadOrder": "We could not load that order.",
+    "description": "Your order details and recharge code were submitted securely. We will email your receipt and notify the administrator.",
+    "verificationPendingTitle": "Verification in progress",
+    "verificationPendingDescription": "Your code is attached to this order and will be reviewed from the secure admin workspace.",
+    "orderReference": "Order reference",
+    "paymentCode": "Payment code",
+    "receivedSecurely": "Received securely",
+    "customerDetails": "Customer",
+    "orderDetails": "Order",
+    "name": "Name",
+    "email": "Email",
+    "amount": "Amount",
+    "paymentMethod": "Payment method",
+    "rechargePartner": "Partner",
+    "continueShopping": "Continue shopping",
+    "openOrdersPrivate": "Open orders are private to this browser",
+    "privateOrdersDescription": "Use the same browser/device that placed the order, or start a new secure checkout from the store.",
+    "referenceHint": "Reference:",
+    "shopStore": "Shop the store"
   },
   "OrderTracking": {
     "backToOrder": "Back to order",
