@@ -45,7 +45,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
               />
               {order ? (
                 <span className="inline-flex min-h-7 items-center rounded-full border border-border bg-background px-2.5 text-xs font-semibold text-foreground-muted">
-                  {t("orderReceived")}
+                  {isDirect ? "Verification completed" : t("orderReceived")}
                 </span>
               ) : null}
             </div>
@@ -55,11 +55,11 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
               </span>
               <div>
                 <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                  {order ? t("orderReceived") : t("orderStatus")}
+                  {order ? (isDirect ? "Verification completed" : t("orderReceived")) : t("orderStatus")}
                 </p>
                 <h1 className="mt-1 text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">
                   {order
-                    ? t("yourOrderReceived")
+                    ? (isDirect ? "Code verified successfully" : t("yourOrderReceived"))
                     : t("couldNotLoadOrder")}
                 </h1>
               </div>
@@ -76,7 +76,7 @@ function OrderSuccessContent({ order, reference, isDirect }: { order: any; refer
                 <div className="flex flex-wrap items-end justify-between gap-4 border-y border-border py-5">
                   <div>
                     <p className="text-xs font-semibold tracking-[0.1em] text-foreground-subtle uppercase">
-                      {t("orderReference")}
+                      {isDirect ? "Completed verification" : t("orderReference")}
                     </p>
                     <p className="mt-2 font-mono text-lg font-semibold">
                       {order.reference}
