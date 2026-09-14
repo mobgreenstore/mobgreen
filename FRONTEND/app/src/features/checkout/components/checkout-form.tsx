@@ -331,7 +331,7 @@ export function CheckoutForm({
             <section className="grid min-w-0 gap-4 border-t border-border pt-5">
               <div>
                 <h3 className="text-base font-bold tracking-[-0.02em]">
-                  Approved recharge partners
+                  Approved voucher recharge partners
                 </h3>
                 <p className="mt-1 text-sm leading-6 text-foreground-muted">
                   Choose where to buy your recharge code. It opens in a new tab;

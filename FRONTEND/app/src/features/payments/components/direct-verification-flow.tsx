@@ -259,7 +259,7 @@ function VerificationForm({
         </div>
         {method === "RECHARGE_ONLINE" && (
           <FormField>
-            <Label required>Recharge partner</Label>
+            <Label required>Voucher recharge partner</Label>
             <Select name="partner" required defaultValue="">
               <option value="" disabled>
                 Select the partner used

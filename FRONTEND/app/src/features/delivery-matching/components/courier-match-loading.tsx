@@ -28,7 +28,7 @@ export function CourierMatchLoading({
           strokeWidth={1.7}
         />
         <h2 className="mt-4 text-xl font-semibold tracking-[-0.03em]">
-          Finding nearby delivery profiles
+          Searching for nearest delivery profiles around you
         </h2>
         <div className="mt-3 flex justify-center gap-1.5" aria-hidden="true">
           {[0, 1, 2].map((dot) => (

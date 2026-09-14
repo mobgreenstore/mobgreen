@@ -57,7 +57,7 @@ export function RechargePartnerDirectory({
         id="approved-recharge-partners"
         className="text-base font-bold tracking-[-0.02em]"
       >
-        Approved recharge partners
+        Approved voucher recharge partners
       </h2>
       <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
         {RECHARGE_PARTNERS.map((partner) => {

@@ -64,7 +64,7 @@ export function DeliveryMatchingFlow({
       const slowTimer = window.setTimeout(() => setSlow(true), 6_000);
       return () => window.clearTimeout(slowTimer);
     }
-    const revealTimer = window.setTimeout(() => setRequestState("idle"), 1_100);
+    const revealTimer = window.setTimeout(() => setRequestState("idle"), 3_000);
     return () => window.clearTimeout(revealTimer);
   }, [intent.candidates.length, requestState]);
 
