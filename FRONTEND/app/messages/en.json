@@ -16,6 +16,7 @@
     "howToOrder": "How to order"
   },
   "Catalog": {
+    "all": "All",
     "allGoods": "All goods",
     "searchPlaceholder": "Search products...",
     "sortNewest": "Newest",

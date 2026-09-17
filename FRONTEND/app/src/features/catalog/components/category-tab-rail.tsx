@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type KeyboardEvent,
 } from "react";
+import { useTranslations } from "next-intl";
 import {
   getCategoryDisplayTone,
   type CategoryDisplayTone,
@@ -33,9 +34,23 @@ export function CategoryTabRail({
   sort: CatalogSort;
   displayTone: CategoryDisplayTone;
 }) {
+  const t = useTranslations("Catalog");
   const viewportRef = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ left: false, right: false });
   const tone = getCategoryDisplayTone(displayTone);
+
+  const allCategory = {
+    id: "all",
+    name: t("all"),
+    slug: "all",
+    description: "",
+    displayTone: "MIST" as const,
+    image: null,
+    productCount: categories.reduce((sum, cat) => sum + cat.productCount, 0),
+    strongestOffer: null,
+  };
+
+  const allCategories = [allCategory, ...categories];
 
   const updateEdges = useCallback(() => {
     const viewport = viewportRef.current;
@@ -64,7 +79,7 @@ export function CategoryTabRail({
     const observer = new ResizeObserver(updateEdges);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [activeCategorySlug, categories.length, updateEdges]);
+  }, [activeCategorySlug, allCategories.length, updateEdges]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (
@@ -98,7 +113,7 @@ export function CategoryTabRail({
   const inactiveClassName =
     "border-current/20 bg-transparent text-inherit hover:border-current/45 hover:bg-black/5";
 
-  if (!categories.length) return null;
+  if (!allCategories.length) return null;
 
   return (
     <nav
@@ -123,14 +138,14 @@ export function CategoryTabRail({
           onKeyDown={handleKeyDown}
           className="flex snap-x snap-mandatory scrollbar-none gap-2 overflow-x-auto px-3 py-2.5 sm:px-5 lg:px-8"
         >
-          {categories.map((category) => {
+          {allCategories.map((category) => {
             const active = category.slug === activeCategorySlug;
             return (
               <Link
                 key={category.id}
                 data-category-tab
                 href={catalogHref({
-                  category: category.slug,
+                  category: category.slug === "all" ? "" : category.slug,
                   search,
                   sort,
                 })}

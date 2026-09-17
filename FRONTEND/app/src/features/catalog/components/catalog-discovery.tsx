@@ -23,7 +23,7 @@ export function CatalogDiscovery({
   sort: CatalogSort;
 }) {
   const router = useRouter();
-  const fallbackSlug = categories[0]?.slug ?? "";
+  const fallbackSlug = "";
   const [focusedSlug, setFocusedSlug] = useState(
     activeCategorySlug || fallbackSlug,
   );

@@ -16,6 +16,7 @@
     "howToOrder": "Kā pasūtīt"
   },
   "Catalog": {
+    "all": "Visas",
     "allGoods": "Visas preces",
     "searchPlaceholder": "Meklēt preces...",
     "sortNewest": "Jaunākās",

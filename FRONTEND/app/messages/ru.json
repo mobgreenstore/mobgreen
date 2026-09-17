@@ -16,6 +16,7 @@
     "howToOrder": "Как заказать"
   },
   "Catalog": {
+    "all": "Все",
     "allGoods": "Все товары",
     "searchPlaceholder": "Поиск товаров...",
     "sortNewest": "Новейшие",

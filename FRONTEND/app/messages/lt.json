@@ -16,6 +16,7 @@
     "howToOrder": "Kaip užsakyti"
   },
   "Catalog": {
+    "all": "Visos",
     "allGoods": "Visos prekės",
     "searchPlaceholder": "Ieškoti prekių...",
     "sortNewest": "Naujausios",

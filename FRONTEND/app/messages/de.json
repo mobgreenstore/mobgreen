@@ -16,6 +16,7 @@
     "howToOrder": "Bestellen"
   },
   "Catalog": {
+    "all": "Alle",
     "allGoods": "Alle Waren",
     "searchPlaceholder": "Produkte suchen...",
     "sortNewest": "Neueste",
