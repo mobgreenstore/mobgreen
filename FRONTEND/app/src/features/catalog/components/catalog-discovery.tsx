@@ -28,7 +28,20 @@ export function CatalogDiscovery({
     activeCategorySlug || fallbackSlug,
   );
 
-  const focusedCategory = categories.find(
+  const allCategory = {
+    id: "all",
+    name: "All",
+    slug: "all",
+    description: "",
+    displayTone: "MIST" as const,
+    image: null,
+    productCount: categories.reduce((sum, cat) => sum + cat.productCount, 0),
+    strongestOffer: null,
+  };
+
+  const allCategories = [allCategory, ...categories];
+
+  const focusedCategory = allCategories.find(
     (category) => category.slug === focusedSlug,
   );
   const displayTone = focusedCategory?.displayTone ?? "MIST";
@@ -37,7 +50,7 @@ export function CatalogDiscovery({
     if (!slug || slug === activeCategorySlug) return;
     router.replace(
       catalogHref({
-        category: slug,
+        category: slug === "all" ? "" : slug,
         search,
         sort,
       }),
@@ -55,7 +68,7 @@ export function CatalogDiscovery({
         navigation={
           <CategoryTabRail
             categories={categories}
-            activeCategorySlug={focusedSlug}
+            activeCategorySlug={focusedSlug || "all"}
             search={search}
             sort={sort}
             displayTone={displayTone}
@@ -64,7 +77,7 @@ export function CatalogDiscovery({
       />
       <CategoryShowcaseRail
         categories={categories}
-        activeCategorySlug={activeCategorySlug}
+        activeCategorySlug={activeCategorySlug || "all"}
         search={search}
         sort={sort}
         displayTone={displayTone}
