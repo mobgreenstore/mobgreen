@@ -41,19 +41,6 @@ export function CategoryShowcaseRail({
   const commitTimerRef = useRef<number | null>(null);
   const [edges, setEdges] = useState({ left: false, right: false });
 
-  const allCategory = {
-    id: "all",
-    name: t("all"),
-    slug: "all",
-    description: "",
-    displayTone: "MIST" as const,
-    image: null,
-    productCount: categories.reduce((sum, cat) => sum + cat.productCount, 0),
-    strongestOffer: null,
-  };
-
-  const allCategories = [allCategory, ...categories];
-
   const nearestIndex = useCallback(() => {
     const viewport = viewportRef.current;
     if (!viewport) return 0;
@@ -83,19 +70,19 @@ export function CategoryShowcaseRail({
   }, []);
 
   const focusNearest = useCallback(() => {
-    if (!interactionRef.current || !allCategories.length) return;
-    const category = allCategories[nearestIndex()];
+    if (!interactionRef.current || !categories.length) return;
+    const category = categories[nearestIndex()];
     if (!category) return;
     onFocusedCategoryChange(category.slug);
     if (commitTimerRef.current !== null) {
       window.clearTimeout(commitTimerRef.current);
     }
     commitTimerRef.current = window.setTimeout(() => {
-      onFocusedCategoryCommit(category.slug === "all" ? "" : category.slug);
+      onFocusedCategoryCommit(category.slug);
       interactionRef.current = false;
     }, COMMIT_DELAY_MS);
   }, [
-    allCategories,
+    categories,
     nearestIndex,
     onFocusedCategoryChange,
     onFocusedCategoryCommit,
@@ -108,7 +95,7 @@ export function CategoryShowcaseRail({
     const observer = new ResizeObserver(updateEdges);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [allCategories.length, updateEdges]);
+  }, [categories.length, updateEdges]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -141,9 +128,9 @@ export function CategoryShowcaseRail({
 
   function scrollByCard(direction: -1 | 1) {
     const viewport = viewportRef.current;
-    if (!viewport || !allCategories.length) return;
+    if (!viewport || !categories.length) return;
     const index = Math.min(
-      allCategories.length - 1,
+      categories.length - 1,
       Math.max(0, nearestIndex() + direction),
     );
     const card = viewport.querySelectorAll<HTMLElement>("[data-showcase-item]")[
@@ -158,15 +145,15 @@ export function CategoryShowcaseRail({
       block: "nearest",
       inline: "center",
     });
-    const category = allCategories[index];
+    const category = categories[index];
     if (category) {
       onFocusedCategoryChange(category.slug);
-      onFocusedCategoryCommit(category.slug === "all" ? "" : category.slug);
+      onFocusedCategoryCommit(category.slug);
       interactionRef.current = false;
     }
   }
 
-  if (!allCategories.length) {
+  if (!categories.length) {
     return (
       <section
         aria-label="Category showcase"
@@ -220,7 +207,7 @@ export function CategoryShowcaseRail({
           onScroll={handleScroll}
           className="flex touch-pan-x snap-x snap-mandatory scroll-px-3 scrollbar-none gap-3 overflow-x-auto overscroll-x-contain px-3 pr-12 pb-2 sm:scroll-px-6 sm:gap-4 sm:px-6 sm:pr-20 lg:scroll-px-8 lg:px-8 lg:pr-24"
         >
-          {allCategories.map((category, index) => (
+          {categories.map((category, index) => (
             <div
               key={category.id}
               data-showcase-item={category.slug}

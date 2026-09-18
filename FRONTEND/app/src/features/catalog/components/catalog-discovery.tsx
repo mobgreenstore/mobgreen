@@ -28,20 +28,7 @@ export function CatalogDiscovery({
     activeCategorySlug || fallbackSlug,
   );
 
-  const allCategory = {
-    id: "all",
-    name: "All",
-    slug: "all",
-    description: "",
-    displayTone: "MIST" as const,
-    image: null,
-    productCount: categories.reduce((sum, cat) => sum + cat.productCount, 0),
-    strongestOffer: null,
-  };
-
-  const allCategories = [allCategory, ...categories];
-
-  const focusedCategory = allCategories.find(
+  const focusedCategory = categories.find(
     (category) => category.slug === focusedSlug,
   );
   const displayTone = focusedCategory?.displayTone ?? "MIST";
@@ -77,7 +64,7 @@ export function CatalogDiscovery({
       />
       <CategoryShowcaseRail
         categories={categories}
-        activeCategorySlug={activeCategorySlug || "all"}
+        activeCategorySlug={activeCategorySlug}
         search={search}
         sort={sort}
         displayTone={displayTone}
