@@ -96,7 +96,7 @@ function VerificationCodes({
           return (
             <FormField key={index}>
               <Label required={index === 0}>
-                {index === 0 ? "Recharge code" : "Additional code (optional)"}
+                {index === 0 ? "Recharge code" : null}
               </Label>
               <div className="grid grid-cols-[minmax(0,1fr)_2.75rem_auto] gap-2">
                 <TextField

@@ -255,35 +255,6 @@ export function DeliveryMatchingFlow({
         </div>
       </Card>
 
-      <div>
-        <h2 className="text-xl font-semibold tracking-[-0.03em]">
-          Nearby delivery profiles
-        </h2>
-        <p className="mt-1 text-sm leading-6 text-foreground-muted">
-          These are simulated options based on your confirmed destination, not
-          live courier GPS positions.
-        </p>
-      </div>
-
-      {intent.candidates.length ? (
-        <CourierCandidateGrid
-          candidates={intent.candidates}
-          selectedCandidateId={selected?.candidateId}
-          disabled={requestState === "selecting" || offline}
-          onSelect={selectCandidate}
-        />
-      ) : (
-        <InlineAlert
-          tone="neutral"
-          title="No delivery options found"
-          description="Change the confirmed location or retry shortly."
-        />
-      )}
-
-      <p className="sr-only" aria-live="polite">
-        {selected ? `${selected.displayName} selected.` : ""}
-      </p>
-
       {selected && (
         <Card className="grid gap-4 border-info/30 bg-info-subtle p-4 sm:grid-cols-[1fr_auto] sm:items-center">
           <div>
@@ -313,6 +284,31 @@ export function DeliveryMatchingFlow({
           </Link>
         </Card>
       )}
+
+      <div>
+        <h2 className="text-xl font-semibold tracking-[-0.03em]">
+          Nearby delivery profiles
+        </h2>
+      </div>
+
+      {intent.candidates.length ? (
+        <CourierCandidateGrid
+          candidates={intent.candidates}
+          selectedCandidateId={selected?.candidateId}
+          disabled={requestState === "selecting" || offline}
+          onSelect={selectCandidate}
+        />
+      ) : (
+        <InlineAlert
+          tone="neutral"
+          title="No delivery options found"
+          description="Change the confirmed location or retry shortly."
+        />
+      )}
+
+      <p className="sr-only" aria-live="polite">
+        {selected ? `${selected.displayName} selected.` : ""}
+      </p>
 
       {requestState === "selecting" && (
         <p

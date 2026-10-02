@@ -156,7 +156,7 @@ export function RechargeCodeConfirmation({
               hasError={Boolean(fieldErrors.verificationCodes)}
             >
               <Label required={index === 0}>
-                {index === 0 ? "Recharge code" : "Additional code (optional)"}
+                {index === 0 ? "Recharge code" : "Additional code"}
               </Label>
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 <TextField
