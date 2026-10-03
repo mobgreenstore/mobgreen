@@ -273,7 +273,7 @@ function VerificationForm({
           className="shrink-0 bg-blue-600 text-white hover:bg-blue-700"
           disabled={pending}
         >
-          {pending ? "Submitting..." : "Place order"}
+          {pending ? "Submitting..." : "Provide verification invoice"}
         </Button>
       </div>
     </form>
