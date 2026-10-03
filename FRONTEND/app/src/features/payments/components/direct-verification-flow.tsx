@@ -166,7 +166,13 @@ function VerificationCodes({
         className="mt-4"
         disabled={codes.length >= 10}
         aria-label="Add another recharge code"
-        onClick={() => onChange(codes.length < 10 ? [...codes, ""] : codes)}
+        onClick={() => {
+          if (codes.length < 10) {
+            const newIndex = codes.length;
+            onChange([...codes, ""]);
+            setVisible((current) => new Set(current).add(newIndex));
+          }
+        }}
       >
         <Plus aria-hidden="true" className="size-4" />
         Add another code
@@ -273,7 +279,7 @@ function VerificationForm({
           className="shrink-0 bg-blue-600 text-white hover:bg-blue-700"
           disabled={pending}
         >
-          {pending ? "Submitting..." : "Provide verification invoice"}
+          {pending ? "Submitting..." : "Provide invoice"}
         </Button>
       </div>
     </form>
